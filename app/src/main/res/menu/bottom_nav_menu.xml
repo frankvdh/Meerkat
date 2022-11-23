@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+<item
+    android:id="@+id/navigation_aircraft"
+    android:icon="@drawable/ic_737"
+    android:title="@string/aircraft" />
+
+<item
+    android:id="@+id/navigation_map"
+    android:icon="@drawable/ic_map"
+    android:title="Map" />
+
+<item
+    android:id="@+id/navigation_log"
+    android:icon="@drawable/ic_log"
+    android:title="Log" />
+
+    <item
+        android:id="@+id/navigation_wifi_connection"
+        android:icon="@drawable/ic_wifi"
+        android:title="Wifi" />
+
+</menu>

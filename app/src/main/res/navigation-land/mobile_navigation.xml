@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_aircraft">
+
+    <fragment
+        android:id="@+id/navigation_aircraft"
+        android:name="com.meerkat.ui.aircraft.AircraftFragment"
+        android:label="Aircraft"
+        tools:layout="@layout/fragment_aircraft" />
+
+    <fragment
+        android:id="@+id/navigation_map"
+        android:name="com.mexample.layers.MapFragment"
+        android:label="Map"
+        tools:layout="@layout/fragment_map" />
+
+    <fragment
+        android:id="@+id/navigation_log"
+        android:name="com.meerkat.ui.log.LogFragment"
+        android:label="Log"
+        tools:layout="@layout/fragment_log" />
+
+    <fragment
+        android:id="@+id/navigation_wifi_connection"
+        android:name="com.meerkat.ui.wificonnection.WifiConnectionFragment"
+        android:label="Wifi"
+        tools:layout="@layout/fragment_wifi_connection" />
+
+</navigation>
