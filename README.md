@@ -62,4 +62,5 @@ TO DO
 * Turn off the simulator
 * Add a Settings screen to enable all the settings to be changed interactively instead of needing to edit the text file
 * Improve the code style
-* Port to Apple IOS.
+* Port to Apple IOS
+* Write some documentation
