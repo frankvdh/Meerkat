@@ -63,9 +63,11 @@ TO DO
 * Ownship track and prediction
 * Check that Settings are saved and loaded correctly
 * Check that log files are written correctly
+* Lots more testing
 * Expand to be able to use other Wifi-enabled ADS-B In devices
 * Turn off the simulator
 * Add a Settings screen to enable all the settings to be changed interactively instead of needing to edit the text file
+* Allow other units for vertical speed (currently only fpm)
 * Improve the code style
 * Port to Apple IOS
 * Write some documentation
