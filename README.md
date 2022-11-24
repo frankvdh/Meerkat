@@ -1,5 +1,4 @@
-# Meerkat
-Meerkat - Android ADS-B In display
+# Meerkat - Android ADS-B In display
 
 This is an Android app to display traffic information received from an ADS-B In device such as PingUSB https://uavionix.com/products/pingusb/
 The objective is to use this app in an aircraft to detect nearby traffic equipped with ADS-B Out.
