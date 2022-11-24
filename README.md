@@ -17,7 +17,8 @@ This is very much in the pre-release state. Currently it does
 * A simulator to generate "traffic" for testing (currently turned on by default!)
 
 In the graphic window, the current GPS position is located at the centre of the screen. The background has some circles and lines to make it easier to estimate distance and direction.
-![Screenshot_20221124-163333](https://user-images.githubusercontent.com/6589024/203688405-8af1e7e5-2674-4759-9d0b-1e80cd8e9c0a.png)
+![Screenshot_20221124-163333](https://user-images.githubusercontent.com/6589024/203688692-f4bb89af-625e-4743-8d8d-8310e54db5d6.png)
+
 This graphic window's orientation is currently only "North-up". 
 Each aircraft (or ADS-B-equipped ground vehicle or obstacle) is displayed as an icon depending on its GDL90 emitter type. 
 
