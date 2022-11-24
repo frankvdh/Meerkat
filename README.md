@@ -1,6 +1,6 @@
 # Meerkat - Android ADS-B In display
 
-This is an Android app to display traffic information received from an ADS-B In device such as PingUSB https://uavionix.com/products/pingusb/
+This is an Android app to display traffic information received from an ADS-B In device such as PingUSB https://uavionix.com/products/pingusb/ via WiFi.
 The objective is to use this app in an aircraft to detect nearby traffic equipped with ADS-B Out.
 
 Project Status & Functionality
@@ -17,6 +17,7 @@ This is very much in the pre-release state. Currently it does
 * A simulator to generate "traffic" for testing (currently turned on by default!)
 
 In the graphic window, the current GPS position is located at the centre of the screen. The background has some circles and lines to make it easier to estimate distance and direction.
+![Screenshot_20221124-163333](https://user-images.githubusercontent.com/6589024/203688405-8af1e7e5-2674-4759-9d0b-1e80cd8e9c0a.png)
 This graphic window's orientation is currently only "North-up". 
 Each aircraft (or ADS-B-equipped ground vehicle or obstacle) is displayed as an icon depending on its GDL90 emitter type. 
 
@@ -41,16 +42,14 @@ This software is free (as in beer AND speech). I figure that, although it could 
 valuable to me (as a pilot) if it saves one person from running into me mid-air. So, it's free. It is made available under a Creative Commons 
 Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License. https://creativecommons.org/licenses/by-nc/4.0/
 
-You are free to share (copy and redistribute the material in any medium or format) and
-adapt (remix, transform, and build upon the material) this software under the following terms:
+You are free to share (copy and redistribute the material in any medium or format) and adapt (remix, transform, and build upon the material) this software under the following terms:
 
 Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
 
-NonCommercial — You may not use the material for commercial purposes.
+NonCommercial — You may not use the material for commercial purposes without my specific permission. If you can make some money from my hard work, I think it's fair that I get a share of that money. If you have a great idea that you think will make use both as rich as Creosote, I'll be happy to give you permission.
 
 Having said that, I welcome anyone who wishes to contribute to this project. In particular, it would be good to have someone who is really up to speed with
-Android development. I guess it would be good if it could also be ported to Apple IOS. It would also be helpful to be able to make contact with people who
-have devices other than the PingUSB.
+Android development. I guess it would be good if it could also be ported to Apple IOS. Whilst I have done a fair amount of testing with my PingUSB, it would also be helpful to be able to make contact with people who have other devices, especially if they have documentation on the comms.
 
 TO DO
 -----
@@ -66,3 +65,4 @@ TO DO
 * Improve the code style
 * Port to Apple IOS
 * Write some documentation
+
