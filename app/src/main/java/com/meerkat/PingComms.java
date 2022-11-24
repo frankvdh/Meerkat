@@ -1,3 +1,15 @@
+/*
+ * Copyright 2022 Frank van der Hulst drifter.frank@gmail.com
+ *
+ * This software is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+ * https://creativecommons.org/licenses/by-nc/4.0/
+ *
+ * You are free to share (copy and redistribute the material in any medium or format) and
+ * adapt (remix, transform, and build upon the material) this software under the following terms:
+ * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+ * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+ * NonCommercial — You may not use the material for commercial purposes.
+ */
 package com.meerkat;
 
 import static com.meerkat.Settings.logDecodedMessages;
@@ -76,7 +88,7 @@ public class PingComms {
                             StringBuilder sb = new StringBuilder();
                             for (byte b : packet)
                                 sb.append(String.format("%02x", b));
-                            Log.d(sb.toString());
+                            Log.i(sb.toString());
                         }
                         ByteArrayInputStream is = new ByteArrayInputStream(packet);
                         long now = new Date().getTime();
@@ -84,7 +96,7 @@ public class PingComms {
                             Gdl90Message message = Gdl90Message.getMessage(is, now);
                             if (message == null) continue;
                             if (logDecodedMessages)
-                                Log.d(message.toString());
+                                Log.i(message.toString());
                             if (message instanceof Traffic) {
                                 Traffic traffic1 = (Traffic) message;
                                 if (traffic1.callsign.equals("********") || traffic1.point.getLatitude() == 0 && traffic1.point.getLongitude() == 0)

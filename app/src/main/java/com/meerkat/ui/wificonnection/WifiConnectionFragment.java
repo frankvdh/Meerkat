@@ -1,9 +1,19 @@
+/*
+ * Copyright 2022 Frank van der Hulst drifter.frank@gmail.com
+ *
+ * This software is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+ * https://creativecommons.org/licenses/by-nc/4.0/
+ *
+ * You are free to share (copy and redistribute the material in any medium or format) and
+ * adapt (remix, transform, and build upon the material) this software under the following terms:
+ * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+ * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+ * NonCommercial — You may not use the material for commercial purposes.
+ */
 package com.meerkat.ui.wificonnection;
 
 import static com.meerkat.Settings.port;
 import static com.meerkat.Settings.wifiName;
-import static com.meerkat.log.Log.useLogWriter;
-import static com.meerkat.log.Log.viewLogWriter;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
@@ -19,20 +29,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.meerkat.MainActivity;
+import com.google.android.material.button.MaterialButton;
 import com.meerkat.PingComms;
-import com.meerkat.R;
 import com.meerkat.Settings;
 import com.meerkat.WifiConnection;
 import com.meerkat.databinding.FragmentWifiConnectionBinding;
 import com.meerkat.log.Log;
-import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,16 +64,14 @@ public class WifiConnectionFragment extends Fragment implements ApListAdapter.Sc
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        useLogWriter(viewLogWriter, false);
         // Inflate the layout for this fragment
         binding = FragmentWifiConnectionBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         this.context = getContext();
         accessPoints = new ArrayList<>();
         Button b = binding.scanWifiButton;
-        b.setOnClickListener(this::onClick);
+        b.setOnClickListener(this);
         b.setVisibility(View.VISIBLE);
-        context.registerReceiver(new WifiScanReceiver(), new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         myAdapter = new ApListAdapter(accessPoints, this);
         RecyclerView apListView = binding.aplistview;
         apListView.setVisibility(View.INVISIBLE);
@@ -90,13 +97,6 @@ public class WifiConnectionFragment extends Fragment implements ApListAdapter.Sc
         Log.i("WifiConnectionFragment paused");
     }
 
-    public static WifiConnection findWifiConnection() {
-        Log.i("New connection");
-
-        WifiConnection result = new WifiConnection();
-        return result;
-    }
-
     @Override
     public void onClick(View v) {
         Button b = binding.scanWifiButton;
@@ -107,29 +107,35 @@ public class WifiConnectionFragment extends Fragment implements ApListAdapter.Sc
         wifiName = null;
         if (PingComms.pingComms != null)
             PingComms.pingComms.stop();
-        //noinspection deprecation
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        wifiManager.startScan();
-
-    }
-
-    private class WifiScanReceiver extends BroadcastReceiver {
-        // This is checked via mLocationPermissionApproved boolean
-        public void onReceive(Context context, Intent intent) {
-            WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-            @SuppressLint("MissingPermission") List<ScanResult> scanResults = wifiManager.getScanResults();
-            Log.i(scanResults.size() + " APs discovered.");
-            // User to select from available Wifi networks
-            for (ScanResult scanResult : scanResults) {
-                if (scanResult.SSID.isEmpty()) continue;
-                accessPoints.add(scanResult.SSID);
-                if (accessPoints.size() >= RangingRequest.getMaxPeers()) break;
-            }
-
-            myAdapter.notifyDataSetChanged();
-            Log.i("Select the ADS-B device WiFi network");
+        context.registerReceiver(wifiScanReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+        boolean success = wifiManager.startScan();
+        if (!success) {
+            Toast.makeText(getContext(), "No Wifi networks found", Toast.LENGTH_LONG).show();
         }
     }
+
+    BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
+        // This is checked via mLocationPermissionApproved boolean
+        @SuppressLint("NotifyDataSetChanged")
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)) {
+                WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                @SuppressLint("MissingPermission") List<ScanResult> scanResults = wifiManager.getScanResults();
+                Log.i(scanResults.size() + " APs discovered.");
+                // User to select from available Wifi networks
+                for (ScanResult scanResult : scanResults) {
+                    if (scanResult.SSID.isEmpty()) continue;
+                    accessPoints.add(scanResult.SSID);
+                    if (accessPoints.size() >= RangingRequest.getMaxPeers()) break;
+                }
+                myAdapter.notifyDataSetChanged();
+                Log.i("Select the ADS-B device WiFi network");
+            } else {
+                Toast.makeText(getContext(), "No Wifi networks found", Toast.LENGTH_LONG).show();
+            }
+         }
+    };
 
     @Override
     public void onScanResultItemClick(String scanResult) {
@@ -141,11 +147,10 @@ public class WifiConnectionFragment extends Fragment implements ApListAdapter.Sc
         binding.aplistview.setVisibility(View.INVISIBLE);
         Log.i("Connecting to " + wifiName);
         ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        WifiConnection wifiConnection = new WifiConnection(connMgr, wifiName, "");
+        WifiConnection.init(connMgr, wifiName, "");
         Log.i("Starting Ping comms");
         PingComms.pingComms = new PingComms(port);
         // Configured, but not connected to Wifi, or connected to the wrong Wifi
         PingComms.pingComms.start();
     }
-
 }

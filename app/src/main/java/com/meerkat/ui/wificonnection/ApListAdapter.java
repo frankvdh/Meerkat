@@ -1,3 +1,15 @@
+/*
+ * Copyright 2022 Frank van der Hulst drifter.frank@gmail.com
+ *
+ * This software is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+ * https://creativecommons.org/licenses/by-nc/4.0/
+ *
+ * You are free to share (copy and redistribute the material in any medium or format) and
+ * adapt (remix, transform, and build upon the material) this software under the following terms:
+ * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+ * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+ * NonCommercial — You may not use the material for commercial purposes.
+ */
 package com.meerkat.ui.wificonnection;
 
 import android.net.wifi.ScanResult;
@@ -25,7 +37,7 @@ public class ApListAdapter extends RecyclerView.Adapter<ViewHolder> {
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;
 
-    private ScanResultClickListener scanResultClickListener;
+    private final ScanResultClickListener scanResultClickListener;
 
     private final List<String> accessPoints;
 
@@ -41,7 +53,7 @@ public class ApListAdapter extends RecyclerView.Adapter<ViewHolder> {
     }
 
     public class ViewHolderItem extends RecyclerView.ViewHolder implements View.OnClickListener {
-        public TextView ssidTextView;
+        private final TextView ssidTextView;
 
         public ViewHolderItem(View view) {
             super(view);

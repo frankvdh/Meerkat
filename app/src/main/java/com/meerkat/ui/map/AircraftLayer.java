@@ -1,10 +1,18 @@
+/*
+ * Copyright 2022 Frank van der Hulst drifter.frank@gmail.com
+ *
+ * This software is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+ * https://creativecommons.org/licenses/by-nc/4.0/
+ *
+ * You are free to share (copy and redistribute the material in any medium or format) and
+ * adapt (remix, transform, and build upon the material) this software under the following terms:
+ * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+ * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+ * NonCommercial — You may not use the material for commercial purposes.
+ */
 package com.meerkat.ui.map;
 
-import static com.meerkat.Settings.gradientMaximumFeet;
-import static com.meerkat.Settings.gradientMinimumFeet;
-import static com.meerkat.Settings.historySeconds;
-import static com.meerkat.Settings.showLinearPredictionTrack;
-import static com.meerkat.Settings.showPolynomialPredictionTrack;
+import static com.meerkat.Settings.*;
 import static java.lang.Double.isNaN;
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
@@ -70,20 +78,12 @@ public class AircraftLayer extends Drawable {
         set(v);
     }
 
-    public Bitmap rotateBitmap(Bitmap source, float angle) {
-        if (source == null)
-            return null;
-        Matrix matrix = new Matrix();
-        // Rotate about centre of icon
-        matrix.postTranslate(-source.getWidth() / 2.0f, -source.getHeight() / 2.0f);
-        matrix.postRotate(angle);
-        matrix.postTranslate(source.getWidth() / 2.0f, source.getHeight() / 2.0f);
-        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, false);
-    }
-
     void drawBitmap(Canvas canvas, Bitmap bitmap, float x, float y, float angle, int fg) {
-        Bitmap bmp = rotateBitmap(bitmap, angle);
-        canvas.drawBitmap(replaceColor(bmp, fg), x - bitmap.getWidth() / 2f, y - bitmap.getHeight() / 2f, null);
+        Matrix matrix = new Matrix();
+        // Rotate about centre of icon & translate to aircraft position
+        matrix.setRotate(angle, bitmap.getWidth() / 2f, bitmap.getHeight() / 2f);
+        matrix.postTranslate(x - bitmap.getWidth() / 2f, y - bitmap.getHeight() / 2f);
+        canvas.drawBitmap(replaceColor(bitmap, fg), matrix, null);
     }
 
     public Bitmap replaceColor(Bitmap src, int targetColor) {
@@ -201,10 +201,12 @@ public class AircraftLayer extends Drawable {
                 }
             }
         }
-        int lineHeight = (int) (textPaint.getTextSize() + 1);
-        String[] text = {String.format(Locale.ENGLISH, "%s%c", v.getLabel(), v.current.isCrcValid() ? ' ' : '!'),
-                isNaN(polar.altDifference.value) ? "" : String.format(Locale.ENGLISH, "%s", polar.altDifference)};
-        drawText(canvas, aircraftPoint, lineHeight, text, bounds, bmpWidth);
+        if (aircraftPoint != null) {
+            int lineHeight = (int) (textPaint.getTextSize() + 1);
+            String[] text = {String.format(Locale.ENGLISH, "%s%c", v.getLabel(), v.current.isCrcValid() ? ' ' : '!'),
+                    isNaN(polar.altDifference.value) ? "" : String.format(Locale.ENGLISH, "%s", polar.altDifference)};
+            drawText(canvas, aircraftPoint, lineHeight, text, bounds, bmpWidth);
+        }
 
         long now = Calendar.getInstance().getTime().getTime();
         if (historySeconds > 0) {
@@ -228,8 +230,8 @@ public class AircraftLayer extends Drawable {
     private void drawText(Canvas canvas, final Point aircraftPos, int textHeight, String[] text, Rect bounds, int bmpWidth) {
         // Assume first line of text is always the longest
         float textWidth = textPaint.measureText(text[0]);
-        if (aircraftPos.x + bmpWidth / 2 + textWidth <= bounds.left) return;
-        if (aircraftPos.x - bmpWidth / 2 - textWidth >= bounds.right) return;
+        if (aircraftPos.x + bmpWidth / 2f + textWidth <= bounds.left) return;
+        if (aircraftPos.x - bmpWidth / 2f - textWidth >= bounds.right) return;
         if (aircraftPos.y + textHeight <= bounds.top) return;
         if (aircraftPos.y - textHeight >= bounds.bottom) return;
 

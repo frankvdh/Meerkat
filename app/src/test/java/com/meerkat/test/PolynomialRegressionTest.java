@@ -1,3 +1,15 @@
+/*
+ * Copyright 2022 Frank van der Hulst drifter.frank@gmail.com
+ *
+ * This software is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+ * https://creativecommons.org/licenses/by-nc/4.0/
+ *
+ * You are free to share (copy and redistribute the material in any medium or format) and
+ * adapt (remix, transform, and build upon the material) this software under the following terms:
+ * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+ * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+ * NonCommercial — You may not use the material for commercial purposes.
+ */
 package com.meerkat.test;
 
 import com.meerkat.PolynomialRegression;
@@ -11,7 +23,7 @@ public class PolynomialRegressionTest {
         int[] y = new int[]{1, 6, 17, 34, 57, 86, 121, 162, 209, 262, 321};
         PolynomialRegression pr = new PolynomialRegression(1000, 1);
         for (int i = 0; i < y.length; i++)
-            pr.add(i+1000, new float[]{y[i]});
+            pr.add(i+1000, y[i]);
 
         double[] coeff = pr.getCoefficients()[0];
         Assert.assertArrayEquals(new double[]{1, 2, 3, 1000}, coeff, 0.000001);
@@ -26,7 +38,7 @@ public class PolynomialRegressionTest {
 
         PolynomialRegression pr = new PolynomialRegression(-31065, 1);
         for (Data d : data)
-            pr.add(d.l, new float[]{d.f});
+            pr.add(d.l, d.f);
 
         double[] coeff = pr.getCoefficients()[0];
         Assert.assertArrayEquals(new double[]{147.1, 0, 0, -31065}, coeff, 0.1);
@@ -41,7 +53,7 @@ public class PolynomialRegressionTest {
 
         PolynomialRegression pr = new PolynomialRegression(-47816, 1);
         for (Data d : data)
-            pr.add(d.l, new float[]{d.f});
+            pr.add(d.l, d.f);
 
         double[] coeff = pr.getCoefficients()[0];
         Assert.assertArrayEquals(new double[]{18.2, 0, 0, -47816}, coeff, 0.1);
@@ -55,7 +67,7 @@ public class PolynomialRegressionTest {
 
         PolynomialRegression pr = new PolynomialRegression(data[0].l, 1);
         for (Data d : data)
-            pr.add(d.l, new float[]{d.f});
+            pr.add(d.l, d.f);
 
         double[] coeff = pr.getCoefficients()[0];
         Assert.assertArrayEquals(new double[]{100, 0, 0, data[0].l}, coeff, 0.1);
@@ -69,7 +81,7 @@ public class PolynomialRegressionTest {
 
         PolynomialRegression pr = new PolynomialRegression(data[0].l, 1);
         for (Data d : data)
-            pr.add(d.l, new float[]{d.f});
+            pr.add(d.l, d.f);
 
         double[] coeff = pr.getCoefficients()[0];
         Assert.assertArrayEquals(new double[]{0, .002, 0, data[0].l}, coeff, 0.1);
@@ -83,7 +95,7 @@ public class PolynomialRegressionTest {
 
         PolynomialRegression pr = new PolynomialRegression(data[0].l, 1);
         for (Data d : data)
-            pr.add(d.l, new float[]{d.f});
+            pr.add(d.l, d.f);
 
         double[] coeff = pr.getCoefficients()[0];
         Assert.assertArrayEquals(new double[]{10, 0, 0, data[0].l}, coeff, 0.1);
@@ -99,7 +111,7 @@ public class PolynomialRegressionTest {
 
         PolynomialRegression pr = new PolynomialRegression(0, 1);
         for (Data d : data)
-            pr.add(d.l, new float[]{d.f});
+            pr.add(d.l, d.f);
 
         double[] coeff = pr.getCoefficients()[0];
         Assert.assertArrayEquals(new double[]{18, -0.1, 0, 0}, coeff, 0.01);
@@ -115,14 +127,14 @@ public class PolynomialRegressionTest {
 
         PolynomialRegression pr = new PolynomialRegression(400000, 1);
         for (Data d : data)
-            pr.add(d.l, new float[]{d.f});
+            pr.add(d.l, d.f);
 
         double[] coeff = pr.getCoefficients()[0];
         Assert.assertArrayEquals(new double[]{18, -0.1, 0, 400000}, coeff, 0.01);
     }
     public static class Data {
-       public long l;
-      public  float f;
+       public final long l;
+      public  final float f;
 
         Data(long l, float f) {
             this.l = l;

@@ -1,3 +1,15 @@
+/*
+ * Copyright 2022 Frank van der Hulst drifter.frank@gmail.com
+ *
+ * This software is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+ * https://creativecommons.org/licenses/by-nc/4.0/
+ *
+ * You are free to share (copy and redistribute the material in any medium or format) and
+ * adapt (remix, transform, and build upon the material) this software under the following terms:
+ * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+ * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+ * NonCommercial — You may not use the material for commercial purposes.
+ */
 package com.meerkat;
 
 import android.content.Context;
@@ -5,7 +17,7 @@ import android.content.SharedPreferences;
 
 import static android.content.Context.MODE_PRIVATE;
 
-import static com.meerkat.log.Log.I;
+import static com.meerkat.log.Log.*;
 
 import com.meerkat.log.Log;
 import com.meerkat.measure.Distance;
@@ -40,13 +52,13 @@ public class Settings {
 
     public static void load(Context context) {
         prefs = context.getSharedPreferences("com.meerkat_preferences", MODE_PRIVATE);
-        wifiName = prefs.getString("wifiName", "Ping-6C7A");
+        wifiName = null;//prefs.getString("wifiName", "Ping-6C7A");
         port = prefs.getInt("port", 4000);
         showLog = prefs.getBoolean("showLog", true);
         fileLog = prefs.getBoolean("fileLog", true);
-        logLevel = prefs.getInt("logLevel", I);
-        logRawMessages = prefs.getBoolean("logRawMessages", false);
-        logDecodedMessages = false;//prefs.getBoolean("logDecodedMessages", false);
+        logLevel = D;//prefs.getInt("logLevel", I);
+        logRawMessages = true;//prefs.getBoolean("logRawMessages", false);
+        logDecodedMessages = true;//prefs.getBoolean("logDecodedMessages", false);
         showLinearPredictionTrack = prefs.getBoolean("showLinearPredictionTrack", true);
         showPolynomialPredictionTrack = prefs.getBoolean("showPolynomialPredictionTrack", false);
         historySeconds = prefs.getInt("historySeconds", 60);
@@ -73,7 +85,7 @@ public class Settings {
         } catch(Exception e) {
             speedUnits = Speed.Units.KNOTS;
         }
-        simulate = prefs.getBoolean("simulate", true);
+        simulate = false;//prefs.getBoolean("simulate", true);
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         Log.i("Settings loaded");
     }

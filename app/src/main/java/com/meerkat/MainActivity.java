@@ -1,3 +1,15 @@
+/*
+ * Copyright 2022 Frank van der Hulst drifter.frank@gmail.com
+ *
+ * This software is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+ * https://creativecommons.org/licenses/by-nc/4.0/
+ *
+ * You are free to share (copy and redistribute the material in any medium or format) and
+ * adapt (remix, transform, and build upon the material) this software under the following terms:
+ * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+ * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+ * NonCommercial — You may not use the material for commercial purposes.
+ */
 package com.meerkat;
 
 import static android.os.Environment.MEDIA_MOUNTED;
@@ -34,13 +46,30 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.meerkat.databinding.ActivityMainBinding;
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
-import com.meerkat.ui.wificonnection.WifiConnectionFragment;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+/*
+TODO
+Allow changing the display orientation to "Track up" or "Heading up"
+Keep screen on
+Use a theme to allow black background
+Digital filtering of path to predict track
+Ownship track and prediction
+Check that Settings are saved and loaded correctly
+Check that log files are written correctly
+Lots more testing
+Expand to be able to use other Wifi-enabled ADS-B In devices
+Turn off the simulator
+Add a Settings screen to enable all the settings to be changed interactively instead of needing to edit the text file
+Allow other units for vertical speed (currently only fpm)
+Improve the code style
+Port to Apple IOS
+Write some documentation
+ */
 public class MainActivity extends AppCompatActivity {
 
     static boolean firstRun = true;
@@ -127,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
                     // do nothing
                 }
             } while (!needed.isEmpty());
-            for (var emitterType: Gdl90Message.Emitter.values()){
+            for (var emitterType : Gdl90Message.Emitter.values()) {
                 loadIcon(getApplicationContext(), emitterType);
             }
             Log.level(D);
@@ -154,17 +183,16 @@ public class MainActivity extends AppCompatActivity {
 
             Log.i("Connecting");
             ConnectivityManager connMgr = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-            WifiConnection wifiConnection;
-            if (wifiName != null) {
-                // Already configured
-                wifiConnection = new WifiConnection(connMgr, wifiName, "");
+            if (wifiName == null) {
+                navView.setSelectedItemId(R.id.navigation_wifi_connection);
             } else {
-                wifiConnection = WifiConnectionFragment.findWifiConnection();
-            }
-            Log.i("Connected to Wifi " + wifiConnection);
-            PingComms.pingComms = new PingComms(port);
+                // Already configured
+                WifiConnection.init(connMgr, wifiName, "");
+                Log.i("Connected to Wifi " + WifiConnection.ssId);
+                PingComms.pingComms = new PingComms(port);
 
-            PingComms.pingComms.start();
+                PingComms.pingComms.start();
+            }
             firstRun = false;
         }
     }

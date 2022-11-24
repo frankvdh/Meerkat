@@ -1,3 +1,15 @@
+/*
+ * Copyright 2022 Frank van der Hulst drifter.frank@gmail.com
+ *
+ * This software is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+ * https://creativecommons.org/licenses/by-nc/4.0/
+ *
+ * You are free to share (copy and redistribute the material in any medium or format) and
+ * adapt (remix, transform, and build upon the material) this software under the following terms:
+ * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+ * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+ * NonCommercial — You may not use the material for commercial purposes.
+ */
 package com.meerkat.gdl90;
 
 import static java.lang.Float.NaN;
@@ -21,7 +33,7 @@ public class Traffic extends Gdl90Message {
     private final int alertStatus;
     private final AddrType addrType;
     public final int participantAddr;
-    public Position point;
+    public final Position point;
     private final boolean extrapolated;
     private final int nic;
     private final int nac;
@@ -111,7 +123,7 @@ public class Traffic extends Gdl90Message {
         float vVel = point.getVVel();
         return String.format(Locale.ENGLISH, "%c%c: %8s %s %s %s %03.0f %s %s NIC=%2d NAC=%2d %s %s %o",
                 ownShip ? 'O' : 'T', crcValidChar(),
-                callsign, point.toString(), point.getSpeedUnits().toString(),
+                callsign, point, point.getSpeedUnits().toString(),
                 isNaN(vVel) ? "----   " : String.format(Locale.ENGLISH, "%4f%s", vVel, "fpm"),
                 point.getTrack(),
                 priority, (alertStatus == 0 ? "No alert" : "Traffic Alert"), nic, nac, (extrapolated ? "Extrap" : "Report"),

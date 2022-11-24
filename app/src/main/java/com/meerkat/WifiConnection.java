@@ -1,3 +1,15 @@
+/*
+ * Copyright 2022 Frank van der Hulst drifter.frank@gmail.com
+ *
+ * This software is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+ * https://creativecommons.org/licenses/by-nc/4.0/
+ *
+ * You are free to share (copy and redistribute the material in any medium or format) and
+ * adapt (remix, transform, and build upon the material) this software under the following terms:
+ * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+ * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+ * NonCommercial — You may not use the material for commercial purposes.
+ */
 package com.meerkat;
 
 import static com.meerkat.Settings.wifiName;
@@ -13,9 +25,11 @@ import androidx.annotation.NonNull;
 import com.meerkat.log.Log;
 
 public class WifiConnection {
-    private boolean available;
+    static private boolean available;
+    static public String ssId;
 
-    public WifiConnection() {
+    public static void waitForWifiConnection() {
+        Log.i("Waiting for wifi connection: " + ssId);
         while (!available) {
             try {
                 //noinspection BusyWait
@@ -24,10 +38,9 @@ public class WifiConnection {
                 // ignore
             }
         }
-
     }
 
-    public WifiConnection(ConnectivityManager cm, String ssId, String password) {
+    public static void init(ConnectivityManager cm, String ssId, String password) {
         Log.i("Connecting to Wifi " + ssId);
         WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder().setSsid(ssId);
         if (password != null) {
@@ -58,16 +71,8 @@ public class WifiConnection {
                 available = false;
             }
         });
-        Log.i("Waiting for wifi connection: " + ssId);
-
-        while (!available) {
-            try {
-                //noinspection BusyWait
-                Thread.sleep(1000);
-            } catch (InterruptedException ex) {
-                // do nothing
-            }
-        }
+        WifiConnection.ssId = ssId;
+        waitForWifiConnection();
     }
 
     @NonNull

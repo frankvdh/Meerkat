@@ -1,3 +1,15 @@
+/*
+ * Copyright 2022 Frank van der Hulst drifter.frank@gmail.com
+ *
+ * This software is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+ * https://creativecommons.org/licenses/by-nc/4.0/
+ *
+ * You are free to share (copy and redistribute the material in any medium or format) and
+ * adapt (remix, transform, and build upon the material) this software under the following terms:
+ * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+ * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+ * NonCommercial — You may not use the material for commercial purposes.
+ */
 package com.meerkat.gdl90;
 
 import androidx.annotation.NonNull;
@@ -7,6 +19,7 @@ import com.meerkat.log.Log;
 import java.io.ByteArrayInputStream;
 import java.util.Locale;
 
+@SuppressWarnings({"FieldCanBeLocal", "unused"})
 public class UavionixOem extends Gdl90Message {
     private final char signature;
     private final int subType;
@@ -85,9 +98,9 @@ public class UavionixOem extends Gdl90Message {
     public String toString() {
         String antOffsetLon = antOfsLon == 0 ? "NO_DATA" : antOfsLon == 1 ? "Applied by sensor" :
                 String.format(Locale.ENGLISH, "%dm", antOfsLon * 2 - 1);
-        return String.format(Locale.ENGLISH, "I%c: %c %c %d %o %s %s %.0f %s %s %s %c",
+        return String.format(Locale.ENGLISH, "I%c: %c %d %d %o %s %s %.0f %s %s %s %c",
                 crcValidChar(),
                 signature, subType, msgVersion, icao, emitterType, callsign, stallSpeed,
-                avLw, antOfslat, antOffsetLon, qiMode);
+                avLw, antOfslat, antOffsetLon, qiMode ? 'Q' : ' ');
     }
 }

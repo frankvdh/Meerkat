@@ -1,3 +1,15 @@
+/*
+ * Copyright 2022 Frank van der Hulst drifter.frank@gmail.com
+ *
+ * This software is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+ * https://creativecommons.org/licenses/by-nc/4.0/
+ *
+ * You are free to share (copy and redistribute the material in any medium or format) and
+ * adapt (remix, transform, and build upon the material) this software under the following terms:
+ * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+ * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+ * NonCommercial — You may not use the material for commercial purposes.
+ */
 package com.meerkat.gdl90;
 
 import static com.meerkat.gdl90.Gdl90Message.AircraftLengthWeight.L15M_W23M;
@@ -23,12 +35,7 @@ import static com.meerkat.gdl90.Gdl90Message.LateralGpsOfs.RIGHT_2M;
 import static com.meerkat.gdl90.Gdl90Message.LateralGpsOfs.RIGHT_4M;
 import static com.meerkat.gdl90.Gdl90Message.LateralGpsOfs.RIGHT_6M;
 
-import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.Icon;
 
 import com.meerkat.R;
 import com.meerkat.log.Log;
@@ -72,7 +79,7 @@ public class Gdl90Message {
 
     public enum Priority {Normal, Gen_Emerg, Med_Emerg, Min_Fuel, No_Comms, Hijack, Downed, Reserved}
 
-    static Emitter[] emitterLookup = new Emitter[]
+    static final Emitter[] emitterLookup = new Emitter[]
             {
                     Emitter.Unknown, Emitter.Light, Emitter.Small, Emitter.Large, Emitter.VLarge, Emitter.Heavy, Emitter.Aerobatic, Emitter.Rotor,
                     Emitter.Unused, Emitter.Glider, Emitter.Balloon, Emitter.Skydiver, Emitter.Ultralight, Emitter.Unused, Emitter.UAV, Emitter.Spacecraft, Emitter.Unused,

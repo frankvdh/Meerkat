@@ -1,4 +1,3 @@
-package com.meerkat;
 /*                PUBLIC DOMAIN NOTICE
 This program was prepared by Los Alamos National Security, LLC
 at Los Alamos National Laboratory (LANL) under contract No.
@@ -38,6 +37,7 @@ that such material is not subject to copyright protection.
 //Tim's added comments for the port to Java are not
 //
 ////////////////////////////////////////////////////////////////////////////
+package com.meerkat;
 
 import java.util.Date;
 
@@ -259,7 +259,9 @@ public class TSAGeoMag {
      * bx is the east west field intensity
      * bz is the vertical field intensity positive downward
      */
-    private final double bx, by, bz;
+    private final double bx, by;
+    @SuppressWarnings("FieldCanBeLocal")
+    private final double bz;
 
     /**
      * <p><b>Purpose:</b>  Computes the declination (dec), inclination (dip), total intensity (ti) and

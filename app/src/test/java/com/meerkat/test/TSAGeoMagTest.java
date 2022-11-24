@@ -1,3 +1,15 @@
+/*
+ * Copyright 2022 Frank van der Hulst drifter.frank@gmail.com
+ *
+ * This software is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+ * https://creativecommons.org/licenses/by-nc/4.0/
+ *
+ * You are free to share (copy and redistribute the material in any medium or format) and
+ * adapt (remix, transform, and build upon the material) this software under the following terms:
+ * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+ * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+ * NonCommercial — You may not use the material for commercial purposes.
+ */
 package com.meerkat.test;
 
 import static org.junit.Assert.assertEquals;
@@ -79,7 +91,7 @@ public class TSAGeoMagTest {
         assertEquals(   1.78, TSAGeoMag.getDeclination(  27,   65, new Date(2022-1900, 6, 1), 6000) , 5.0E-1);
         assertEquals(-101.49, TSAGeoMag.getDeclination( -72,   95, new Date(2022-1900, 6, 1), 3000) , 5.0E-1);
         assertEquals(  18.90, TSAGeoMag.getDeclination( -46,  -85, new Date(2022-1900, 6, 1), 6000) , 5.0E-1);
-        assertEquals( -16.65, TSAGeoMag.getDeclination( -13,  -59, new Date(2022-1900, 6, 1),  0000) , 5.0E-1);
+        assertEquals( -16.65, TSAGeoMag.getDeclination( -13,  -59, new Date(2022-1900, 6, 1),  0) , 5.0E-1);
         assertEquals(   1.92, TSAGeoMag.getDeclination(  66, -178, new Date(2022-1900, 6, 1), 16000) , 5.0E-1);
         assertEquals( -64.66, TSAGeoMag.getDeclination( -87,   38, new Date(2022-1900, 6, 1), 2000) , 5.0E-1);
 
