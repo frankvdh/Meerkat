@@ -3,6 +3,8 @@
 This is an Android app to display traffic information received from an ADS-B In device such as PingUSB https://uavionix.com/products/pingusb/
 The objective is to use this app in an aircraft to detect nearby traffic equipped with ADS-B Out.
 
+Project Status & Functionality
+------------------------------
 This is very much in the pre-release state. Currently it does
 * Connect to a PingUSB device via WiFi
 * Receive GDL90 messages from the device, including Traffic and Ownship messages
@@ -33,6 +35,8 @@ Each icon can also optionally (controlled by Settings) have associated with it:
 * A "linear" predicted track, assuming the aircraft continues at the same speed, rate of climb, and track for the next 60 seconds (settable).
 * A "polynomial" predicted track, based on the previous 60 (settable) seconds, so it predicts a turning flight path.
 
+Contributing & Licensing
+------------------------
 This software is free (as in beer AND speech). I figure that, although it could maybe sold for a few hundred dollars total, it is way more
 valuable to me (as a pilot) if it saves one person from running into me mid-air. So, it's free. It is made available under a Creative Commons 
 Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License. https://creativecommons.org/licenses/by-nc/4.0/
