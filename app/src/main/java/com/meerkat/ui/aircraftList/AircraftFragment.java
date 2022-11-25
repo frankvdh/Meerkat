@@ -9,7 +9,7 @@
  * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
  * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
  * NonCommercial — You may not use the material for commercial purposes.
- */package com.meerkat.ui.aircraft;
+ */package com.meerkat.ui.aircraftList;
 
 import static com.meerkat.log.Log.useLogWriter;
 import static com.meerkat.log.Log.viewLogWriter;

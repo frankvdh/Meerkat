@@ -86,7 +86,7 @@ public class Settings {
         } catch(Exception e) {
             speedUnits = Speed.Units.KNOTS;
         }
-        simulate = prefs.getBoolean("simulate", false);
+        simulate = prefs.getBoolean("simulate", true);
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         trackUp = prefs.getBoolean("trackUp", true);
         Log.i("Settings loaded");

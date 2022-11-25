@@ -81,7 +81,7 @@ public class AircraftLayer extends Drawable {
     void drawBitmap(Canvas canvas, Bitmap bitmap, float x, float y, float angle, int fg) {
         Matrix matrix = new Matrix();
         // Rotate about centre of icon & translate to aircraft position
-        matrix.setRotate(angle, bitmap.getWidth() / 2f, bitmap.getHeight() / 2f);
+        matrix.setRotate(trackUp && Gps.location.hasBearing() ? angle - Gps.location.getBearing(): angle, bitmap.getWidth() / 2f, bitmap.getHeight() / 2f);
         matrix.postTranslate(x - bitmap.getWidth() / 2f, y - bitmap.getHeight() / 2f);
         canvas.drawBitmap(replaceColor(bitmap, fg), matrix, null);
     }
@@ -118,7 +118,7 @@ public class AircraftLayer extends Drawable {
     }
 
     Point screenPoint(Polar polar) {
-        double b = Position.bearingToRad(polar.bearing);
+        double b = Position.bearingToRad(trackUp && Gps.location.hasBearing() ? polar.bearing - Gps.location.getBearing(): polar.bearing);
         // new point is relative to (0, 0) of the canvas, which is at the ownShip position
         return new Point((int) (cos(b) * polar.distance.value * MapFragment.scaleFactor), (int) (-sin(b) * polar.distance.value * MapFragment.scaleFactor));
     }
@@ -201,12 +201,6 @@ public class AircraftLayer extends Drawable {
                 }
             }
         }
-        if (aircraftPoint != null) {
-            int lineHeight = (int) (textPaint.getTextSize() + 1);
-            String[] text = {String.format(Locale.ENGLISH, "%s%c", v.getLabel(), v.current.isCrcValid() ? ' ' : '!'),
-                    isNaN(polar.altDifference.value) ? "" : String.format(Locale.ENGLISH, "%s", polar.altDifference)};
-            drawText(canvas, aircraftPoint, lineHeight, text, bounds, bmpWidth);
-        }
 
         long now = Calendar.getInstance().getTime().getTime();
         if (historySeconds > 0) {
@@ -224,10 +218,24 @@ public class AircraftLayer extends Drawable {
                 }
             }
         }
+        // Text is drawn horizontally
+        if (aircraftPoint != null) {
+            int lineHeight = (int) (textPaint.getTextSize() + 1);
+            String[] text = {String.format(Locale.ENGLISH, "%s%c", v.getLabel(), v.current.isCrcValid() ? ' ' : '!'),
+                    isNaN(polar.altDifference.value) ? "" : String.format(Locale.ENGLISH, "%s", polar.altDifference)};
+            drawText(canvas, aircraftPoint, lineHeight, text, bounds, bmpWidth);
+        }
+
     }
 
+    public void rotatePoint(Point point, double angle) {
+        int oldX = point.x, oldY = point.y;
+        point.x = (int) (oldX * Math.cos(angle) - oldY * Math.sin(angle));
+        point.y = (int) (oldX * Math.sin(angle) + oldY * Math.cos(angle));
+    }
 
     private void drawText(Canvas canvas, final Point aircraftPos, int textHeight, String[] text, Rect bounds, int bmpWidth) {
+
         // Assume first line of text is always the longest
         float textWidth = textPaint.measureText(text[0]);
         if (aircraftPos.x + bmpWidth / 2f + textWidth <= bounds.left) return;
@@ -251,7 +259,7 @@ public class AircraftLayer extends Drawable {
         if (y < bounds.top + textHeight) y = bounds.top + textHeight;
         else if (y >= bounds.bottom - textHeight)
             y = bounds.bottom - textHeight - 1;
-
+        // Rotate canvas back so that text is horizontal
         canvas.drawText(text[0], x, y, textPaint);
         if (!text[1].isBlank()) canvas.drawText(text[1], x, y + textHeight, textPaint);
     }

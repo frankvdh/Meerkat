@@ -41,7 +41,11 @@ public class Simulator {
             new Flight(-1, "ownship", Gdl90Message.Emitter.Light, new Polar(new Distance(0f, Distance.Units.NM), 0, new Height(5000f, Height.Units.FT)),
                     new Speed(100f, Speed.Units.KNOTS), 20, true, 5,
                     new Action[]{
-                            new Action(0, 0, 0, 300, true),
+                            new Action(0, 0, 0, 6, false),
+                            new Action(0, 0, 1000, 12, true),
+                            new Action(0, 360, 5000, 120, true),
+                            new Action(0, 0, 0, 5, true),
+                            new Action(0, -360, -10000, 120, true),
                     });
 
     private static final Flight[] traffic = {

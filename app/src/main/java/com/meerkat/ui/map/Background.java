@@ -59,8 +59,6 @@ public class Background extends Drawable {
         // All screen locations are relative to this point
         canvas.translate(xCentre, getBounds().height() * (100f - screenYPosPercent) / 100);
         canvas.drawLine(-xCentre, 0, xCentre, 0, circlePaint);
-        if (trackUp && Gps.location.hasBearing())
-            canvas.rotate(Gps.location.getBearing());
         canvas.drawCircle(0, 0, 100, redPaint);
         float radiusStep = circleRadiusStep * MapFragment.scaleFactor;
         for (float rad = radiusStep; rad < getBounds().height(); rad += radiusStep) {

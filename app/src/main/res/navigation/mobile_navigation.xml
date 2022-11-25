@@ -6,7 +6,7 @@ android:id="@+id/mobile_navigation"
 app:startDestination="@+id/navigation_map">
 <fragment
     android:id="@+id/navigation_aircraft"
-    android:name="com.meerkat.ui.aircraft.AircraftFragment"
+    android:name="com.meerkat.ui.aircraftList.AircraftFragment"
     android:label="Aircraft"
     tools:layout="@layout/fragment_aircraft" />
 
