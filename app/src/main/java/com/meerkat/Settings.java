@@ -53,6 +53,7 @@ public class Settings {
 
     public static void load(Context context) {
         prefs = context.getSharedPreferences("com.meerkat_preferences", MODE_PRIVATE);
+        boolean noPrefsSaved = prefs.getString("wifiName", null) == null;
         wifiName = prefs.getString("wifiName", "Ping-6C7A");
         port = prefs.getInt("port", 4000);
         showLog = prefs.getBoolean("showLog", true);
@@ -61,7 +62,7 @@ public class Settings {
         logRawMessages = prefs.getBoolean("logRawMessages", false);
         logDecodedMessages = prefs.getBoolean("logDecodedMessages", false);
         showLinearPredictionTrack = prefs.getBoolean("showLinearPredictionTrack", true);
-        showPolynomialPredictionTrack = prefs.getBoolean("showPolynomialPredictionTrack", false);
+        showPolynomialPredictionTrack = prefs.getBoolean("showPolynomialPredictionTrack", true);
         historySeconds = prefs.getInt("historySeconds", 60);
         purgeSeconds = prefs.getInt("historySeconds", 60);
         predictionSeconds = prefs.getInt("predictionSeconds", 60);
@@ -89,6 +90,8 @@ public class Settings {
         simulate = prefs.getBoolean("simulate", true);
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         trackUp = prefs.getBoolean("trackUp", true);
+        if (noPrefsSaved)
+            save();
         Log.i("Settings loaded");
     }
 
