@@ -32,9 +32,19 @@ public class Simulator {
     private int actionIndex;
     private Action action;
     private final Flight flight;
+    private static final Position initialPos = new Position("gps", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0, new Height(5000f, Height.Units.FT), new Speed(100f, Speed.Units.KNOTS), 350f, 0f, true, true, new Date().getTime());
+
+    private final boolean isGps;
     final ScheduledFuture<?> thread;
 
-    private static final Flight[] flights = {
+    private static final Flight ownShip =
+            new Flight(-1, "ownship", Gdl90Message.Emitter.Light, new Polar(new Distance(0f, Distance.Units.NM), 0, new Height(5000f, Height.Units.FT)),
+                    new Speed(100f, Speed.Units.KNOTS), 20, true, 5,
+                    new Action[]{
+                            new Action(0, 0, 0, 300, true),
+                    });
+
+    private static final Flight[] traffic = {
             new Flight(1, "test", Gdl90Message.Emitter.Light, new Polar(new Distance(5f, Distance.Units.NM), 0, new Height(0f, Height.Units.FT)),
                     new Speed(100f, Speed.Units.KNOTS), 0, false, 0,
                     new Action[]{
@@ -46,7 +56,7 @@ public class Simulator {
                     }),
 
             new Flight(2, "ZK-HVY", Gdl90Message.Emitter.Heavy, new Polar(new Distance(20f, Distance.Units.NM), 225, new Height(20000f, Height.Units.FT)),
-                    new Speed(500f, Speed.Units.KNOTS), 20, true,5,
+                    new Speed(500f, Speed.Units.KNOTS), 20, true, 5,
                     new Action[]{
                             new Action(0, 0, 0, 300, true),
                     }),
@@ -68,7 +78,7 @@ public class Simulator {
                     }),
 
             new Flight(5, "UAV", Gdl90Message.Emitter.UAV, new Polar(new Distance(15f, Distance.Units.NM), -30, new Height(0f, Height.Units.FT)),
-                    new Speed(0f, Speed.Units.KNOTS), 0,  true, 0,
+                    new Speed(0f, Speed.Units.KNOTS), 0, true, 0,
                     new Action[]{
                             new Action(10, 0, 500, 10, true),
                             new Action(0, 0, -500, 10, true),
@@ -90,17 +100,19 @@ public class Simulator {
     };
 
 
-    private Simulator(Flight f) {
+    private Simulator(Flight f, boolean isGps) {
         flight = f;
         actionIndex = -1;
         nextActionTime = 0;
+        this.isGps = isGps;
         Log.i("new Sim: " + flight.position.toString());
         thread = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::act, flight.initialDelay, 1, SECONDS);
     }
 
     public static void start() {
-        for (Flight f : flights)
-            new Simulator(f);
+        new Simulator(ownShip, true);
+        for (Flight f : traffic)
+            new Simulator(f, false);
     }
 
     private void act() {
@@ -121,12 +133,15 @@ public class Simulator {
         flight.position.setTrack((flight.position.getTrack() + action.turn) % 360);
         flight.position.setVVel(flight.position.getVVel() + action.climb);
         flight.position.setTime(new Date().getTime());
-        Polar p = new Polar(new Distance(flight.position.getSpeedMps(), Distance.Units.M), flight.position.getTrack(), new Height(flight.position.getVVel() * 1/60, Height.Units.FT));
+        Polar p = new Polar(new Distance(flight.position.getSpeedMps(), Distance.Units.M), flight.position.getTrack(), new Height(flight.position.getVVel() * 1 / 60, Height.Units.FT));
         flight.position.moveBy(p);
-        VehicleList.vehicleList.upsert(flight.callsign, flight.id, flight.position.linearPredict(1), flight.emitterType);
+        if (isGps)
+            Gps.location.set(flight.position);
+        else
+            VehicleList.vehicleList.upsert(flight.callsign, flight.id, flight.position.linearPredict(1), flight.emitterType);
     }
 
-    private static class Flight {
+    static class Flight {
         final Position position;
         final int id;
         final String callsign;
@@ -140,7 +155,7 @@ public class Simulator {
             this.emitterType = emitterType;
             this.initialDelay = initialDelay;
             this.actions = actions;
-            position = new Position(Gps.location, p);
+            position = new Position(initialPos, p);
             position.setSpeed(speed);
             position.setTrack(track);
             position.setVVel(0);
@@ -149,7 +164,7 @@ public class Simulator {
 
     }
 
-    private static class Action {
+    static class Action {
         final float accel;
         final float turn;
         final float climb;

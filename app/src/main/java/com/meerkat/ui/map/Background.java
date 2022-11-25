@@ -12,9 +12,7 @@
  */
 package com.meerkat.ui.map;
 
-import static com.meerkat.Settings.circleRadiusStep;
-import static com.meerkat.Settings.screenWidth;
-import static com.meerkat.Settings.screenYPosPercent;
+import static com.meerkat.Settings.*;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -29,6 +27,7 @@ import android.graphics.drawable.Drawable;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.meerkat.Gps;
 import com.meerkat.log.Log;
 
 public class Background extends Drawable {
@@ -54,11 +53,16 @@ public class Background extends Drawable {
     public void draw(@NonNull Canvas canvas) {
         Log.d("draw background");
         canvas.drawColor(Color.WHITE, PorterDuff.Mode.SRC);
-        canvas.drawLine(getBounds().width() / 2f, 0, getBounds().width() / 2f, getBounds().height(), circlePaint);
-        canvas.translate(getBounds().width() / 2f, getBounds().height() * (100f - screenYPosPercent) / 100);
-        canvas.drawLine(-getBounds().width() / 2f, 0, getBounds().width() / 2f, 0, circlePaint);
+        float xCentre = getBounds().width() / 2f;
+        canvas.drawLine(xCentre, 0, xCentre, getBounds().height(), circlePaint);
+        // Translate canvas so that 0,0 is at specified location
+        // All screen locations are relative to this point
+        canvas.translate(xCentre, getBounds().height() * (100f - screenYPosPercent) / 100);
+        canvas.drawLine(-xCentre, 0, xCentre, 0, circlePaint);
+        if (trackUp && Gps.location.hasBearing())
+            canvas.rotate(Gps.location.getBearing());
         canvas.drawCircle(0, 0, 100, redPaint);
-        float radiusStep = circleRadiusStep / screenWidth * getBounds().width() / 2f;
+        float radiusStep = circleRadiusStep * MapFragment.scaleFactor;
         for (float rad = radiusStep; rad < getBounds().height(); rad += radiusStep) {
             canvas.drawCircle(0, 0, rad, circlePaint);
         }

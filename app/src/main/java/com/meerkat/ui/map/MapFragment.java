@@ -46,16 +46,13 @@ public class MapFragment extends Fragment {
         binding = FragmentMapBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         ImageView mapView = binding.mapview;
-
-        // Attach a pinch zoom listener to the map view
-        if (scaleGestureDetector == null) {
-            PinchListener pinchListener = new PinchListener(mapView);
-            scaleGestureDetector = new ScaleGestureDetector(getContext(), pinchListener);
-        }
-
         background = new Background();
         layers = new LayerDrawable(new Drawable[]{background});
-         mapView.setImageDrawable(layers);
+        mapView.setImageDrawable(layers);
+
+        // Attach a pinch zoom listener to the map view
+        scaleGestureDetector = new ScaleGestureDetector(getContext(), new PinchListener(mapView));
+        mapView.setOnTouchListener(handleTouch);
         Log.d("finished creating");
         return root;
     }
@@ -63,36 +60,24 @@ public class MapFragment extends Fragment {
     @Override
     public void onViewStateRestored(Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
-        scaleFactor = getWidth(getContext())/ screenWidth/2;
+        scaleFactor = getWidth(getContext()) / screenWidth / 2;
     }
 
     //get width screen
-    public static int getWidth(Context context){
+    public static int getWidth(Context context) {
         return context.getResources().getDisplayMetrics().widthPixels;
     }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
     }
 
-    public boolean onTouchEvent(MotionEvent event) {
+    private final View.OnTouchListener handleTouch = (view, event) -> {
         // Dispatch activity on touch event to the scale gesture detector.
-        scaleGestureDetector.onTouchEvent(event);
-        return true;
-    }
-
-//    @Override
-//    public boolean performClick() {
-//        super.performClick();
-//        return false;
-//    }
-//
-//    @Override public boolean dispatchTouchEvent(MotionEvent event) {
-//        mLastTouchPoint = new Point((int) event.getX(), (int) event.getY());
-//        postInvalidate();
-//        return super.dispatchTouchEvent(event);
-//    }
+        return scaleGestureDetector.onTouchEvent(event);
+    };
 
     public static void refresh(AircraftLayer layer) {
         if (layer == null)
@@ -104,7 +89,6 @@ public class MapFragment extends Fragment {
     /* This listener is used to listen pinch zoom gesture. */
     private static class PinchListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
 
-        private final static String TAG_PINCH_LISTENER = "PINCH_LISTENER";
         private final ImageView mapView;
 
         // The default constructor pass context and imageview object.
@@ -115,10 +99,6 @@ public class MapFragment extends Fragment {
         // When pinch zoom gesture occurred.
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
-            if (detector == null) {
-                Log.e(TAG_PINCH_LISTENER, "Pinch listener onScale detector parameter is null.");
-                return false;
-            }
             // Scale the image with pinch zoom value.
             scaleFactor *= detector.getScaleFactor() * mapView.getScaleX();
             refresh(null);

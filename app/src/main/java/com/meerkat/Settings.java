@@ -49,16 +49,17 @@ public class Settings {
     public static Speed.Units speedUnits;
     public static boolean simulate;
     public static String countryCode;
+    public static boolean trackUp;
 
     public static void load(Context context) {
         prefs = context.getSharedPreferences("com.meerkat_preferences", MODE_PRIVATE);
-        wifiName = null;//prefs.getString("wifiName", "Ping-6C7A");
+        wifiName = prefs.getString("wifiName", "Ping-6C7A");
         port = prefs.getInt("port", 4000);
         showLog = prefs.getBoolean("showLog", true);
         fileLog = prefs.getBoolean("fileLog", true);
-        logLevel = D;//prefs.getInt("logLevel", I);
-        logRawMessages = true;//prefs.getBoolean("logRawMessages", false);
-        logDecodedMessages = true;//prefs.getBoolean("logDecodedMessages", false);
+        logLevel = prefs.getInt("logLevel", I);
+        logRawMessages = prefs.getBoolean("logRawMessages", false);
+        logDecodedMessages = prefs.getBoolean("logDecodedMessages", false);
         showLinearPredictionTrack = prefs.getBoolean("showLinearPredictionTrack", true);
         showPolynomialPredictionTrack = prefs.getBoolean("showPolynomialPredictionTrack", false);
         historySeconds = prefs.getInt("historySeconds", 60);
@@ -85,8 +86,9 @@ public class Settings {
         } catch(Exception e) {
             speedUnits = Speed.Units.KNOTS;
         }
-        simulate = false;//prefs.getBoolean("simulate", true);
+        simulate = prefs.getBoolean("simulate", false);
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
+        trackUp = prefs.getBoolean("trackUp", true);
         Log.i("Settings loaded");
     }
 
@@ -115,6 +117,7 @@ public class Settings {
         edit.putString("speedUnits", String.valueOf(speedUnits));
         edit.putBoolean("simulate", simulate);
         edit.putString("countryCode", countryCode);
+        edit.putBoolean("trackUp", trackUp);
         edit.apply();
         Log.i("Settings saved");
     }

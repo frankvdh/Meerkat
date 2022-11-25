@@ -13,7 +13,7 @@
 
     <fragment
         android:id="@+id/navigation_map"
-        android:name="com.mexample.layers.MapFragment"
+        android:name="com.meerkat.ui.map.MapFragment"
         android:label="Map"
         tools:layout="@layout/fragment_map" />
 

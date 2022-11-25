@@ -3,4 +3,12 @@
 
     <string name="aircraft">Aircraft</string>
     <string name="scan_wifi">Scan Wifi</string>
+    <string name="wifi_network">Wifi network</string>
+    <string name="callsign">Callsign</string>
+    <string name="distance">Distance</string>
+    <string name="bearing">Bearing</string>
+    <string name="altitude">Altitude</string>
+    <string name="track">Track</string>
+    <string name="speed">Speed</string>
+    <string name="vertical_speed">Vertical Speed</string>
 </resources>

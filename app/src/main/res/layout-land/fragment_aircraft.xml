@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FBDEDE"
     android:foregroundGravity="top"
     android:textDirection="locale">
 
@@ -39,7 +38,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_tiny"
                 android:background="@color/teal_700"
-                android:text=" Callsign "
+                android:text="@string/callsign"
                 android:textAlignment="center"
                 android:textColor="@color/white"
                 android:textSize="24sp"
@@ -49,7 +48,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@color/teal_700"
-                android:text=" Distance "
+                android:text="@string/distance"
                 android:textColor="@color/white"
                 android:textSize="24sp" />
 
@@ -57,7 +56,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@color/teal_700"
-                android:text=" Bearing "
+                android:text="@string/bearing"
                 android:textColor="@color/white"
                 android:textSize="24sp" />
 
@@ -65,7 +64,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@color/teal_700"
-                android:text=" Altitude "
+                android:text="@string/altitude"
                 android:textColor="@color/white"
                 android:textSize="24sp" />
 
@@ -73,7 +72,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@color/teal_700"
-                android:text=" Track "
+                android:text="@string/track"
                 android:textColor="@color/white"
                 android:textSize="24sp" />
 
@@ -81,7 +80,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@color/teal_700"
-                android:text=" Speed "
+                android:text="@string/speed"
                 android:textColor="@color/white"
                 android:textSize="24sp" />
 
@@ -90,7 +89,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/margin_tiny"
                 android:background="@color/teal_700"
-                android:text=" Vertical Speed "
+                android:text="@string/vertical_speed"
                 android:textColor="@color/white"
                 android:textSize="24sp" />
         </TableRow>

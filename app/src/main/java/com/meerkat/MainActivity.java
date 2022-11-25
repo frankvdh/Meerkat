@@ -52,24 +52,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-/*
-TODO
-Allow changing the display orientation to "Track up" or "Heading up"
-Keep screen on
-Use a theme to allow black background
-Digital filtering of path to predict track
-Ownship track and prediction
-Check that Settings are saved and loaded correctly
-Check that log files are written correctly
-Lots more testing
-Expand to be able to use other Wifi-enabled ADS-B In devices
-Turn off the simulator
-Add a Settings screen to enable all the settings to be changed interactively instead of needing to edit the text file
-Allow other units for vertical speed (currently only fpm)
-Improve the code style
-Port to Apple IOS
-Write some documentation
- */
 public class MainActivity extends AppCompatActivity {
 
     static boolean firstRun = true;

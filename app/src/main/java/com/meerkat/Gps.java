@@ -21,7 +21,12 @@ import android.location.LocationManager;
 import android.os.IBinder;
 import android.widget.Toast;
 
+import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
+import com.meerkat.measure.Distance;
+import com.meerkat.measure.Height;
+import com.meerkat.measure.Polar;
+import com.meerkat.measure.Speed;
 import com.meerkat.ui.map.MapFragment;
 
 import java.util.Locale;
@@ -44,6 +49,8 @@ public class Gps extends Service implements LocationListener {
     @SuppressLint("MissingPermission")
     public Gps(LocationManager locationManager) {
         location = new Location("gps");
+        if (Settings.simulate)
+            return;
         try {
             // getting GPS status
             isEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -77,7 +84,7 @@ public class Gps extends Service implements LocationListener {
         synchronized (Gps.location) {
             Gps.location.set(location);
         }
-        Log.d("GPS: " + String.format(Locale.ENGLISH, "(%.5f, %.5f) @%.0fm, %.0f %3.0f", location.getLatitude(), location.getLongitude(),location.getAltitude(), location.getSpeed(), location.getBearing()));
+        Log.d("GPS: " + String.format(Locale.ENGLISH, "(%.5f, %.5f) @%.0fm, %.0f %3.0f", location.getLatitude(), location.getLongitude(), location.getAltitude(), location.getSpeed(), location.getBearing()));
         MapFragment.refresh(null);
     }
 
