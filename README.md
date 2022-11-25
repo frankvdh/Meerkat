@@ -100,10 +100,9 @@ TO DO
 * Port to Apple IOS.
 * Keep screen on
 * Lots more testing
-  Turn off the simulator
-  Add a Settings screen to enable all the settings to be changed interactively instead of needing to edit the text file
-  Allow other units for vertical speed (currently only fpm)
-  Improve the code style
-  Port to Apple IOS
-  Write some documentation
-  */
+* Allow other units for vertical speed (currently only fpm)
+* Improve the code style
+* Port to Apple IOS
+* Write some documentation
+* Add a "Quit" button
+More TODO
