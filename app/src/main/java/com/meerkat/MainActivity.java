@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
             VehicleList.vehicleList = new VehicleList();
 
             if (simulate) {
-                Simulator.start();
+                Simulator.startAll();
                 firstRun = false;
                 return;
             }

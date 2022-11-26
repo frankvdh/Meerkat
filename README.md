@@ -60,26 +60,26 @@ Apart from wifiName, there is currently no way for the user to alter these setti
 
 User settings
 -------------
-| User Setting name               | Usage                                                                                                                                                                                             | Default value                                     |
-|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
+| User Setting name               | Usage                                                                                                                                                                                             | Default value                                   |
+|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
 | wifiName                        | ssId of the Wifi network established by the device (e.g. Ping-6C7A for my PingUSB). Automatically saved when comms are established                                                                | Ping-6C7A -- will be null in the released version |
-| port                            | TCP port for comms from the device                                                                                                                                                                | 4000 (PingUSB default)                            |
-| showLinearPredictionTrack       | Whether to display the "linear" predicted track for each aircraft on the screen. This assumes that the aircraft will continue at the same speed, rate of climb, and track for the next 60 seconds | true                                              |
-| showPolynomialPredictionTrack   | Whether to display the "polynomial" predicted track for each aircraft on the screen. This predicts accelerating, turning, climbing path for the next 60 seconds                                   | true                                              |
-| historySeconds                  | How many seconds of history track to display for each aircraft. Also used for polynomial prediction                                                                                               | 60                                                |
-| purgeSeconds                    | How many seconds to wait before an aircraft is removed from the display                                                                                                                           | 60                                                |
-| predictionSeconds               | How many seconds into the future to predict the track of each aircraft. Applies to both linear and polynomial prediction                                                                          | 60                                                |
-| polynomialPredictionStepSeconds | How many seconds each step of the polynomial prediction is                                                                                                                                        | 6                                                 |
-| gradientMaximumFeet             | How many feet above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green                                                                                         | 5000                                              |
-| gradientMinimumFeet             | How many feet above/below the phone's GPS altitude an aircraft displays as completely red                                                                                                         | 1000                                              |
-| screenYPosPercent               | Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height                                                                                              | 25%                                               |
-| distanceUnits                   | User's preferred distance units KM, NM, M                                                                                                                                                         | NM                                                |
-| screenWidth                     | Distance that the width of the screen represents in the user's distance units                                                                                                                     | 10                                                |
-| circleRadiusStep                | Distance apart of the circles on the screen in the user's distance units                                                                                                                          | 5                                                 |
-| altUnits                        | User's preferred altitude units FT, M                                                                                                                                                             | FT                                                |
-| speedUnits                      | User's preferred speed units KTS, MPH, KPH                                                                                                                                                        | KPH                                               |
-| countryCode                     | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed.                                                                      | ZK                                                |
-| trackUp                         | Display orientation... track-up or North-up                                                                                                                                                       | true |
+| port                            | TCP port for comms from the device                                                                                                                                                                | 4000 (PingUSB default)                          |
+| showLinearPredictionTrack       | Whether to display the "linear" predicted track for each aircraft on the screen. This assumes that the aircraft will continue at the same speed, rate of climb, and track for the next 60 seconds | true                                            |
+| showPolynomialPredictionTrack   | Whether to display the "polynomial" predicted track for each aircraft on the screen. This predicts accelerating, turning, climbing path for the next 60 seconds                                   | true                                            |
+| historySeconds                  | How many seconds of history track to display for each aircraft. Also used for polynomial prediction                                                                                               | 60                                              |
+| purgeSeconds                    | How many seconds to wait before an aircraft is removed from the display                                                                                                                           | 60                                              |
+| predictionSeconds               | How many seconds into the future to predict the track of each aircraft. Applies to both linear and polynomial prediction                                                                          | 60                                              |
+| polynomialPredictionStepSeconds | How many seconds each step of the polynomial prediction is                                                                                                                                        | 6                                               |
+| gradientMaximumDiff             | How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green                                                                             | 5000                                          |
+| gradientMinimumDiff             | How many [altitude unit]s above/below the phone's GPS altitude an aircraft displays as completely red                                                                                             | 1000                                            |
+| screenYPosPercent               | Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height                                                                                              | 25%                                             |
+| distanceUnits                   | User's preferred distance units KM, NM, M                                                                                                                                                         | NM                                              |
+| screenWidth                     | Distance that the width of the screen represents in the user's distance units                                                                                                                     | 10                                              |
+| circleRadiusStep                | Distance apart of the circles on the screen in the user's distance units                                                                                                                          | 5                                               |
+| altUnits                        | User's preferred altitude units FT, M                                                                                                                                                             | FT                                              |
+| speedUnits                      | User's preferred speed units KTS, MPH, KPH                                                                                                                                                        | KPH                                             |
+| countryCode                     | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed.                                                                      | ZK                                              |
+| trackUp                         | Display orientation... track-up or North-up                                                                                                                                                       | true                                            |
 
 Debugging settings
 ------------------
@@ -105,10 +105,10 @@ TO DO
 * Internationalisation
 * Port to Apple IOS.
 * Keep screen on
-* Lots more testing
 * Allow other units for vertical speed (currently only fpm)
 * Improve the code style
 * Port to Apple IOS
 * Write some documentation
 * Add a "Quit" button
 * Add a button to toggle between the display orientations
+* Lots more testing

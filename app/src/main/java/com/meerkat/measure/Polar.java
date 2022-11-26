@@ -16,6 +16,8 @@ import static com.meerkat.Settings.distanceUnits;
 
 import android.location.Location;
 
+import androidx.annotation.NonNull;
+
 public class Polar {
     public double bearing;
     public final Distance distance;
@@ -32,11 +34,15 @@ public class Polar {
         altDifference.set(point.isAirborne() ?(float) (point.getAltitude()-base.getAltitude()) / altUnits.factor : Float.NaN, altUnits);
     }
 
-
     public Polar(Distance d, double b, Height a) {
         distance = d;
         bearing = b;
         altDifference = a;
+    }
+
+    @NonNull
+    public String toString() {
+        return String.format("%s @ %s, %s", distance, bearing, altDifference);
     }
 }
 

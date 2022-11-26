@@ -124,17 +124,17 @@ public class Position extends Location {
             return this;
         float bearing = (float) p.bearing;
         float distance = p.distance.value * p.distance.units.factor;
-        var brngRad = latLonDegToRad(bearing);
+        var bearingRad = latLonDegToRad(bearing);
         var latRad = latLonDegToRad(lat);
         var lonRad = latLonDegToRad(lon);
-        var distFrac = distance / 6371000d; // earth Radius In Metres
+        var distFraction = distance / 6371000d; // earth Radius In Metres
         var cosLat = cos(latRad);
         var sinLat = sin(latRad);
-        var sinDist = sin(distFrac);
-        var cosDist = cos(distFrac);
+        var sinDist = sin(distFraction);
+        var cosDist = cos(distFraction);
 
-        var latitudeResult = asin(sinLat * cosDist + cosLat * sinDist * cos(brngRad));
-        var a = atan2(sin(brngRad) * sinDist * cosLat, cosDist - sinLat * sin(latitudeResult));
+        var latitudeResult = asin(sinLat * cosDist + cosLat * sinDist * cos(bearingRad));
+        var a = atan2(sin(bearingRad) * sinDist * cosLat, cosDist - sinLat * sin(latitudeResult));
         var longitudeResult = (lonRad + a + 3 * PI) % (2 * PI) - PI;
          setProvider("predicted from " + getProvider());
         setLatitude(rad2latLonDeg(latitudeResult));
@@ -147,7 +147,7 @@ public class Position extends Location {
 
     //        Return new Point given initial coordinates, altitude, speed and track, and vertical speed
     public Position linearPredict(int seconds) {
-        Polar p = new Polar(new Distance(getSpeedMps()*seconds, Distance.Units.M), getTrack(), new Height(vVelFpm * seconds/60, Height.Units.FT));
+        Polar p = new Polar(new Distance(getSpeedMps()*seconds, Distance.Units.M), getTrack(), new Height(vVelFpm * seconds/60f, Height.Units.FT));
         return new Position(this).moveBy(p);
     }
 

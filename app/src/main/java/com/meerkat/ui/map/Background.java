@@ -12,7 +12,8 @@
  */
 package com.meerkat.ui.map;
 
-import static com.meerkat.Settings.*;
+import static com.meerkat.Settings.circleRadiusStep;
+import static com.meerkat.Settings.screenYPosPercent;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -27,7 +28,6 @@ import android.graphics.drawable.Drawable;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.meerkat.Gps;
 import com.meerkat.log.Log;
 
 public class Background extends Drawable {
@@ -51,7 +51,7 @@ public class Background extends Drawable {
 
     @Override
     public void draw(@NonNull Canvas canvas) {
-        Log.d("draw background");
+        Log.v("draw background");
         canvas.drawColor(Color.WHITE, PorterDuff.Mode.SRC);
         float xCentre = getBounds().width() / 2f;
         canvas.drawLine(xCentre, 0, xCentre, getBounds().height(), circlePaint);

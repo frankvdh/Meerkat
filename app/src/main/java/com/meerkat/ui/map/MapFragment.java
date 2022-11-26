@@ -19,7 +19,6 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,20 +33,17 @@ import com.meerkat.log.Log;
 public class MapFragment extends Fragment {
 
     private FragmentMapBinding binding;
-    Background background;
-    public static LayerDrawable layers;
+    static final Background background = new Background();
+    public static final LayerDrawable layers = new LayerDrawable(new Drawable[]{background});
     static float scaleFactor;
     // Used to detect pinch zoom gesture.
     private ScaleGestureDetector scaleGestureDetector = null;
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d("createView");
-
         binding = FragmentMapBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         ImageView mapView = binding.mapview;
-        background = new Background();
-        layers = new LayerDrawable(new Drawable[]{background});
         mapView.setImageDrawable(layers);
 
         // Attach a pinch zoom listener to the map view
@@ -75,6 +71,7 @@ public class MapFragment extends Fragment {
     }
 
     private final View.OnTouchListener handleTouch = (view, event) -> {
+//        getView().performClick();
         // Dispatch activity on touch event to the scale gesture detector.
         return scaleGestureDetector.onTouchEvent(event);
     };

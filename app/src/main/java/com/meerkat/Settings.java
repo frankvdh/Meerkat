@@ -39,8 +39,8 @@ public class Settings {
     public static int purgeSeconds;
     public static int predictionSeconds;
     public static int polynomialPredictionStepSeconds;
-    public static int gradientMaximumFeet;
-    public static int gradientMinimumFeet;
+    public static int gradientMaximumDiff;
+    public static int gradientMinimumDiff;
     public static int screenYPosPercent;
     public static float screenWidth;
     public static float circleRadiusStep;
@@ -67,8 +67,8 @@ public class Settings {
         purgeSeconds = prefs.getInt("historySeconds", 60);
         predictionSeconds = prefs.getInt("predictionSeconds", 60);
         polynomialPredictionStepSeconds = prefs.getInt("polynomialPredictionStepSeconds", 10);
-        gradientMaximumFeet = prefs.getInt("gradientMaximumFeet", 5000);
-        gradientMinimumFeet = prefs.getInt("gradientMinimumFeet", 1000);
+        gradientMaximumDiff = prefs.getInt("gradientMaximumDiff", 5000);
+        gradientMinimumDiff = prefs.getInt("gradientMinimumDiff", 1000);
         screenYPosPercent = prefs.getInt("screenYPosPercent", 25);
         screenWidth = prefs.getFloat("screenWidth", 10);
         circleRadiusStep = prefs.getFloat("circleRadiusStep", 5);
@@ -87,7 +87,7 @@ public class Settings {
         } catch(Exception e) {
             speedUnits = Speed.Units.KNOTS;
         }
-        simulate = prefs.getBoolean("simulate", true);
+        simulate = prefs.getBoolean("simulate", false);
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         trackUp = prefs.getBoolean("trackUp", true);
         if (noPrefsSaved)
@@ -110,8 +110,8 @@ public class Settings {
         edit.putInt("purgeSeconds", purgeSeconds);
         edit.putInt("predictionSeconds", predictionSeconds);
         edit.putInt("polynomialPredictionStepSeconds", polynomialPredictionStepSeconds);
-        edit.putInt("gradientMaximumFeet", gradientMaximumFeet);
-        edit.putInt("gradientMinimumFeet", gradientMinimumFeet);
+        edit.putInt("gradientMaximumDiff", gradientMaximumDiff);
+        edit.putInt("gradientMinimumDiff", gradientMinimumDiff);
         edit.putInt("screenYPosPercent", screenYPosPercent);
         edit.putFloat("screenWidth", screenWidth);
         edit.putFloat("circleRadiusStep", circleRadiusStep);
