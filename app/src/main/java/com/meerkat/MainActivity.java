@@ -14,6 +14,7 @@ package com.meerkat;
 
 import static android.os.Environment.MEDIA_MOUNTED;
 import static com.meerkat.Settings.fileLog;
+import static com.meerkat.Settings.load;
 import static com.meerkat.Settings.port;
 import static com.meerkat.Settings.simulate;
 import static com.meerkat.Settings.wifiName;
@@ -24,17 +25,21 @@ import static java.lang.Thread.sleep;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.Display;
 import android.view.WindowManager;
+import android.widget.ImageView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -44,6 +49,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.meerkat.databinding.ActivityMainBinding;
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
+import com.meerkat.ui.map.Background;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Settings.load(this.getApplicationContext());
-
         ActivityMainBinding binding = inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         BottomNavigationView navView = findViewById(R.id.nav_view);
@@ -134,15 +139,13 @@ public class MainActivity extends AppCompatActivity {
 
                 try {
                     //noinspection BusyWait
-                    sleep(100);
+                    sleep(1000);
                 } catch (InterruptedException e) {
                     // do nothing
                 }
             } while (!needed.isEmpty());
-            for (var emitterType : Gdl90Message.Emitter.values()) {
-                loadIcon(getApplicationContext(), emitterType);
-            }
-            Log.level(Log.Level.D);
+
+           Log.level(Log.Level.D);
             Log.d("Permissions OK");
 
             new Gps((LocationManager) this.getSystemService(LOCATION_SERVICE));
@@ -185,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
         Log.i("Stop");
         Log.close();
     }
+
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         // to handle the case where the user grants the permission. See the documentation
         // for ActivityCompat#requestPermissions for more details.

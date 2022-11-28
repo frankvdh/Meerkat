@@ -11,4 +11,6 @@
     <string name="track">Track</string>
     <string name="speed">Speed</string>
     <string name="vertical_speed">Vertical Speed</string>
+    <string name="map">Map</string>
+    <string name="compass">Compass</string>
 </resources>

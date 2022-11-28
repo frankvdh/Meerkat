@@ -111,10 +111,10 @@ This list is growing rather than shrinking!
 * Port to Apple IOS
 * Write some documentation
 * Add a "Quit" button
-* Add a button to toggle between the display orientations
+* Make compass a button to toggle between the display orientations
 * Display zoom level
 * Auto-zoom
 * Indicate Mode-C traffic presence
-* Fix - Historic aircraft remain visible when app reloads
+* Fix - Reloading app to restart properly
 * Check GPS hasBearing() and getBearing() for Track-up
 * Lots more testing

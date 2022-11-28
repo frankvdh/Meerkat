@@ -131,8 +131,8 @@ public class Vehicle implements Comparable<Vehicle> {
                 double[][] cSpeedTrack = prSpeedTrack.getCoefficients();
                 predicted.clear();
                 if (cSpeedTrack != null) {
-                    Log.i("Speed coeffs %.1f %.3f %.5f", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2]);
-                    Log.i("Track coeffs %.1f %.3f %.5f", cSpeedTrack[1][0], cSpeedTrack[1][1], cSpeedTrack[1][2]);
+                    Log.v("Speed coeffs %.1f %.3f %.5f", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2]);
+                    Log.v("Track coeffs %.1f %.3f %.5f", cSpeedTrack[1][0], cSpeedTrack[1][1], cSpeedTrack[1][2]);
                     if (current.isValid()) {
                         Position p = current;
                         for (int t = polynomialPredictionStepSeconds; t <= predictionSeconds; t += polynomialPredictionStepSeconds) {
@@ -142,7 +142,7 @@ public class Vehicle implements Comparable<Vehicle> {
                             p.setSpeed(new Speed(speed, Speed.Units.KNOTS));
                             p.setTrack(p.getTrack() + track * polynomialPredictionStepSeconds * 1000);
                             predicted.add(p);
-                            Log.i("%s Speed %.1f Track %.1f", callsign, speed, track);
+                            Log.d("%s Speed %.1f Track %.1f", callsign, speed, track);
                         }
                     }
                 }

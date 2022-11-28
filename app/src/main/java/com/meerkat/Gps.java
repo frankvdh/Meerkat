@@ -38,7 +38,7 @@ public class Gps extends Service implements LocationListener {
     public static volatile Location location;
 
     // The minimum distance to change Updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
+    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 5; // 10 meters
 
     // The minimum time between updates in milliseconds
     private static final long MIN_UPDATE_INTERVAL = 10000; // 10 seconds
@@ -81,10 +81,12 @@ public class Gps extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
+        if (location.hasBearing() && location.getBearing() == 0.0)
+            location.removeBearing();
+        Log.d("GPS: (%.5f, %.5f) @%.0fm, %.0f %3.0f%c", location.getLatitude(), location.getLongitude(), location.getAltitude(), location.getSpeed(), location.getBearing(), location.hasBearing()? ' ' : '!');
         synchronized (Gps.location) {
             Gps.location.set(location);
         }
-        Log.d("GPS: (%.5f, %.5f) @%.0fm, %.0f %3.0f%c", location.getLatitude(), location.getLongitude(), location.getAltitude(), location.getSpeed(), location.getBearing(), location.hasBearing()? ' ' : '!');
         MapFragment.refresh(null);
     }
 

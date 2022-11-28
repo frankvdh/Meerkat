@@ -28,11 +28,12 @@ import java.util.concurrent.ScheduledFuture;
 
 public class Simulator {
 
+    private static final Position initialPos = new Position("gps", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0, new Height(5000f, Height.Units.FT), new Speed(100f, Speed.Units.KNOTS), 350f, 0f, true, true, new Date().getTime());
+
     private int nextActionTime;
     private int actionIndex;
     private Action action;
     private final Flight flight;
-    private static final Position initialPos = new Position("gps", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0, new Height(5000f, Height.Units.FT), new Speed(100f, Speed.Units.KNOTS), 350f, 0f, true, true, new Date().getTime());
     private final int initialDelay;
 
     private final boolean isGps;
@@ -124,25 +125,24 @@ public class Simulator {
     }
 
     private void act() {
-        if (actionIndex >= flight.actions.length) {
-            Log.i("cancel Sim");
-            this.thread.cancel(false);
-            return;
-        }
-        if (--nextActionTime <= 0) {
-            Log.d("Next action: %s @ %s",this.flight.callsign, this.flight.position);
-            action = flight.actions[++actionIndex];
+         if (--nextActionTime <= 0) {
+             if (++actionIndex >= flight.actions.length) {
+                 Log.i("cancel Sim " + flight.callsign);
+                 this.thread.cancel(false);
+                 return;
+             }
+             Log.d("Next action: %s @ %s", flight.callsign, flight.position);
+            action = flight.actions[actionIndex];
             nextActionTime = action.duration;
             flight.position.setProvider("Sim");
             flight.position.setAirborne(action.airborne);
-            flight.position.setVVel(0);
+            flight.position.setVVel(action.climb);
         }
         flight.position.setCrcValid(true);
         flight.position.setSpeed(new Speed(flight.position.getSpeedUnits().value + action.accel, Speed.Units.KNOTS));
         flight.position.setTrack((flight.position.getTrack() + action.turn) % 360);
-        flight.position.setVVel(flight.position.getVVel() + action.climb);
         flight.position.setTime(new Date().getTime());
-        Polar p = new Polar(new Distance(flight.position.getSpeedMps(), Distance.Units.M), flight.position.getTrack(), new Height(flight.position.getVVel() * 1 / 60, Height.Units.FT));
+        Polar p = new Polar(new Distance(flight.position.getSpeedMps(), Distance.Units.M), flight.position.getTrack(), new Height(flight.position.getVVel() / 60, Height.Units.FT));
         flight.position.moveBy(p);
         if (isGps)
             Gps.location.set(flight.position);

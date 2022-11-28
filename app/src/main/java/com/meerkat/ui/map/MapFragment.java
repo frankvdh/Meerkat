@@ -13,8 +13,11 @@
 package com.meerkat.ui.map;
 
 import static com.meerkat.Settings.screenWidth;
+import static com.meerkat.Settings.trackUp;
+import static com.meerkat.ui.map.AircraftLayer.loadIcon;
 
 import android.content.Context;
+import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
@@ -27,14 +30,16 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.meerkat.Gps;
 import com.meerkat.databinding.FragmentMapBinding;
+import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
 
 public class MapFragment extends Fragment {
 
     private FragmentMapBinding binding;
-    static final Background background = new Background();
-    public static final LayerDrawable layers = new LayerDrawable(new Drawable[]{background});
+    static Background background;
+    public static LayerDrawable layers;
     static float scaleFactor;
     // Used to detect pinch zoom gesture.
     private ScaleGestureDetector scaleGestureDetector = null;
@@ -44,7 +49,13 @@ public class MapFragment extends Fragment {
         binding = FragmentMapBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         ImageView mapView = binding.mapview;
+        background = new Background(getContext(), binding.compassView, getWidth(getContext()));
+        layers = new LayerDrawable(new Drawable[]{background});
         mapView.setImageDrawable(layers);
+
+        for (var emitterType : Gdl90Message.Emitter.values()) {
+            emitterType.bitmap = loadIcon(getContext(), emitterType.iconId);
+        }
 
         // Attach a pinch zoom listener to the map view
         scaleGestureDetector = new ScaleGestureDetector(getContext(), new PinchListener(mapView));
@@ -68,6 +79,14 @@ public class MapFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+
+    static Matrix positionMatrix(int centreX, int centreY, float x, float y, float angle) {
+        Matrix matrix = new Matrix();
+        // Rotate about centre of icon & translate to bitmap position
+        matrix.setRotate(trackUp && Gps.location.hasBearing() ? angle - Gps.location.getBearing() : angle, centreX, centreY);
+        matrix.postTranslate(x - centreX, y - centreY);
+        return matrix;
     }
 
     private final View.OnTouchListener handleTouch = (view, event) -> {

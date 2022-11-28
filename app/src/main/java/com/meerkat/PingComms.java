@@ -72,6 +72,10 @@ public class PingComms {
                     recvSocket.setReuseAddress(true);
                 } catch (IOException e) {
                     Log.e("IO Exception: %s", e.toString());
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ignored) {
+                    }
                     recvSocket = null;
                     continue;
                 }

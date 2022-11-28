@@ -12,7 +12,12 @@
  */
 package com.meerkat.ui.map;
 
-import static com.meerkat.Settings.*;
+import static com.meerkat.Settings.gradientMaximumDiff;
+import static com.meerkat.Settings.gradientMinimumDiff;
+import static com.meerkat.Settings.historySeconds;
+import static com.meerkat.Settings.showLinearPredictionTrack;
+import static com.meerkat.Settings.showPolynomialPredictionTrack;
+import static com.meerkat.Settings.trackUp;
 import static java.lang.Double.isNaN;
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
@@ -24,7 +29,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathDashPathEffect;
@@ -78,14 +82,6 @@ public class AircraftLayer extends Drawable {
         set(v);
     }
 
-    void drawBitmap(Canvas canvas, Bitmap bitmap, float x, float y, float angle, int fg) {
-        Matrix matrix = new Matrix();
-        // Rotate about centre of icon & translate to aircraft position
-        matrix.setRotate(trackUp && Gps.location.hasBearing() ? angle - Gps.location.getBearing() : angle, bitmap.getWidth() / 2f, bitmap.getHeight() / 2f);
-        matrix.postTranslate(x - bitmap.getWidth() / 2f, y - bitmap.getHeight() / 2f);
-        canvas.drawBitmap(replaceColor(bitmap, fg), matrix, null);
-    }
-
     public Bitmap replaceColor(Bitmap src, int targetColor) {
         if (src == null) {
             return null;
@@ -123,23 +119,21 @@ public class AircraftLayer extends Drawable {
         return new Point((int) (cos(b) * polar.distance.value * MapFragment.scaleFactor), (int) (-sin(b) * polar.distance.value * MapFragment.scaleFactor));
     }
 
-    static public void loadIcon(Context context, Gdl90Message.Emitter e) {
-        Icon icon = Icon.createWithResource(context, e.iconId);
+    static public Bitmap loadIcon(Context context, int iconId) {
+        Icon icon = Icon.createWithResource(context, iconId);
         Drawable drawable = icon.loadDrawable(context);
         if (drawable instanceof BitmapDrawable) {
             BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
-            e.bitmap = bitmapDrawable.getBitmap();
-            return;
+            return bitmapDrawable.getBitmap();
         }
-
         if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
-            e.bitmap = ((BitmapDrawable) Icon.createWithResource(context, Gdl90Message.Emitter.Unknown.iconId).loadDrawable(context)).getBitmap();
-            return;
+            return ((BitmapDrawable) Icon.createWithResource(context, Gdl90Message.Emitter.Unknown.iconId).loadDrawable(context)).getBitmap();
         }
-        e.bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(e.bitmap);
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
+        return bitmap;
     }
 
     android.graphics.Point current;
@@ -171,7 +165,8 @@ public class AircraftLayer extends Drawable {
             aircraftPoint = screenPoint(polar);
             // Draw the icon if part of it is visible
             if (aircraftPoint.x > bounds.left - bmpWidth / 2 && aircraftPoint.x < bounds.right + bmpWidth / 2 && aircraftPoint.y > bounds.top - bmpWidth / 2 && aircraftPoint.y < bounds.bottom + bmpWidth / 2) {
-                drawBitmap(canvas, v.emitterType.bitmap, aircraftPoint.x, aircraftPoint.y, Float.isNaN(track) ? 0 : track, altColour(polar.altDifference, isAirborne));
+                canvas.drawBitmap(replaceColor(v.emitterType.bitmap, altColour(polar.altDifference, isAirborne)),
+                        MapFragment.positionMatrix(v.emitterType.bitmap.getWidth() / 2, v.emitterType.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y, Float.isNaN(track) ? 0 : track), null);
             }
         } else {
             isValid = !v.history.isEmpty();
@@ -203,7 +198,7 @@ public class AircraftLayer extends Drawable {
                         android.graphics.Point sxy1 = screenPoint(polar);
                         if (current.x == sxy1.x && current.y == sxy1.y)
                             continue;
-                        Log.d("%s: %s %08x", v.callsign, polar, altColour(polar.altDifference, isAirborne));
+                        Log.v("%s: %s %08x", v.callsign, polar, altColour(polar.altDifference, isAirborne));
                         lineTo(canvas, sxy1, altColour(polar.altDifference, isAirborne), predictEffect);
                     }
                 }
