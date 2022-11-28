@@ -122,7 +122,7 @@ public class WifiConnectionFragment extends Fragment implements ApListAdapter.Sc
             if (intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)) {
                 WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
                 @SuppressLint("MissingPermission") List<ScanResult> scanResults = wifiManager.getScanResults();
-                Log.i(scanResults.size() + " APs discovered.");
+                Log.i("%d APs discovered.", scanResults.size());
                 // User to select from available Wifi networks
                 for (ScanResult scanResult : scanResults) {
                     if (scanResult.SSID.isEmpty()) continue;
@@ -140,7 +140,7 @@ public class WifiConnectionFragment extends Fragment implements ApListAdapter.Sc
     @Override
     public void onScanResultItemClick(String scanResult) {
         wifiName = scanResult;
-        Log.d("onScanResultItemClick(): ssid: " + wifiName);
+        Log.d("onScanResultItemClick(): ssid: %s", wifiName);
 
         // User has selected a Wifi SSID -- save it for future use, and connect to it
         Settings.save();

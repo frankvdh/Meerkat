@@ -29,7 +29,7 @@ public class WifiConnection {
     static public String ssId;
 
     public static void waitForWifiConnection() {
-        Log.i("Waiting for wifi connection: " + ssId);
+        Log.i("Waiting for wifi connection: %s", ssId);
         while (!available) {
             try {
                 //noinspection BusyWait
@@ -41,7 +41,7 @@ public class WifiConnection {
     }
 
     public static void init(ConnectivityManager cm, String ssId, String password) {
-        Log.i("Connecting to Wifi " + ssId);
+        Log.i("Connecting to Wifi %s", ssId);
         WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder().setSsid(ssId);
         if (password != null) {
             builder.setWpa2Passphrase(password);
@@ -57,7 +57,7 @@ public class WifiConnection {
         cm.requestNetwork(networkRequest, new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(@NonNull Network network) {
-                Log.i("Connected to wifi " + ssId);
+                Log.i("Connected to wifi %s", ssId);
                 available = true;
                 // bind so all api calls are performed over this new network
                 cm.bindProcessToNetwork(network);
@@ -67,7 +67,7 @@ public class WifiConnection {
             @Override
             public void onUnavailable() {
                 super.onUnavailable();
-                Log.i("Wifi unavailable: " + ssId);
+                Log.i("Wifi unavailable: %s", ssId);
                 available = false;
             }
         });

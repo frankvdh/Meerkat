@@ -41,7 +41,7 @@ public class Gps extends Service implements LocationListener {
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
 
     // The minimum time between updates in milliseconds
-    private static final long MIN_UPDATE_INTERVAL = 60000; // 1 minute
+    private static final long MIN_UPDATE_INTERVAL = 10000; // 10 seconds
 
     // Declaring a Location Manager
     private LocationManager locationManager;
@@ -60,7 +60,7 @@ public class Gps extends Service implements LocationListener {
                 Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 if (location != null)
                     Gps.location.set(location);
-                Log.d("GPS Enabled: " + location);
+                Log.d("GPS Enabled: %s", location);
             }
         } catch (Exception e) {
             throw new RuntimeException("GPSTracker setup failed: " + e.getMessage());
@@ -84,7 +84,7 @@ public class Gps extends Service implements LocationListener {
         synchronized (Gps.location) {
             Gps.location.set(location);
         }
-        Log.d("GPS: " + String.format(Locale.ENGLISH, "(%.5f, %.5f) @%.0fm, %.0f %3.0f", location.getLatitude(), location.getLongitude(), location.getAltitude(), location.getSpeed(), location.getBearing()));
+        Log.d("GPS: (%.5f, %.5f) @%.0fm, %.0f %3.0f%c", location.getLatitude(), location.getLongitude(), location.getAltitude(), location.getSpeed(), location.getBearing(), location.hasBearing()? ' ' : '!');
         MapFragment.refresh(null);
     }
 

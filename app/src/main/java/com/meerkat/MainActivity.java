@@ -18,8 +18,6 @@ import static com.meerkat.Settings.port;
 import static com.meerkat.Settings.simulate;
 import static com.meerkat.Settings.wifiName;
 import static com.meerkat.databinding.ActivityMainBinding.inflate;
-import static com.meerkat.log.Log.D;
-import static com.meerkat.log.Log.I;
 import static com.meerkat.ui.map.AircraftLayer.loadIcon;
 import static java.lang.Thread.sleep;
 
@@ -86,16 +84,19 @@ public class MainActivity extends AppCompatActivity {
             /* The device is rotated to the right. */
             Log.i("Landscape Right");
         } else {
-            Log.i("Orientation: " + orientation);
+            Log.i("Orientation: %s", orientation);
         }
         if (firstRun) {
-            Log.level(I);
+            Log.level(Log.Level.I);
             Log.i("Checking permissions");
             String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.CHANGE_WIFI_STATE,
-                    Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.INTERNET};
+                    Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.CHANGE_NETWORK_STATE, Manifest.permission.INTERNET
+//                    Manifest.permission.WRITE_EXTERNAL_STORAGE not needed after API 19
+            };
             ArrayList<String> needed = new ArrayList<>();
             do {
+                needed.clear();
                 for (String s : permissions) {
                     if (this.checkSelfPermission(s) != PackageManager.PERMISSION_GRANTED) {
                         needed.add(s);
@@ -141,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
             for (var emitterType : Gdl90Message.Emitter.values()) {
                 loadIcon(getApplicationContext(), emitterType);
             }
-            Log.level(D);
+            Log.level(Log.Level.D);
             Log.d("Permissions OK");
 
             new Gps((LocationManager) this.getSystemService(LOCATION_SERVICE));
@@ -170,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 // Already configured
                 WifiConnection.init(connMgr, wifiName, "");
-                Log.i("Connected to Wifi " + WifiConnection.ssId);
+                Log.i("Connected to Wifi %s", WifiConnection.ssId);
                 PingComms.pingComms = new PingComms(port);
 
                 PingComms.pingComms.start();
@@ -179,12 +180,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void onStop() {
+        super.onStop();
+        Log.i("Stop");
+        Log.close();
+    }
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         // to handle the case where the user grants the permission. See the documentation
         // for ActivityCompat#requestPermissions for more details.
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        Log.d("Request Permissions Result: " + requestCode);
+        Log.d("Request Permissions Result: %d", requestCode);
         for (int i = 0; i < permissions.length; i++)
-            Log.d(permissions[i] + " -> " + grantResults[i]);
+            Log.d("%s -> %d", permissions[i], grantResults[i]);
     }
 }

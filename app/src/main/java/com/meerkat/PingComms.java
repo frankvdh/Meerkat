@@ -34,7 +34,7 @@ public class PingComms {
     static public PingComms pingComms;
 
     public PingComms(final int port) {
-        Log.i("constructor");
+        Log.d("constructor");
         this.port = port;
         thread = new Thread(receiveData);
     }
@@ -71,7 +71,7 @@ public class PingComms {
                     recvSocket.setBroadcast(true);
                     recvSocket.setReuseAddress(true);
                 } catch (IOException e) {
-                    Log.e("IO Exception: " + e);
+                    Log.e("IO Exception: %s", e.toString());
                     recvSocket = null;
                     continue;
                 }
@@ -79,10 +79,10 @@ public class PingComms {
                 while (!stopped && recvSocket != null) {
                     try {
                         //                     if (recvSocket == null) return;
-                        Log.v("Waiting for next datagram: " + recvSocket.isBound());
+                        Log.v("Waiting for next datagram: %s", recvSocket.isBound());
                         // Blocks until a message returns on this socket from a remote host.
                         recvSocket.receive(recvDatagram);
-                        Log.v("received datagram " + recvDatagram.getLength() + " bytes");
+                        Log.v("received datagram %d bytes", recvDatagram.getLength());
                         byte[] packet = Arrays.copyOfRange(recvDatagram.getData(), 0, recvDatagram.getLength());
                         if (logRawMessages) {
                             StringBuilder sb = new StringBuilder();
@@ -106,7 +106,7 @@ public class PingComms {
                             }
                         }
                     } catch (IOException e) {
-                        Log.e("IO Exception: " + e);
+                        Log.e("IO Exception: %s", e.toString());
                         recvSocket = null;
                     }
                 }

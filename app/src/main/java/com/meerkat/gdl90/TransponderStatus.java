@@ -38,7 +38,7 @@ public class TransponderStatus extends Gdl90Message {
         msgVersion = (byte) getByte();
         int msgSize = msgVersion == 1 ? 9 : msgVersion == 2 ? 15 : 16;
         if (is.available() < msgSize + 1) {
-            Log.i("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
+            Log.i("Message too short: expected %d but received %d", msgSize, is.available() - 2);
             throw new RuntimeException("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
         }
         byte b = (byte) getByte();

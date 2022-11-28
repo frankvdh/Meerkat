@@ -110,7 +110,7 @@ public class Simulator {
         nextActionTime = 0;
         this.isGps = isGps;
         this.initialDelay = initialDelay;
-        Log.i("new Sim: " + flight.position.toString());
+        Log.i("new Sim: %s", flight.position.toString());
     }
 
     public static void startAll() {
@@ -130,7 +130,7 @@ public class Simulator {
             return;
         }
         if (--nextActionTime <= 0) {
-            Log.d("Next action: " + this.flight.callsign + " @ " + this.flight.position);
+            Log.d("Next action: %s @ %s",this.flight.callsign, this.flight.position);
             action = flight.actions[++actionIndex];
             nextActionTime = action.duration;
             flight.position.setProvider("Sim");

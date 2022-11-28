@@ -62,7 +62,7 @@ public class Vehicle implements Comparable<Vehicle> {
         for (int i = 1; i < MapFragment.layers.getNumberOfLayers(); i++) {
             AircraftLayer d = (AircraftLayer) MapFragment.layers.getDrawable(i);
             if (!d.isVisible()) {
-                Log.i("ReUse layer " + i + " was " + MapFragment.layers.getId(i));
+                Log.i("ReUse layer %d was %d", i, MapFragment.layers.getId(i));
                 synchronized (MapFragment.layers) {
                     MapFragment.layers.setId(i, v.id);
                     d.set(v);
@@ -131,8 +131,8 @@ public class Vehicle implements Comparable<Vehicle> {
                 double[][] cSpeedTrack = prSpeedTrack.getCoefficients();
                 predicted.clear();
                 if (cSpeedTrack != null) {
-                    Log.i(String.format(Locale.ENGLISH, "Speed coeffs %.1f %.3f %.5f", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2]));
-                    Log.i(String.format(Locale.ENGLISH, "Track coeffs %.1f %.3f %.5f", cSpeedTrack[1][0], cSpeedTrack[1][1], cSpeedTrack[1][2]));
+                    Log.i("Speed coeffs %.1f %.3f %.5f", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2]);
+                    Log.i("Track coeffs %.1f %.3f %.5f", cSpeedTrack[1][0], cSpeedTrack[1][1], cSpeedTrack[1][2]);
                     if (current.isValid()) {
                         Position p = current;
                         for (int t = polynomialPredictionStepSeconds; t <= predictionSeconds; t += polynomialPredictionStepSeconds) {
@@ -142,7 +142,7 @@ public class Vehicle implements Comparable<Vehicle> {
                             p.setSpeed(new Speed(speed, Speed.Units.KNOTS));
                             p.setTrack(p.getTrack() + track * polynomialPredictionStepSeconds * 1000);
                             predicted.add(p);
-                            Log.i(String.format(Locale.ENGLISH, "%s Speed %.1f Track %.1f", callsign, speed, track));
+                            Log.i("%s Speed %.1f Track %.1f", callsign, speed, track);
                         }
                     }
                 }

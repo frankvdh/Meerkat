@@ -57,7 +57,7 @@ public class TransponderConfiguration extends Gdl90Message {
         //noinspection ConditionalExpressionWithIdenticalBranches
         int msgSize = msgVersion == 1 ? 19 : msgVersion == 2 ? 21 : msgVersion == 3 ? 22 : msgVersion == 4 ? 29 : 29;
         if (is.available() < msgSize + 1) {
-            Log.i("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
+            Log.i("Message too short: expected %d but received %d", msgSize, is.available() - 2);
             throw new RuntimeException("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
         }
         participantAddr = (getByte() << 16) + (getByte() << 8) + getByte();

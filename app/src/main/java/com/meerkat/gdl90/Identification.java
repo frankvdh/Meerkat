@@ -34,7 +34,7 @@ public class Identification extends Gdl90Message {
         msgVersion = (byte) getByte();
         int msgSize = msgVersion == 1 ? 18 : msgVersion == 2 ? 36 : 66;
         if (is.available() < msgSize + 1) {
-            Log.w("Message too short: expected " + msgSize + " but received " + (is.available()-1));
+            Log.w("Message too short: expected %d but received %d",msgSize, is.available()-1);
         }
         priFwMajorVersion = (byte) getByte();
         priFwMinorVersion = (byte) getByte();

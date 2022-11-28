@@ -30,7 +30,7 @@ public class Settings {
     public static int port;
     public static boolean showLog;
     public static boolean fileLog;
-    public static int logLevel;
+    public static Level logLevel;
     public static boolean logRawMessages;
     public static boolean logDecodedMessages;
     public static boolean showLinearPredictionTrack;
@@ -53,12 +53,17 @@ public class Settings {
 
     public static void load(Context context) {
         prefs = context.getSharedPreferences("com.meerkat_preferences", MODE_PRIVATE);
-        boolean noPrefsSaved = prefs.getString("wifiName", null) == null;
+        boolean saveNeeded = prefs.getString("wifiName", null) == null;
         wifiName = prefs.getString("wifiName", "Ping-6C7A");
         port = prefs.getInt("port", 4000);
         showLog = prefs.getBoolean("showLog", true);
         fileLog = prefs.getBoolean("fileLog", true);
-        logLevel = prefs.getInt("logLevel", I);
+        try {
+        logLevel = Level.valueOf(prefs.getString("logLevel", "I").toUpperCase().trim().substring(0, 1));
+        } catch(Exception e) {
+            logLevel = Level.I;
+            saveNeeded = true;
+        }
         logRawMessages = prefs.getBoolean("logRawMessages", false);
         logDecodedMessages = prefs.getBoolean("logDecodedMessages", false);
         showLinearPredictionTrack = prefs.getBoolean("showLinearPredictionTrack", true);
@@ -76,21 +81,24 @@ public class Settings {
             distanceUnits = Distance.Units.valueOf(prefs.getString("distanceUnits", "NM").toUpperCase().trim());
         } catch(Exception e) {
             distanceUnits = Distance.Units.NM;
+            saveNeeded = true;
         }
         try {
             altUnits = Height.Units.valueOf(prefs.getString("altUnits", "FT").toUpperCase().trim());
         } catch(Exception e) {
             altUnits = Height.Units.FT;
+            saveNeeded = true;
         }
         try {
             speedUnits = Speed.Units.valueOf(prefs.getString("speedUnits", "KNOTS").toUpperCase().trim());
         } catch(Exception e) {
             speedUnits = Speed.Units.KNOTS;
+            saveNeeded = true;
         }
         simulate = prefs.getBoolean("simulate", false);
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         trackUp = prefs.getBoolean("trackUp", true);
-        if (noPrefsSaved)
+        if (saveNeeded)
             save();
         Log.i("Settings loaded");
     }
@@ -101,7 +109,7 @@ public class Settings {
         edit.putInt("port", port);
         edit.putBoolean("showLog", showLog);
         edit.putBoolean("fileLog", fileLog);
-        edit.putInt("logLevel", logLevel);
+        edit.putString("logLevel", String.valueOf(logLevel));
         edit.putBoolean("logRawMessages", logRawMessages);
         edit.putBoolean("logDecodedMessages", logDecodedMessages);
         edit.putBoolean("showLinearPredictionTrack", showLinearPredictionTrack);

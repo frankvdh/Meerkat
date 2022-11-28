@@ -36,7 +36,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
             while (iterator.hasNext()) {
                 HashMap.Entry<Integer, Vehicle> entry = iterator.next();
                 if (now - entry.getValue().current.getTime() > purgeSeconds * 1000L) {
-                    Log.i("Purge: " + entry.getValue().callsign + ", " + (now - entry.getValue().current.getTime()) + ", " + new Date(now) + ", " + new Date(entry.getValue().current.getTime()));
+                    Log.i("Purge: %s, %d, %s, %s",entry.getValue().callsign, (now - entry.getValue().current.getTime()), new Date(now), new Date(entry.getValue().current.getTime()));
                     entry.getValue().layer.setVisible(false, false);
                     MapFragment.layers.invalidateDrawable(entry.getValue().layer);
                     iterator.remove();

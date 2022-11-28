@@ -20,33 +20,49 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 interface LogWriter {
-    void append(int level, String tag, String msg);
+    void append(Log.Level level, String tag, String msg);
 }
 
 class SystemOutLogWriter implements LogWriter {
-    private final static String[] LEVELS = new String[]{" ", "V", "D", "I", "W", "E", "A"};
-
-    public void append(int level, String tag, String msg) {
-        System.out.println(LEVELS[level] + "/" + tag + ": " + msg);
+    public void append(Log.Level level, String tag, String msg) {
+        System.out.println(level + "/" + tag + ": " + msg);
     }
 }
 
 class FileLogWriter implements LogWriter {
-    private final static String[] METHOD_NAMES = new String[]{" ", "v", "d", "i", "w", "e", "a"};
-    BufferedWriter bw;
+    static final DateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS");
 
-    public FileLogWriter(File file) throws IOException {
-        this.bw = new BufferedWriter(new FileWriter(file, true));
+    BufferedWriter bw;
+final File file;
+    public FileLogWriter(File file) {
+        this.file = file;
+        append(Log.Level.A, "Log restarted", new Date().toString());
     }
 
-    public void append(int level, String tag, String msg) {
+    public void append(Log.Level level, String tag, String msg)  {
         try {
-            bw.write(METHOD_NAMES[level] + "/" + tag + ": " + msg + "\r\n");
+            if (bw == null)
+                bw = new BufferedWriter(new FileWriter(file, true));
+            bw.write(String.format("%s %s/%s %s\r\n",  sdf.format(new Date()), tag, level, msg));
         } catch (IOException e) {
-            // Ignore
+            bw = null;
         }
+    }
+
+    public void close() {
+        append(Log.Level.A, "Log closed", new Date().toString());
+        try {
+            bw.flush();
+            bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        bw = null;
     }
 }
 
@@ -57,9 +73,9 @@ class ViewLogWriter implements LogWriter {
         this.logFragment = logFragment;
     }
 
-    public void append(int level, String tag, String message) {
+    public void append(Log.Level level, String tag, String message) {
         if (logFragment != null && !message.isEmpty()) {
-                 logFragment.append(message);
+            logFragment.append(message);
         }
     }
 
@@ -67,25 +83,23 @@ class ViewLogWriter implements LogWriter {
 
 class AndroidLogWriter implements LogWriter {
 
-    private final static String[] METHOD_NAMES = new String[]{" ", "v", "d", "i", "w", "e", "a"};
-
     private final Method[] mLogMethods;
 
     public AndroidLogWriter() throws ClassNotFoundException {
-        mLogMethods = new Method[METHOD_NAMES.length];
+        mLogMethods = new Method[Log.Level.A.value +1];
         Class<?> logClass = Class.forName("android.util.Log");
-        for (int i = 0; i < METHOD_NAMES.length; i++) {
+        for (Log.Level l: Log.Level.values()) {
             try {
-                mLogMethods[i] = logClass.getMethod(METHOD_NAMES[i], String.class, String.class);
+                mLogMethods[l.value] = logClass.getMethod(l.name().toLowerCase(), String.class, String.class);
             } catch (NoSuchMethodException | SecurityException e) {
                 // ignore
             }
         }
     }
 
-    public void append(int level, String tag, String msg) {
+    public void append(Log.Level level, String tag, String msg) {
         try {
-            mLogMethods[level].invoke(null, tag, msg);
+            mLogMethods[level.value].invoke(null, tag, msg);
         } catch (InvocationTargetException | IllegalAccessException ex) {
             // ignore
         }

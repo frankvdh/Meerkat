@@ -108,7 +108,7 @@ public class Gdl90Message {
         this.messageId = messageId;
         this.is = is;
         if (is.available() < msgSize + 2) {
-            Log.i("Message too short: expected " + msgSize + " but received " + (is.available() - 2));
+            Log.i("Message too short: expected %d but received %d", msgSize, is.available() - 2);
             throw new RuntimeException("Message too short: expected " + msgSize + " but received " + (is.available() - 2));
         }
         crc = Crc16Table[0] ^ messageId;

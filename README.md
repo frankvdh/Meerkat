@@ -83,17 +83,18 @@ User settings
 
 Debugging settings
 ------------------
-| Debugging Setting name          | Usage                                                                                                                                                                                             | Default value                                     |
-|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
-| showLog                         | Whether to output logs to a window on the screen                                                                                                                                                  | false                                             |
-| fileLog                         | Whether to output logs to /storage/sdcard0/Android/data/com.meerkat/files/meerkat.log. NB This file is never erased or shortened. If left alone, this will eventually chew up all the storage!    | false                                             |
-| logLevel                        | Amount of detail to write to logs... A, E, W, I, D, V                                                                                                                                             | I                                                 |
-| logRawMessages                  | Whether to write the raw messages, as received from the device, to the logs                                                                                                                       | false                                             |
-| logDecodedMessages              | Whether to write the decoded messages, as interpreted by the GDL90 parser, to the logs                                                                                                            | false                                             |
-| simulate                        | Play the simulated traffic instead of real traffic                                                                                                      | false                                             |
+| Debugging Setting name          | Usage                                                                                                                                                                                                                   | Default value                                     |
+|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
+| showLog                         | Whether to output logs to a window on the screen                                                                                                                                                                        | false                                             |
+| fileLog                         | Whether to output logs to /storage/sdcard0/Android/data/com.meerkat/files/meerkat.log. NB This file is never erased or shortened. If left alone, this will eventually chew up all the storage at the rate of ~100MB/hr! | false                                             |
+| logLevel                        | Amount of detail to write to logs... Assert, Error, Warning, Info, Debug, V                                                                                                                                             | I                                                 |
+| logRawMessages                  | Whether to write the raw messages, as received from the device, to the logs                                                                                                                                             | false                                             |
+| logDecodedMessages              | Whether to write the decoded messages, as interpreted by the GDL90 parser, to the logs                                                                                                                                  | false                                             |
+| simulate                        | Play the simulated traffic instead of real traffic                                                                                                                                                                      | false                                             |
 
 TO DO
 -----
+This list is growing rather than shrinking!
 * Allow changing the display orientation to "Heading up"
 * Use a theme to allow black background
 * Digital filtering of path to predict track
@@ -111,4 +112,9 @@ TO DO
 * Write some documentation
 * Add a "Quit" button
 * Add a button to toggle between the display orientations
+* Display zoom level
+* Auto-zoom
+* Indicate Mode-C traffic presence
+* Fix - Historic aircraft remain visible when app reloads
+* Check GPS hasBearing() and getBearing() for Track-up
 * Lots more testing

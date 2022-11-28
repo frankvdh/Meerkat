@@ -94,7 +94,7 @@ public class AircraftFragment extends Fragment {
             int i = 1; // row 0 is header
             for (Iterator<Vehicle> it = s.iterator(); it.hasNext(); i++) {
                 Vehicle v = it.next();
-                Log.i("" + v.toString());
+                Log.i(v.toString());
                 float distance = Gps.location.distanceTo(v.current) / 1852;
                 float track = v.current.getTrack();
                 Speed speed = v.current.getSpeedUnits();
@@ -131,7 +131,7 @@ public class AircraftFragment extends Fragment {
                 uiActivity.runOnUiThread(() -> tableAircraft.removeViewAt(finalJ));
             }
         } catch (Exception ex) {
-            Log.e("Exception in AircraftFragment scheduled task: " + ex.getMessage());
+            Log.e("Exception in AircraftFragment scheduled task: %s", ex.getMessage());
         }
     }
 

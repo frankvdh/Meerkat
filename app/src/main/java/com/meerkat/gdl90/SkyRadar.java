@@ -34,7 +34,7 @@ public class SkyRadar extends Gdl90Message {
         fwVersion = (byte) getByte();
         int msgSize = fwVersion < 42 ? 9 : fwVersion < 45 ? 11 : 20;
         if (is.available() < msgSize + 1) {
-            Log.i("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
+            Log.i("Message too short: expected %d but received %d", msgSize, is.available() - 2);
             throw new RuntimeException("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
         }
         debugData = (byte) getByte();

@@ -18,37 +18,30 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public final class Log {
 
-    public final static int V = 1;
-    public final static int D = 2;
-    public final static int I = 3;
-    public final static int W = 4;
-    public final static int E = 5;
-    public final static int A = 6;
+    public enum Level {
+        V(1), D(2), I(3), W(4), E(5), A(6);
+
+        final public int value;
+
+        Level(int value) {
+            this.value = value;
+        }
+    }
 
     private Log() {
     }
-
 
     private static final Set<LogWriter> mPrinters = new HashSet<>();
     public static final AndroidLogWriter ANDROID;
     public static ViewLogWriter viewLogWriter;
 
-    private final static Map<String, String> mTags = new HashMap<>();
-
-    private static String[] mUseTags = new String[]{"tag", "TAG"};
-    private static boolean mUseFormat = false;
-    private static int mMinLevel = V;
+    private static Level mMinLevel = Level.V;
 
     static {
         try {
@@ -59,16 +52,8 @@ public final class Log {
         }
     }
 
-    public static synchronized void useTags(String[] tags) {
-        mUseTags = tags;
-    }
-
-    public static synchronized void level(int minLevel) {
+    public static synchronized void level(Level minLevel) {
         mMinLevel = minLevel;
-    }
-
-    public static synchronized void useFormat(boolean yes) {
-        mUseFormat = yes;
     }
 
     public static synchronized void useLogWriter(LogWriter p, boolean on) {
@@ -89,68 +74,62 @@ public final class Log {
         mPrinters.add(viewLogWriter);
     }
 
-    public static synchronized void v(Object msg, Object... args) {
-        log(V, mUseFormat, msg, args);
+    public static synchronized void v(String msg, Object... args) {
+        log(Level.V, msg, args);
     }
 
-    public static synchronized void d(Object msg, Object... args) {
-        log(D, mUseFormat, msg, args);
+    public static synchronized void d(String msg, Object... args) {
+        log(Level.D, msg, args);
     }
 
-    public static synchronized void i(Object msg, Object... args) {
-        log(I, mUseFormat, msg, args);
+    public static synchronized void i(String msg, Object... args) {
+        log(Level.I, msg, args);
     }
 
-    public static synchronized void w(Object msg, Object... args) {
-        log(W, mUseFormat, msg, args);
+    public static synchronized void w(String msg, Object... args) {
+        log(Level.W, msg, args);
     }
 
-    public static synchronized void e(Object msg, Object... args) {
-        log(E, mUseFormat, msg, args);
+    public static synchronized void e(String msg, Object... args) {
+        log(Level.E, msg, args);
     }
 
-    public static synchronized void a(Object msg, Object... args) {
-        log(A, mUseFormat, msg, args);
+    public static synchronized void a(String msg, Object... args) {
+        log(Level.A, msg, args);
     }
 
-    private static void log(int level, boolean fmt, Object msg, Object... args) {
-        if (level < mMinLevel) {
+    public static void close() {
+        for (LogWriter p : mPrinters) {
+            if (p instanceof FileLogWriter)
+                ((FileLogWriter) p).close();
+        }
+
+    }
+
+    private static void log(Level level, String msg, Object... args) {
+        if (level.value < mMinLevel.value) {
             return;
         }
-        String tag = tag();
-        if (mUseTags.length > 0 && tag.equals(msg)) {
-            if (args.length > 1) {
-                print(level, tag, format(fmt, args[0], Arrays.copyOfRange(args, 1, args.length)));
-            } else {
-                print(level, tag, format(fmt, (args.length > 0 ? args[0] : "")));
-            }
-        } else {
-            print(level, tag, format(fmt, msg, args));
-        }
+        print(level, tag(), format(msg, args));
     }
 
-    private static String format(boolean fmt, Object msg, Object... args) {
+    private static String format(String head, Object... args) {
         Throwable t = null;
-        if (args == null) {
-            // Null array is not supposed to be passed into this method, so it must
-            // be a single null argument
-            args = new Object[]{null};
-        }
-        if (args.length > 0 && args[args.length - 1] instanceof Throwable) {
+        if (args != null && args.length > 0 && args[args.length - 1] instanceof Throwable) {
             t = (Throwable) args[args.length - 1];
             args = Arrays.copyOfRange(args, 0, args.length - 1);
         }
-        if (fmt && msg instanceof String) {
-            String head = (String) msg;
-            if (head.indexOf('%') != -1) {
-                return String.format(head, args);
-            }
-        }
         StringBuilder sb = new StringBuilder();
-        sb.append(msg == null ? "null" : msg.toString());
-        for (Object arg : args) {
-            sb.append("\t");
-            sb.append(arg == null ? "null" : arg.toString());
+        if (args == null || args.length == 0) {
+            sb.append(head == null ? "null" : head);
+        } else if (head != null && head.indexOf('%') != -1) {
+            sb.append(String.format(head, args));
+        } else {
+            sb.append(head == null ? "null" : head);
+            for (Object arg : args) {
+                sb.append("\t");
+                sb.append(arg == null ? "null" : arg.toString());
+            }
         }
         if (t != null) {
             sb.append("\n");
@@ -164,7 +143,7 @@ public final class Log {
 
     final static int MAX_LOG_LINE_LENGTH = 4000;
 
-    private static void print(int level, String tag, String msg) {
+    private static void print(Level level, String tag, String msg) {
         for (String line : msg.split("\\n")) {
             do {
                 int splitPos = Math.min(MAX_LOG_LINE_LENGTH, line.length());
@@ -185,8 +164,8 @@ public final class Log {
         }
     }
 
-    private final static Pattern ANONYMOUS_CLASS = Pattern.compile("\\$\\d+$");
     private final static int STACK_DEPTH = 4;
+    private final static int MAX_FILENAME_LENGTH = 30;
 
     private static String tag() {
         StackTraceElement[] stackTrace = new Throwable().getStackTrace();
@@ -194,36 +173,8 @@ public final class Log {
             throw new IllegalStateException
                     ("Synthetic stacktrace didn't have enough elements: are you using proguard?");
         }
-        String className = stackTrace[STACK_DEPTH - 1].getClassName();
-        String tag = mTags.get(className);
-        if (tag != null) {
-            return tag;
-        }
-
-        try {
-            Class<?> c = Class.forName(className);
-            for (String f : mUseTags) {
-                try {
-                    Field field = c.getDeclaredField(f);
-
-                    field.setAccessible(true);
-                    Object value = field.get(null);
-                    if (value instanceof String) {
-                        mTags.put(className, (String) value);
-                        return (String) value;
-                    }
-                } catch (NoSuchFieldException | IllegalAccessException |
-                        IllegalStateException | NullPointerException e) {
-                    //Ignore
-                }
-            }
-        } catch (ClassNotFoundException e) { /* Ignore */ }
-
-        // Check class field useTag, if exists - return it, otherwise - return the generated tag
-        Matcher m = ANONYMOUS_CLASS.matcher(className);
-        if (m.find()) {
-            className = m.replaceAll("");
-        }
-        return className.substring(className.lastIndexOf('.') + 1);
+        String fileName = stackTrace[STACK_DEPTH - 1].getFileName();
+        fileName = fileName.substring(0, fileName.lastIndexOf('.')) + '/' + stackTrace[STACK_DEPTH - 1].getLineNumber();
+        return fileName.length() < MAX_FILENAME_LENGTH ? fileName : fileName.substring(fileName.length() - MAX_FILENAME_LENGTH);
     }
 }

@@ -203,7 +203,7 @@ public class AircraftLayer extends Drawable {
                         android.graphics.Point sxy1 = screenPoint(polar);
                         if (current.x == sxy1.x && current.y == sxy1.y)
                             continue;
-                        Log.d(v.callsign + ": " + polar + String.format(" %08x", altColour(polar.altDifference, isAirborne)));
+                        Log.d("%s: %s %08x", v.callsign, polar, altColour(polar.altDifference, isAirborne));
                         lineTo(canvas, sxy1, altColour(polar.altDifference, isAirborne), predictEffect);
                     }
                 }

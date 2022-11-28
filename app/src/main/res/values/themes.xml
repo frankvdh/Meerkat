@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.AdsbDisplay" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.MeerkatLight" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryVariant">@color/purple_700</item>
@@ -13,10 +13,10 @@
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
     </style>
-    <style name="Theme.AdsbDisplay.NoActionBar">
+    <style name="Theme.MeerkatLight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
-    <style name="Theme.AdsbDisplay.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-    <style name="Theme.AdsbDisplay.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="Theme.MeerkatLight.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="Theme.MeerkatLight.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>
