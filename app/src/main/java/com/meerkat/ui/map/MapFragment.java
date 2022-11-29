@@ -49,7 +49,7 @@ public class MapFragment extends Fragment {
         binding = FragmentMapBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         ImageView mapView = binding.mapview;
-        background = new Background(getContext(), binding.compassView, getWidth(getContext()));
+        background = new Background(getContext(), binding.compassView, binding.compassText, getWidth(getContext()));
         layers = new LayerDrawable(new Drawable[]{background});
         mapView.setImageDrawable(layers);
 

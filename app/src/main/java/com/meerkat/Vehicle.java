@@ -33,7 +33,7 @@ public class Vehicle implements Comparable<Vehicle> {
     public final ArrayList<Position> predicted;
     public @NonNull
     Gdl90Message.Emitter emitterType;
-    public Position current;
+    public final Position current;
     public Position predictedPosition;
     private float distance;
     final AircraftLayer layer;
@@ -91,44 +91,50 @@ public class Vehicle implements Comparable<Vehicle> {
 
     public void update(Position point, String callsign, @NonNull Gdl90Message.Emitter emitterType) {
 //        Log.d(String.format("%06x, \"%s\", \"%s\", %s", id, callsign, emitterType, point.toString()));
-        synchronized (this) {
-            current = point;
-            distance = Gps.location.distanceTo(current); // metres
+        synchronized (current) {
+            current.set(point);
+        }
+        distance = Gps.location.distanceTo(point); // metres
 //        Log.i("Current: " + current.toString());
-            history.add(current);
-            if (emitterType != Gdl90Message.Emitter.Unknown) {
-                if (this.emitterType != emitterType) {
-                    this.emitterType = emitterType;
-                }
+        history.add(point);
+        if (emitterType != Gdl90Message.Emitter.Unknown) {
+            if (this.emitterType != emitterType) {
+                this.emitterType = emitterType;
             }
-            if (callsign != null)
-                this.callsign = callsign;
-            if (showLinearPredictionTrack)
-                predictedPosition = current.linearPredict(predictionSeconds);
-            else
-                predictedPosition = null;
-            if (showPolynomialPredictionTrack) {
-                PolynomialRegression prSpeedTrack = new PolynomialRegression(current.getTime(), 2);
-                final long maxAge = point.getTime() - historySeconds * 1000L;
-                int i;
-                for (i = history.size(); i > 0; i--) {
-                    if (history.get(i - 1).getTime() < maxAge) break;
-                }
-                float prevTrack = i == 0 ? history.get(0).getTrack() : history.get(i - 1).getTrack();
-                float prevTime = i == 0 ? history.get(0).getTime() * 2 - history.get(1).getTime() : history.get(i - 1).getTime();
-                for (; i < history.size(); i++) {
-                    var p = history.get(i);
-                    if (p.getTime() == prevTime) continue;
-                    // Use the angle between one reading and the next and their timestamps to calculate
-                    // rate of turn for prediction. This is to avoid clock arithmetic issues,
-                    // and to allow predictions that exceed 180 degrees total turn
-                    var turnRate = (p.getTrack() - prevTrack) / (p.getTime() - prevTime);
-                    prevTrack = p.getTrack();
-                    if (turnRate < -180) turnRate += 180;
-                    else if (turnRate > 180) turnRate -= 180;
-                    prSpeedTrack.add(p.getTime(), p.getSpeedUnits().value, turnRate);
-                }
-                double[][] cSpeedTrack = prSpeedTrack.getCoefficients();
+        }
+        if (callsign != null)
+            this.callsign = callsign;
+        if (showLinearPredictionTrack)
+            predictedPosition = current.linearPredict(predictionSeconds);
+        else
+            predictedPosition = null;
+
+        if (showPolynomialPredictionTrack) {
+            PolynomialRegression prSpeedTrack = new PolynomialRegression(current.getTime(), 2);
+            final long maxAge = point.getTime() - historySeconds * 1000L;
+            synchronized(history) {
+                history.removeIf(e -> e.getTime() < maxAge);
+            }
+            float prevTrack = history.get(0).getTrack();
+            float prevTime = history.get(0).getTime();
+            for (int i = 1; i < history.size(); i++) {
+                var p = history.get(i);
+                var time = p.getTime();
+                if (time == prevTime) continue;
+                // Use the angle between one reading and the next and their timestamps to calculate
+                // rate of turn for prediction. This is to avoid clock arithmetic issues,
+                // and to allow predictions that exceed 180 degrees total turn
+                var track = p.getTrack();
+
+                var turnRate = (track - prevTrack) / (time - prevTime)/1000;
+                if (turnRate < -180) turnRate += 180;
+                else if (turnRate > 180) turnRate -= 180;
+                prSpeedTrack.add(time, p.getSpeedUnits().value, turnRate);
+                prevTrack = track;
+                prevTime = time;
+            }
+            double[][] cSpeedTrack = prSpeedTrack.getCoefficients();
+            synchronized (predicted) {
                 predicted.clear();
                 if (cSpeedTrack != null) {
                     Log.v("Speed coeffs %.1f %.3f %.5f", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2]);
@@ -153,8 +159,7 @@ public class Vehicle implements Comparable<Vehicle> {
 
     @NonNull
     public String toString() {
-        return String.format(Locale.ENGLISH, "%06x %-8s %c %s", id, callsign, current.isCrcValid() ? ' ' : '!',
-                current.toString());
+        return String.format(Locale.ENGLISH, "%06x %-8s %c %s", id, callsign, current.isCrcValid() ? ' ' : '!', current);
     }
 
     @Override

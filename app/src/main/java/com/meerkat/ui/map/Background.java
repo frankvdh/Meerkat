@@ -13,11 +13,11 @@
 package com.meerkat.ui.map;
 
 import static com.meerkat.Settings.circleRadiusStep;
+import static com.meerkat.Settings.headingUp;
 import static com.meerkat.Settings.screenYPosPercent;
 import static com.meerkat.Settings.trackUp;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -27,14 +27,16 @@ import android.graphics.PathDashPathEffect;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
 
+import com.meerkat.Compass;
 import com.meerkat.Gps;
 import com.meerkat.R;
 import com.meerkat.log.Log;
@@ -43,9 +45,11 @@ public class Background extends Drawable {
     private final Paint redPaint;
     private final Paint circlePaint;
     private final ImageView compassView;
+    private final TextView compassText;
 
-    public Background(Context context, ImageView compassView, int mapWidth) {
+    public Background(Context context, ImageView compassView, TextView compassText, int mapWidth) {
         this.compassView = compassView;
+        this.compassText = compassText;
         Paint whitePaint = new Paint();
         whitePaint.setColor(Color.WHITE);
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -65,9 +69,17 @@ public class Background extends Drawable {
         compassView.setTranslationY(viewSize/2f);
         compassView.setLeft(mapWidth -viewSize);
         compassView.setBottom(viewSize);
-
         compassView.setScaleX((float)viewSize/imageSize);
         compassView.setScaleY((float)viewSize/imageSize);
+
+        compassText.setTop(compassView.getTop());
+        compassText.setRight(compassView.getRight());
+        compassText.setLeft(compassView.getLeft());
+        compassText.setBottom(compassView.getBottom());
+        compassText.setTranslationX(-viewSize/2f);
+        compassText.setTranslationY(viewSize/2f + compassText.getLineHeight()/2f);
+        compassText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        compassText.setText(headingUp ? "H" : trackUp ? "T" : "N");
     }
 
     @Override
@@ -86,8 +98,9 @@ public class Background extends Drawable {
         for (float rad = radiusStep; rad < bounds.height(); rad += radiusStep) {
             canvas.drawCircle(0, 0, rad, circlePaint);
         }
-        compassView.setRotation(360-Gps.location.getBearing());
-//        Log.d("finished draw background");
+        int rot = (int) ((headingUp ? -Compass.degTrue() : trackUp ? -Gps.location.getBearing() : 0) + 360) % 360;
+        compassView.setRotation(rot);
+        Log.v("finished draw background... rot = %d", rot);
     }
 
     @Override

@@ -14,6 +14,7 @@ package com.meerkat.ui.map;
 
 import static com.meerkat.Settings.gradientMaximumDiff;
 import static com.meerkat.Settings.gradientMinimumDiff;
+import static com.meerkat.Settings.headingUp;
 import static com.meerkat.Settings.historySeconds;
 import static com.meerkat.Settings.showLinearPredictionTrack;
 import static com.meerkat.Settings.showPolynomialPredictionTrack;
@@ -43,6 +44,7 @@ import android.graphics.drawable.Icon;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.meerkat.Compass;
 import com.meerkat.Gps;
 import com.meerkat.Vehicle;
 import com.meerkat.gdl90.Gdl90Message;
@@ -114,7 +116,7 @@ public class AircraftLayer extends Drawable {
     }
 
     Point screenPoint(Polar polar) {
-        double b = Position.bearingToRad(trackUp && Gps.location.hasBearing() ? polar.bearing - Gps.location.getBearing() : polar.bearing);
+        double b = Position.bearingToRad(polar.bearing - (headingUp ? Compass.degTrue() : trackUp ? Gps.location.getBearing() : 0));
         // new point is relative to (0, 0) of the canvas, which is at the ownShip position
         return new Point((int) (cos(b) * polar.distance.value * MapFragment.scaleFactor), (int) (-sin(b) * polar.distance.value * MapFragment.scaleFactor));
     }
@@ -150,7 +152,7 @@ public class AircraftLayer extends Drawable {
         float track;
         boolean isAirborne, isValid;
         if (!this.isVisible()) return;
-        synchronized (v) {
+        synchronized (v.current) {
             track = v.current.getTrack();
             isAirborne = v.current.isAirborne();
             isValid = v.current.isValid();
@@ -166,7 +168,8 @@ public class AircraftLayer extends Drawable {
             // Draw the icon if part of it is visible
             if (aircraftPoint.x > bounds.left - bmpWidth / 2 && aircraftPoint.x < bounds.right + bmpWidth / 2 && aircraftPoint.y > bounds.top - bmpWidth / 2 && aircraftPoint.y < bounds.bottom + bmpWidth / 2) {
                 canvas.drawBitmap(replaceColor(v.emitterType.bitmap, altColour(polar.altDifference, isAirborne)),
-                        MapFragment.positionMatrix(v.emitterType.bitmap.getWidth() / 2, v.emitterType.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y, Float.isNaN(track) ? 0 : track), null);
+                        MapFragment.positionMatrix(v.emitterType.bitmap.getWidth() / 2, v.emitterType.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
+                                track - (headingUp ? Compass.degTrue() : trackUp ? track : 0)), null);
             }
         } else {
             isValid = !v.history.isEmpty();
@@ -192,7 +195,7 @@ public class AircraftLayer extends Drawable {
 
             if (showPolynomialPredictionTrack) {
                 current = aircraftPoint;
-                synchronized (v) {
+                synchronized (v.predicted) {
                     for (Position p1 : v.predicted) {
                         polar.set(Gps.location, p1);
                         android.graphics.Point sxy1 = screenPoint(polar);
@@ -209,7 +212,7 @@ public class AircraftLayer extends Drawable {
         if (historySeconds > 0) {
             final long maxAge = now - historySeconds * 1000L;
             current = new Point(aircraftPoint);
-            synchronized (v) {
+            synchronized (v.history) {
                 for (int i = v.history.size() - 2; i >= 0; i--) {
                     Position p = v.history.get(i);
                     if (p.getTime() < maxAge) break;

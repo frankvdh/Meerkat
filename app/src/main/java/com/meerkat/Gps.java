@@ -21,15 +21,8 @@ import android.location.LocationManager;
 import android.os.IBinder;
 import android.widget.Toast;
 
-import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
-import com.meerkat.measure.Distance;
-import com.meerkat.measure.Height;
-import com.meerkat.measure.Polar;
-import com.meerkat.measure.Speed;
 import com.meerkat.ui.map.MapFragment;
-
-import java.util.Locale;
 
 public class Gps extends Service implements LocationListener {
 
@@ -44,13 +37,28 @@ public class Gps extends Service implements LocationListener {
     private static final long MIN_UPDATE_INTERVAL = 10000; // 10 seconds
 
     // Declaring a Location Manager
-    private LocationManager locationManager;
+    private final LocationManager locationManager;
 
-    @SuppressLint("MissingPermission")
     public Gps(LocationManager locationManager) {
+        this.locationManager = locationManager;
         location = new Location("gps");
         if (Settings.simulate)
             return;
+        resume();
+    }
+
+    /**
+     * Stop using GPS listener
+     */
+
+    public void pause() {
+        if (locationManager != null) {
+            locationManager.removeUpdates(this);
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    public void resume() {
         try {
             // getting GPS status
             isEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -63,19 +71,7 @@ public class Gps extends Service implements LocationListener {
                 Log.d("GPS Enabled: %s", location);
             }
         } catch (Exception e) {
-            throw new RuntimeException("GPSTracker setup failed: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Stop using GPS listener
-     * Calling this function will stop using GPS in your app
-     */
-
-    public void pause() {
-        if (locationManager != null) {
-            locationManager.removeUpdates(this);
-            locationManager = null;
+            throw new RuntimeException("GPS setup failed: " + e.getMessage());
         }
     }
 
@@ -83,10 +79,11 @@ public class Gps extends Service implements LocationListener {
     public void onLocationChanged(Location location) {
         if (location.hasBearing() && location.getBearing() == 0.0)
             location.removeBearing();
-        Log.d("GPS: (%.5f, %.5f) @%.0fm, %.0f %3.0f%c", location.getLatitude(), location.getLongitude(), location.getAltitude(), location.getSpeed(), location.getBearing(), location.hasBearing()? ' ' : '!');
+        Log.d("GPS: (%.5f, %.5f) @%.0fm, %.0f %3.0f%c", location.getLatitude(), location.getLongitude(), location.getAltitude(), location.getSpeed(), location.getBearing(), location.hasBearing() ? ' ' : '!');
         synchronized (Gps.location) {
             Gps.location.set(location);
         }
+        Compass.locationChanged = true;
         MapFragment.refresh(null);
     }
 

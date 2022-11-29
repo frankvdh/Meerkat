@@ -13,4 +13,6 @@
     <string name="vertical_speed">Vertical Speed</string>
     <string name="map">Map</string>
     <string name="compass">Compass</string>
+    <string name="log">Log</string>
+    <string name="wifi">Wifi</string>
 </resources>

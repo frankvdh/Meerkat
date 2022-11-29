@@ -26,10 +26,22 @@
         android:id="@+id/compassView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:contentDescription="@string/compass"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/compass"
-        tools:ignore="ImageContrastCheck"
-        android:contentDescription="@string/compass" />
+        tools:ignore="ImageContrastCheck" />
+
+    <TextView
+        android:id="@+id/compassText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=" "
+        android:textSize="34sp"
+        app:layout_constraintBottom_toTopOf="@+id/compassView"
+        app:layout_constraintEnd_toStartOf="@+id/compassView"
+        app:layout_constraintStart_toStartOf="@id/compassView"
+        app:layout_constraintTop_toTopOf="@id/compassView"
+        tools:ignore="SpeakableTextPresentCheck" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

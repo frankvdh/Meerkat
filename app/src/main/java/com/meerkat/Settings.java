@@ -49,7 +49,7 @@ public class Settings {
     public static Speed.Units speedUnits;
     public static boolean simulate;
     public static String countryCode;
-    public static boolean trackUp;
+    public static boolean trackUp, headingUp;
 
     public static void load(Context context) {
         prefs = context.getSharedPreferences("com.meerkat_preferences", MODE_PRIVATE);
@@ -95,9 +95,10 @@ public class Settings {
             speedUnits = Speed.Units.KNOTS;
             saveNeeded = true;
         }
-        simulate = prefs.getBoolean("simulate", false);
+        simulate = true; //prefs.getBoolean("simulate", false);
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
-        trackUp = prefs.getBoolean("trackUp", true);
+        trackUp = false; //prefs.getBoolean("trackUp", false);
+        headingUp = true; //prefs.getBoolean("headingUp", !trackUp);
         if (saveNeeded)
             save();
         Log.i("Settings loaded");
@@ -129,6 +130,7 @@ public class Settings {
         edit.putBoolean("simulate", simulate);
         edit.putString("countryCode", countryCode);
         edit.putBoolean("trackUp", trackUp);
+        edit.putBoolean("headingUp", headingUp);
         edit.apply();
         Log.i("Settings saved");
     }

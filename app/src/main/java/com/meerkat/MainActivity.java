@@ -14,32 +14,27 @@ package com.meerkat;
 
 import static android.os.Environment.MEDIA_MOUNTED;
 import static com.meerkat.Settings.fileLog;
-import static com.meerkat.Settings.load;
 import static com.meerkat.Settings.port;
 import static com.meerkat.Settings.simulate;
 import static com.meerkat.Settings.wifiName;
 import static com.meerkat.databinding.ActivityMainBinding.inflate;
-import static com.meerkat.ui.map.AircraftLayer.loadIcon;
 import static java.lang.Thread.sleep;
 
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.Display;
+import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.content.res.AppCompatResources;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -47,9 +42,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.meerkat.databinding.ActivityMainBinding;
-import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
-import com.meerkat.ui.map.Background;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,6 +52,8 @@ import java.util.Iterator;
 public class MainActivity extends AppCompatActivity {
 
     static boolean firstRun = true;
+private Gps gps;
+private Compass compass;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,9 +143,9 @@ public class MainActivity extends AppCompatActivity {
            Log.level(Log.Level.D);
             Log.d("Permissions OK");
 
-            new Gps((LocationManager) this.getSystemService(LOCATION_SERVICE));
+            gps = new Gps((LocationManager) this.getSystemService(LOCATION_SERVICE));
+            compass = new Compass(getApplicationContext());
             VehicleList.vehicleList = new VehicleList();
-
             if (simulate) {
                 Simulator.startAll();
                 firstRun = false;
@@ -183,8 +178,22 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void onPause() {
+        super.onPause();
+        gps.pause();
+        compass.pause();
+    }
+
+    public void onResume() {
+        super.onResume();
+        gps.resume();
+        compass.resume();
+    }
+
     public void onStop() {
         super.onStop();
+        gps.pause();
+        compass.pause();
         Log.i("Stop");
         Log.close();
     }
@@ -196,5 +205,9 @@ public class MainActivity extends AppCompatActivity {
         Log.d("Request Permissions Result: %d", requestCode);
         for (int i = 0; i < permissions.length; i++)
             Log.d("%s -> %d", permissions[i], grantResults[i]);
+    }
+
+    public void onClick(View view) {
+        Log.e("click in MainActivity... should never be called");
     }
 }

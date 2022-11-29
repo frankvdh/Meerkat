@@ -15,16 +15,16 @@ package com.meerkat.gdl90;
 import static java.lang.Float.NaN;
 import static java.lang.Float.isNaN;
 
+import android.hardware.GeomagneticField;
+
 import androidx.annotation.NonNull;
 
-import com.meerkat.TSAGeoMag;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Height;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Speed;
 
 import java.io.ByteArrayInputStream;
-import java.util.Date;
 import java.util.Locale;
 
 public class Traffic extends Gdl90Message {
@@ -108,7 +108,7 @@ public class Traffic extends Gdl90Message {
             case True:
                 return track;
             case Mag:
-                return (float) ((track + TSAGeoMag.getDeclination(lat, lon, new Date(), alt)) % 360);
+                return (float) ((track + new GeomagneticField((float) lat, (float) lon, alt, System.currentTimeMillis()).getDeclination()) % 360);
             // Track
             case TRK:
                 return track;

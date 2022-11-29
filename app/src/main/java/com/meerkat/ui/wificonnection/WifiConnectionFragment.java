@@ -73,7 +73,7 @@ public class WifiConnectionFragment extends Fragment implements ApListAdapter.Sc
         b.setOnClickListener(this);
         b.setVisibility(View.VISIBLE);
         myAdapter = new ApListAdapter(accessPoints, this);
-        RecyclerView apListView = binding.aplistview;
+        RecyclerView apListView = binding.apListView;
         apListView.setVisibility(View.INVISIBLE);
         // Improve performance if you know that changes in content do not change the layout size of the RecyclerView
         apListView.setHasFixedSize(true);
@@ -101,7 +101,7 @@ public class WifiConnectionFragment extends Fragment implements ApListAdapter.Sc
     public void onClick(View v) {
         Button b = binding.scanWifiButton;
         b.setVisibility(View.INVISIBLE);
-        RecyclerView apList = binding.aplistview;
+        RecyclerView apList = binding.apListView;
         apList.setVisibility(View.VISIBLE);
         Log.i("Scanning WiFi");
         wifiName = null;
@@ -144,7 +144,7 @@ public class WifiConnectionFragment extends Fragment implements ApListAdapter.Sc
 
         // User has selected a Wifi SSID -- save it for future use, and connect to it
         Settings.save();
-        binding.aplistview.setVisibility(View.INVISIBLE);
+        binding.apListView.setVisibility(View.INVISIBLE);
         Log.i("Connecting to " + wifiName);
         ConnectivityManager connMgr = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         WifiConnection.init(connMgr, wifiName, "");
