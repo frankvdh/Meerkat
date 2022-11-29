@@ -14,10 +14,18 @@ This is very much in the pre-release state. Currently it does
 * A simulator to generate "traffic" for testing (turned on by default!)
 * Display logs & raw messages on the screen
 * Display nearby traffic in a text window
-* Display nearby traffic in a graphic map window, either North-up or Track-up
+* Display nearby traffic in a graphic map window, either Heading-Up, Track-Up, or North-Up
 
 In the map window, the current GPS position is located at the lower centre of the screen. The background has some circles and lines to make it easier to estimate distance and direction.
 The map window is zoomable with a pinch gesture.
+
+In Heading-Up mode, the phone's orientation is used to orientate the map display, so that (assuming the phone is orientated in the same direction as the aircraft), the view
+on the screen should match with the view out the window... i.e. the screen display is oriented with the real world. The downside is that this will be inaccurate in accelerated flight (turns, acceleration/decelleration, changes in climb/descent rate).
+
+In Track-Up mode, the aircraft GPS track is used to orientate the map display. In nil-wind and non-sideslip conditions, this will be the same as Heading-Up,
+and it will not be affected by accelerated flight.
+
+In North-Up mode, the map display is aligned with Grid North.
 
 Each aircraft (or ADS-B-equipped ground vehicle or obstacle) is displayed as an icon depending on its GDL90 emitter type. 
 
@@ -25,6 +33,7 @@ Each aircraft's icon is coloured to indicate the altitude relative to the phone'
 * green if 5000ft or more below, transitioning to red if less than 1000ft below 
 * blue if 5000ft or more above, transitioning to red if less than 1000ft above
 * black if not airborne.
+* The 5000ft and 1000ft limits are settable by changing the gradientMaximumDiff and gradientMinimumDiff (and altUnits) settings
 
 Each icon has text alongside, giving
 * The aircraft's callsign (if available)
@@ -79,6 +88,7 @@ User settings
 | altUnits                        | User's preferred altitude units FT, M                                                                                                                                                             | FT                                              |
 | speedUnits                      | User's preferred speed units KTS, MPH, KPH                                                                                                                                                        | KPH                                             |
 | countryCode                     | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed.                                                                      | ZK                                              |
+| headingUp                       | Display orientation... heading-up... if false, trackUp is used                                                                                                                                                      | true                                            |
 | trackUp                         | Display orientation... track-up or North-up                                                                                                                                                       | true                                            |
 
 Debugging settings
@@ -94,27 +104,26 @@ Debugging settings
 
 TO DO
 -----
-This list is growing rather than shrinking!
-* Allow changing the display orientation to "Heading up"
-* Use a theme to allow black background
-* Digital filtering of path to predict track
+This list is more-or-less in priority order. It is growing rather than shrinking!
+* Keep screen on
+* Make compass a button to toggle between Heading-Up, Track-Up, and North-Up display orientations
+* Screen orientation as an enum
+* Add a version to settings
+* Allow other units for vertical speed (currently only fpm)
 * Ownship track... history and prediction
 * Facility to clear log files
-* Expand to be able to use other Wifi-enabled ADS-B In devices
-* Add a Settings screen to enable all the settings to be changed interactively instead of needing to edit the text file
-* Improve the code style
-* Internationalisation
-* Port to Apple IOS.
-* Keep screen on
-* Allow other units for vertical speed (currently only fpm)
-* Improve the code style
-* Port to Apple IOS
-* Write some documentation
 * Add a "Quit" button
-* Make compass a button to toggle between the display orientations
 * Display zoom level
 * Auto-zoom
 * Indicate Mode-C traffic presence
 * Fix - Reloading app to restart properly
-* Check GPS hasBearing() and getBearing() for Track-up
+* Add a Settings screen to enable all the settings to be changed interactively instead of needing to edit the text file
+* Audio / Haptic alerts of collision threats
+* Use a theme to allow black background
+* Digital filtering of path to predict tracks
+* Expand to be able to use other Wifi-enabled ADS-B In devices
+* Improve the code style
+* Write some documentation
 * Lots more testing
+* Internationalisation
+* Port to Apple IOS.

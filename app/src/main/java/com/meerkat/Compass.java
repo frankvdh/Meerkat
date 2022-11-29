@@ -31,12 +31,9 @@ import android.os.IBinder;
 import androidx.annotation.Nullable;
 
 import com.meerkat.log.Log;
+import com.meerkat.ui.map.MapFragment;
 
 public class Compass extends Service implements SensorEventListener {
-
-    LowPassFilter filterYaw = new LowPassFilter(0.03f);
-    LowPassFilter filterPitch = new LowPassFilter(0.03f);
-    LowPassFilter filterRoll = new LowPassFilter(0.03f);
 
     static GeomagneticField geoField;
     static public float Declination = 0;
@@ -49,9 +46,9 @@ public class Compass extends Service implements SensorEventListener {
     private final float[] rotationMatrix = new float[16];
     private final float[] orientation = new float[4];
 
-    static public float Heading = 0.f;
-    static public float Pitch = 0.f;
-    static public float Roll = 0.f;
+    static public float Heading;
+    static public float Pitch;
+    static public float Roll;
 
     public Compass(Context context) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
@@ -65,10 +62,6 @@ public class Compass extends Service implements SensorEventListener {
             locationChanged = false;
         }
         return (Heading + Declination) % 360;
-    }
-
-    public static float degMagnetic() {
-        return Heading;
     }
 
     public void resume() {
@@ -106,17 +99,18 @@ public class Compass extends Service implements SensorEventListener {
             SensorManager.getOrientation(rotationMatrix, orientation);
             // "orientationAngles" has azimuth (Z axis angle relative to mag north), pitch, roll
 
-            float yaw = (float) (Math.toDegrees(orientation[0]));
-            float pitch = (float) Math.toDegrees(orientation[1]);
-            float roll = (float) Math.toDegrees(orientation[2]);
+            var prevHeading = Heading;
+            Heading = (float) (Math.toDegrees(orientation[0]));
+            Pitch = (float) Math.toDegrees(orientation[1]);
+            Roll = (float) Math.toDegrees(orientation[2]);
 
-            Heading = filterYaw.lowPass(yaw);
-            Pitch = filterPitch.lowPass(pitch);
-            Roll = filterRoll.lowPass(roll);
-            Log.v("Mag %5.1f %5.1f %5.1f | Acc %5.1f %5.1f %5.1f | Mag deg %3.0f",
-                    lastMagFields[0], lastMagFields[1], lastMagFields[2],
-                    lastAccels[0], lastAccels[1], lastAccels[2],
-                    Heading);
+            if ((int) Heading != (int) prevHeading) {
+                 Log.v("Mag %5.1f %5.1f %5.1f | Acc %5.1f %5.1f %5.1f | Mag deg %3.0f",
+                        lastMagFields[0], lastMagFields[1], lastMagFields[2],
+                        lastAccels[0], lastAccels[1], lastAccels[2],
+                        Heading);
+                MapFragment.refresh(null);
+            }
         }
     }
 

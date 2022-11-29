@@ -12,12 +12,11 @@
  */
 package com.meerkat;
 
+import static android.content.Context.MODE_PRIVATE;
+import static com.meerkat.log.Log.Level;
+
 import android.content.Context;
 import android.content.SharedPreferences;
-
-import static android.content.Context.MODE_PRIVATE;
-
-import static com.meerkat.log.Log.*;
 
 import com.meerkat.log.Log;
 import com.meerkat.measure.Distance;
@@ -95,10 +94,10 @@ public class Settings {
             speedUnits = Speed.Units.KNOTS;
             saveNeeded = true;
         }
-        simulate = true; //prefs.getBoolean("simulate", false);
+        simulate = prefs.getBoolean("simulate", false);
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
-        trackUp = false; //prefs.getBoolean("trackUp", false);
-        headingUp = true; //prefs.getBoolean("headingUp", !trackUp);
+        headingUp = prefs.getBoolean("headingUp", true);
+        trackUp = !headingUp && prefs.getBoolean("trackUp", true);
         if (saveNeeded)
             save();
         Log.i("Settings loaded");
