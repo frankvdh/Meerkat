@@ -14,11 +14,9 @@ package com.meerkat.ui.map;
 
 import static com.meerkat.Settings.gradientMaximumDiff;
 import static com.meerkat.Settings.gradientMinimumDiff;
-import static com.meerkat.Settings.headingUp;
 import static com.meerkat.Settings.historySeconds;
 import static com.meerkat.Settings.showLinearPredictionTrack;
 import static com.meerkat.Settings.showPolynomialPredictionTrack;
-import static com.meerkat.Settings.trackUp;
 import static java.lang.Double.isNaN;
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
@@ -44,7 +42,6 @@ import android.graphics.drawable.Icon;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.meerkat.Compass;
 import com.meerkat.Gps;
 import com.meerkat.Vehicle;
 import com.meerkat.gdl90.Gdl90Message;
@@ -53,12 +50,11 @@ import com.meerkat.measure.Height;
 import com.meerkat.measure.Polar;
 import com.meerkat.measure.Position;
 
-import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 
 public class AircraftLayer extends Drawable {
     private Vehicle v;
-    private final Polar polar = new Polar();
     private static final PathEffect historyEffect;
     private static final PathEffect predictEffect;
     private static final Paint textPaint = new Paint(Color.BLACK);
@@ -68,6 +64,7 @@ public class AircraftLayer extends Drawable {
         trackPaint.setStrokeWidth(10);
         textPaint.setStyle(Paint.Style.FILL);
         textPaint.setTextSize(48);
+        textPaint.setTextAlign(Paint.Align.LEFT);
         Path path = new Path();
         path.addCircle(0, 0, 4, Path.Direction.CW);
         historyEffect = new PathDashPathEffect(path, 8, 0, PathDashPathEffect.Style.TRANSLATE);
@@ -115,10 +112,12 @@ public class AircraftLayer extends Drawable {
         return 0xff000000 | R << 16 | BG << (altDifference.value > 0 ? 0 : 8);
     }
 
-    Point screenPoint(Polar polar) {
-        double b = Position.bearingToRad(polar.bearing - (headingUp ? Compass.degTrue() : trackUp ? Gps.location.getBearing() : 0));
+    Point screenPoint(Position p) {
+        Polar spPolar = new Polar();
+        spPolar.set(Gps.location, p);
+        double b = Position.bearingToRad(spPolar.bearing - MapFragment.displayRotation());
         // new point is relative to (0, 0) of the canvas, which is at the ownShip position
-        return new Point((int) (cos(b) * polar.distance.value * MapFragment.scaleFactor), (int) (-sin(b) * polar.distance.value * MapFragment.scaleFactor));
+        return new Point((int) (cos(b) * spPolar.distance.value * MapFragment.scaleFactor), (int) (-sin(b) * spPolar.distance.value * MapFragment.scaleFactor));
     }
 
     static public Bitmap loadIcon(Context context, int iconId) {
@@ -138,90 +137,77 @@ public class AircraftLayer extends Drawable {
         return bitmap;
     }
 
-    android.graphics.Point current;
-
-    private void lineTo(Canvas canvas, android.graphics.Point p, int colour, PathEffect effect) {
-        trackPaint.setColor(colour);
+    private Point line(Canvas canvas, Point current, Position p, PathEffect effect) {
+        Point point = screenPoint(p);
+        if (current.x == point.x && current.y == point.y)
+            return current;
+        trackPaint.setColor(altColour(altDiff(p.getAlt()), p.isAirborne()));
         trackPaint.setPathEffect(effect);
-        canvas.drawLine(current.x, current.y, p.x, p.y, trackPaint);
-        current = p;
+        canvas.drawLine(current.x, current.y, point.x, point.y, trackPaint);
+        return point;
+    }
+
+    private void polyLine(Canvas canvas, Point c1, final List<Position> l, PathEffect effect) {
+        Point current = new Point(c1);
+        if (l == null || l.size() == 0) return;
+        synchronized (l) {
+            for (Position p: l) {
+                current = line(canvas, current, p, effect);
+            }
+        }
+    }
+
+    private Height altDiff(Height h) {
+        return new Height(h.value - (float) Gps.location.getAltitude() / h.units.factor, h.units);
     }
 
     @Override
     public void draw(@NonNull Canvas canvas) {
         float track;
-        boolean isAirborne, isValid;
+        boolean isAirborne;
+        Gdl90Message.Emitter emitter;
+        Position currentPos;
+        String callsign;
         if (!this.isVisible()) return;
-        synchronized (v.current) {
-            track = v.current.getTrack();
-            isAirborne = v.current.isAirborne();
-            isValid = v.current.isValid();
-        }
-        Log.v("draw " + v.id + " " + v.callsign);
-        // Canvas is already translated so that 0,0 is at the ownShip point
-        Rect bounds = canvas.getClipBounds();
-        var bmpWidth = v.emitterType.bitmap.getWidth();
-        Point aircraftPoint;
-        if (isValid) {
-            polar.set(Gps.location, v.current);
-            aircraftPoint = screenPoint(polar);
-            // Draw the icon if part of it is visible
-            if (aircraftPoint.x > bounds.left - bmpWidth / 2 && aircraftPoint.x < bounds.right + bmpWidth / 2 && aircraftPoint.y > bounds.top - bmpWidth / 2 && aircraftPoint.y < bounds.bottom + bmpWidth / 2) {
-                canvas.drawBitmap(replaceColor(v.emitterType.bitmap, altColour(polar.altDifference, isAirborne)),
-                        MapFragment.positionMatrix(v.emitterType.bitmap.getWidth() / 2, v.emitterType.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
-                                track - (headingUp ? Compass.degTrue() : trackUp ? track : 0)), null);
+        synchronized (this) {
+            synchronized (v.lastValid) {
+                track = v.lastValid.getTrack();
+                isAirborne = v.lastValid.isAirborne();
+                emitter = v.emitterType;
+                currentPos = new Position(v.lastValid);
+                callsign = v.callsign;
             }
-        } else {
-            isValid = !v.history.isEmpty();
-            if (isValid) {
-                polar.set(Gps.location, v.history.get(v.history.size() - 1));
-                aircraftPoint = screenPoint(polar);
-            } else aircraftPoint = null;
-        }
-        if (isValid) {
-            if (aircraftPoint != null) {
+            Log.d("draw %d %s %s", v.id, callsign, currentPos);
+            // Canvas is already translated so that 0,0 is at the ownShip point
+            Rect bounds = canvas.getClipBounds();
+            var bmpWidth = emitter.bitmap.getWidth();
+            Point aircraftPoint = screenPoint(currentPos);
+            // Draw the icon if part of it is visible
+            Height altDiff = new Height((float) ((currentPos.getAltitude() - Gps.location.getAltitude()) / currentPos.getAlt().units.factor), currentPos.getAlt().units);
+            if (aircraftPoint.x > bounds.left - bmpWidth / 2 && aircraftPoint.x < bounds.right + bmpWidth / 2 && aircraftPoint.y > bounds.top - bmpWidth / 2 && aircraftPoint.y < bounds.bottom + bmpWidth / 2) {
+                canvas.drawBitmap(replaceColor(emitter.bitmap, altColour(altDiff, isAirborne)),
+                        MapFragment.positionMatrix(emitter.bitmap.getWidth() / 2, emitter.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
+                                track - MapFragment.displayRotation()), null);
                 int lineHeight = (int) (textPaint.getTextSize() + 1);
-                String[] text = {String.format(Locale.ENGLISH, "%s%c", v.getLabel(), v.current.isCrcValid() ? ' ' : '!'),
-                        isNaN(polar.altDifference.value) ? "" : polar.altDifference.toString()};
+                String[] text = {String.format(Locale.ENGLISH, "%s%c", v.getLabel(), v.isValid() ? ' ' : '!'),
+                        isNaN(altDiff.value) ? "" : altDiff.toString()};
                 drawText(canvas, aircraftPoint, lineHeight, text, bounds, bmpWidth);
             }
 
-            if (showLinearPredictionTrack && v.predictedPosition != null && v.predictedPosition.isValid()) {
-                current = aircraftPoint;
-                polar.set(Gps.location, v.predictedPosition);
-                Log.v(v.callsign + ": " + polar + String.format(" %08x", altColour(polar.altDifference, isAirborne)));
-                lineTo(canvas, screenPoint(polar), altColour(polar.altDifference, isAirborne), predictEffect);
-            }
-
-            if (showPolynomialPredictionTrack) {
-                current = aircraftPoint;
-                synchronized (v.predicted) {
-                    for (Position p1 : v.predicted) {
-                        polar.set(Gps.location, p1);
-                        android.graphics.Point sxy1 = screenPoint(polar);
-                        if (current.x == sxy1.x && current.y == sxy1.y)
-                            continue;
-                        Log.v("%s: %s %08x", v.callsign, polar, altColour(polar.altDifference, isAirborne));
-                        lineTo(canvas, sxy1, altColour(polar.altDifference, isAirborne), predictEffect);
+            if (showLinearPredictionTrack && v.predictedPosition != null) {
+                synchronized (v.predictedPosition) {
+                    if (v.predictedPosition.isValid()) {
+                        line(canvas, aircraftPoint, v.predictedPosition, predictEffect);
                     }
                 }
             }
-        }
 
-        long now = Calendar.getInstance().getTime().getTime();
-        if (historySeconds > 0) {
-            final long maxAge = now - historySeconds * 1000L;
-            current = new Point(aircraftPoint);
-            synchronized (v.history) {
-                for (int i = v.history.size() - 2; i >= 0; i--) {
-                    Position p = v.history.get(i);
-                    if (p.getTime() < maxAge) break;
-                    polar.set(Gps.location, p);
-                    android.graphics.Point sxy1 = screenPoint(polar);
-                    if (sxy1.x == current.x && sxy1.y == current.y)
-                        continue;
-                    lineTo(canvas, sxy1, altColour(polar.altDifference, p.isAirborne()), historyEffect);
-                }
+             if (showPolynomialPredictionTrack) {
+                polyLine(canvas, aircraftPoint, v.predicted, predictEffect);
+             }
+
+            if (historySeconds > 0) {
+                polyLine(canvas, aircraftPoint, v.history, historyEffect);
             }
         }
     }
@@ -239,13 +225,12 @@ public class AircraftLayer extends Drawable {
         int x = aircraftPos.x;
         if (x < bounds.left) x = bounds.left;
         else if (x >= bounds.right) x = bounds.right - 1;
-        if (x > 0) {
-            x -= bmpWidth / 2;
+        if (x > bounds.width()/4) {
             textPaint.setTextAlign(Paint.Align.RIGHT);
-        } else {
-            x += bmpWidth / 2;
+        } else if (x < -bounds.width()/4) {
             textPaint.setTextAlign(Paint.Align.LEFT);
         }
+        x += (textPaint.getTextAlign() == Paint.Align.LEFT ? bmpWidth : -bmpWidth) / 2;
 
         int y = aircraftPos.y;
         if (y < bounds.top + textHeight) y = bounds.top + textHeight;

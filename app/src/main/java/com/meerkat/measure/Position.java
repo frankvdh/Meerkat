@@ -11,7 +11,6 @@
  * NonCommercial — You may not use the material for commercial purposes.
  */package com.meerkat.measure;
 
-import static android.util.Half.NaN;
 import static com.meerkat.Settings.altUnits;
 import static com.meerkat.Settings.speedUnits;
 import static java.lang.Math.PI;
@@ -40,7 +39,7 @@ public class Position extends Location {
         if (alt != null && !Float.isNaN(alt.value)) setAltitude(alt.value * alt.units.factor);
         if (speed != null && !Float.isNaN(speed.value))
             setSpeed(speed.value * speed.units.factor);
-        if (!Float.isNaN(track)) setBearing(track);
+        if (!Float.isNaN(track)) setTrack(track);
         this.vVelFpm = vVelFpm;
         this.crcValid = crcValid;
         this.airborne = airborne;
@@ -49,7 +48,7 @@ public class Position extends Location {
     }
 
     public Position(String provider, double lat, double lon, Height alt, long time) {
-        this(provider, lat, lon, alt, null, Float.NaN, NaN, true, true, time);
+        this(provider, lat, lon, alt, null, Float.NaN, Float.NaN, true, true, time);
     }
 
     public Position(Location l, Polar p) {
@@ -63,11 +62,6 @@ public class Position extends Location {
     public Position(Position p) {
         super(p.getProvider());
         set(p);
-        setVVel(p.vVelFpm);
-        this.crcValid = p.crcValid;
-        this.airborne = p.airborne;
-        setSpeed(new Speed(p.speed.value, p.speed.units));
-        setAlt(new Height(p.alt.value, p.alt.units));
     }
 
     public void setSpeed(Speed speed) {
@@ -145,9 +139,19 @@ public class Position extends Location {
     }
 
 
-    //        Return new Point given initial coordinates, altitude, speed and track, and vertical speed
-    public Position linearPredict(int seconds) {
-        Polar p = new Polar(new Distance(getSpeedMps()*seconds, Distance.Units.M), getTrack(), new Height(vVelFpm * seconds/60f, Height.Units.FT));
+    public void set(Position p) {
+        super.set(p);
+        this.crcValid = p.crcValid;
+        this.airborne = p.airborne;
+        setSpeed(new Speed(p.speed.value, p.speed.units));
+        setAlt(new Height(p.alt.value, p.alt.units));
+        setVVel(p.vVelFpm);
+        setTrack(p.getTrack());
+    }
+
+    //        Return new Point seconds into the future, given initial coordinates, altitude, speed and track, and vertical speed
+    public Position linearPredict(long elapsedMs) {
+        Polar p = new Polar(new Distance(getSpeedMps()*elapsedMs/1000f, Distance.Units.M), getTrack(), new Height(vVelFpm * elapsedMs/60000f, Height.Units.FT));
         return new Position(this).moveBy(p);
     }
 

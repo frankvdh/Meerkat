@@ -21,7 +21,6 @@ import com.meerkat.measure.Position;
 import com.meerkat.ui.map.MapFragment;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.Executors;
@@ -30,13 +29,14 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
     static public VehicleList vehicleList;
 
     private void purge() {
-        long now = new Date().getTime();
+        long now = System.currentTimeMillis();
         synchronized (this) {
             Iterator<HashMap.Entry<Integer, Vehicle> > iterator = this.entrySet().iterator();
             while (iterator.hasNext()) {
                 HashMap.Entry<Integer, Vehicle> entry = iterator.next();
-                if (now - entry.getValue().current.getTime() > purgeSeconds * 1000L) {
-                    Log.i("Purge: %s, %d, %s, %s",entry.getValue().callsign, (now - entry.getValue().current.getTime()), new Date(now), new Date(entry.getValue().current.getTime()));
+                long age = now - entry.getValue().history.get(entry.getValue().history.size()-1).getTime();
+                if (age > purgeSeconds * 1000L) {
+                    Log.i("Purge: %s, %d",entry.getValue().callsign, age);
                     entry.getValue().layer.setVisible(false, false);
                     MapFragment.layers.invalidateDrawable(entry.getValue().layer);
                     iterator.remove();

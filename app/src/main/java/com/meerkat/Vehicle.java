@@ -12,28 +12,34 @@
  */
 package com.meerkat;
 
-import static com.meerkat.Settings.*;
+import static com.meerkat.Settings.countryCode;
+import static com.meerkat.Settings.historySeconds;
+import static com.meerkat.Settings.polynomialHistorySeconds;
+import static com.meerkat.Settings.polynomialPredictionStepSeconds;
+import static com.meerkat.Settings.predictionSeconds;
+import static com.meerkat.Settings.showLinearPredictionTrack;
+import static com.meerkat.Settings.showPolynomialPredictionTrack;
 
 import androidx.annotation.NonNull;
 
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
-import com.meerkat.measure.Speed;
 import com.meerkat.ui.map.AircraftLayer;
 import com.meerkat.ui.map.MapFragment;
 
-import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Locale;
 
 public class Vehicle implements Comparable<Vehicle> {
     public final int id;
     public String callsign;
-    public final ArrayList<Position> history;
-    public final ArrayList<Position> predicted;
+    public final LinkedList<Position> history;
+    public final LinkedList<Position> predicted;
     public @NonNull
     Gdl90Message.Emitter emitterType;
-    public final Position current;
+    public Position lastValid;
     public Position predictedPosition;
     private float distance;
     final AircraftLayer layer;
@@ -42,14 +48,17 @@ public class Vehicle implements Comparable<Vehicle> {
         this.id = id;
         this.callsign = callsign;
         this.emitterType = emitterType;
-        this.history = new ArrayList<>();
-        this.predicted = new ArrayList<>();
-        current = point;
+        // History & Predicted go in opposite directions... in each case, the last entry is the furthest away from the current position of the aircraft.
+        // So history is in decreasing time order, and predicted is in increasing time order
+        this.history = new LinkedList<>();
+        this.predicted = new LinkedList<>();
 
-        history.add(current);
-        distance = Gps.location.distanceTo(current);
+        history.addFirst(point);
+        // Always accept the first point, even if it isn't valid
+        lastValid = point;
+        distance = Gps.location.distanceTo(point);
         if (showLinearPredictionTrack)
-            predictedPosition = current.linearPredict(predictionSeconds);
+            predictedPosition = point.linearPredict(predictionSeconds * 1000L);
         else
             predictedPosition = null;
         layer = findLayer(this);
@@ -90,65 +99,80 @@ public class Vehicle implements Comparable<Vehicle> {
     }
 
     public void update(Position point, String callsign, @NonNull Gdl90Message.Emitter emitterType) {
-//        Log.d(String.format("%06x, \"%s\", \"%s\", %s", id, callsign, emitterType, point.toString()));
-        synchronized (current) {
-            current.set(point);
+        Log.d(String.format("%06x, \"%s\", \"%s\", %s", id, callsign, emitterType, point.toString()));
+        var now = System.currentTimeMillis();
+        final long maxAge = now - historySeconds * 1000L;
+        synchronized (history) {
+            Iterator<Position> it = history.descendingIterator();
+            while (it.hasNext()) {
+                var p = it.next();
+                if (p.getTime() > maxAge) break;
+                it.remove();
+            }
+            history.addFirst(point);
         }
-        distance = Gps.location.distanceTo(point); // metres
-//        Log.i("Current: " + current.toString());
-        history.add(point);
-        if (emitterType != Gdl90Message.Emitter.Unknown) {
-            if (this.emitterType != emitterType) {
-                this.emitterType = emitterType;
+        synchronized (this) {
+            if (point.isValid())
+                lastValid = point;
+            distance = Gps.location.distanceTo(point); // metres
+
+        Log.v("Current: %s", lastValid.toString());
+            if (emitterType != Gdl90Message.Emitter.Unknown) {
+                if (this.emitterType != emitterType) {
+                    this.emitterType = emitterType;
+                }
+            }
+            if (callsign != null && !callsign.equals(this.callsign))
+                this.callsign = callsign;
+
+            if (showLinearPredictionTrack && lastValid != null) {
+                predictedPosition = lastValid.linearPredict(now - lastValid.getTime() + predictionSeconds * 1000L);
+                predictedPosition.setTime(now + predictionSeconds * 1000L);
             }
         }
-        if (callsign != null)
-            this.callsign = callsign;
-        if (showLinearPredictionTrack)
-            predictedPosition = current.linearPredict(predictionSeconds);
-        else
-            predictedPosition = null;
-
         if (showPolynomialPredictionTrack) {
-            PolynomialRegression prSpeedTrack = new PolynomialRegression(current.getTime(), 2);
-            final long maxAge = point.getTime() - historySeconds * 1000L;
-            synchronized(history) {
-                history.removeIf(e -> e.getTime() < maxAge);
-            }
-            float prevTrack = history.get(0).getTrack();
-            float prevTime = history.get(0).getTime();
-            for (int i = 1; i < history.size(); i++) {
-                var p = history.get(i);
-                var time = p.getTime();
-                if (time == prevTime) continue;
-                // Use the angle between one reading and the next and their timestamps to calculate
-                // rate of turn for prediction. This is to avoid clock arithmetic issues,
-                // and to allow predictions that exceed 180 degrees total turn
-                var track = p.getTrack();
-
-                var turnRate = (track - prevTrack) / (time - prevTime)/1000;
-                if (turnRate < -180) turnRate += 180;
-                else if (turnRate > 180) turnRate -= 180;
-                prSpeedTrack.add(time, p.getSpeedUnits().value, turnRate);
-                prevTrack = track;
-                prevTime = time;
-            }
-            double[][] cSpeedTrack = prSpeedTrack.getCoefficients();
-            synchronized (predicted) {
-                predicted.clear();
-                if (cSpeedTrack != null) {
-                    Log.v("Speed coeffs %.1f %.3f %.5f", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2]);
-                    Log.v("Track coeffs %.1f %.3f %.5f", cSpeedTrack[1][0], cSpeedTrack[1][1], cSpeedTrack[1][2]);
-                    if (current.isValid()) {
-                        Position p = current;
+            if (!history.isEmpty()) {
+                PolynomialRegression prSpeedTrack = new PolynomialRegression(history.getLast().getTime(), 3);
+                // Assume that the oldest history point is valid, and not turning
+                float prevTrack = history.getLast().getTrack();
+                long prevTime = history.getLast().getTime() - 1;
+                Iterator<Position> it = history.descendingIterator();
+                while (it.hasNext()) {
+                    var p = it.next();
+                    var time = p.getTime();
+                    if (time == prevTime || time < lastValid.getTime() - polynomialHistorySeconds * 1000L || !p.isValid())
+                        continue;
+                    // Unwind modulo arithmetic so that turns in the same direction keep incrementing, even though the result is > 360 or < 0
+                    var track = p.getTrack();
+                    var turn = track - prevTrack;
+                    while (turn > 180) turn -= 360;
+                    while (turn < -180) turn += 180;
+                    Log.v("Add %d %5.0f %5.0f %5.0f", time, p.getSpeedMps(), prevTrack + turn, p.getAltitude());
+                    prSpeedTrack.add(time, p.getSpeedMps(), prevTrack + turn, (float) p.getAltitude());
+                    prevTrack = track;
+                    prevTime = time;
+                }
+                double[][] cSpeedTrack = prSpeedTrack.getCoefficients();
+                synchronized (predicted) {
+                    predicted.clear();
+                    if (cSpeedTrack != null) {
+                        Log.v("Speed coeffs %.1f %.3f %.5f", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2]);
+                        Log.v("Track coeffs %.1f %.3f %.5f", cSpeedTrack[1][0], cSpeedTrack[1][1], cSpeedTrack[1][2]);
+                        Log.v("Alt   coeffs %.1f %.3f %.5f", cSpeedTrack[2][0], cSpeedTrack[2][1], cSpeedTrack[2][2]);
+                        Position p = lastValid;
                         for (int t = polynomialPredictionStepSeconds; t <= predictionSeconds; t += polynomialPredictionStepSeconds) {
-                            p = p.linearPredict(polynomialPredictionStepSeconds);
-                            float speed = (float) (cSpeedTrack[0][0] + cSpeedTrack[0][1] * t * 1000 + cSpeedTrack[0][2] * t * t * 1000000);
-                            float track = (float) (cSpeedTrack[1][0] + cSpeedTrack[1][1] * t * 1000 + cSpeedTrack[1][2] * t * t * 1000000);
-                            p.setSpeed(new Speed(speed, Speed.Units.KNOTS));
-                            p.setTrack(p.getTrack() + track * polynomialPredictionStepSeconds * 1000);
-                            predicted.add(p);
-                            Log.d("%s Speed %.1f Track %.1f", callsign, speed, track);
+                            var t1 = now - (long) cSpeedTrack[0][3] + t * 1000L;
+                            var t2 = t1 * t1;
+                            p = p.linearPredict(polynomialPredictionStepSeconds * 1000L);
+                            float speed = (float) (cSpeedTrack[0][0] + cSpeedTrack[0][1] * t1 + cSpeedTrack[0][2] * t2);
+                            float track = (float) (cSpeedTrack[1][0] + cSpeedTrack[1][1] * t1 + cSpeedTrack[1][2] * t2);
+                            float alt = (float) (cSpeedTrack[2][0] + cSpeedTrack[2][1] * t1 + cSpeedTrack[2][2] * t2);
+                            p.setSpeed(speed);
+                            p.setTrack(track % 360);
+                            p.setAltitude(alt);
+                            p.setTime(now + t1);
+                            predicted.addLast(p);
+                            Log.v("%s Predict Speed %.1f Track %.1f Alt %.1f %s", callsign, speed, track, alt, p);
                         }
                     }
                 }
@@ -157,9 +181,13 @@ public class Vehicle implements Comparable<Vehicle> {
         MapFragment.refresh(layer);
     }
 
+    public boolean isValid() {
+        return history.getFirst().isCrcValid();
+    }
+
     @NonNull
     public String toString() {
-        return String.format(Locale.ENGLISH, "%06x %-8s %c %s", id, callsign, current.isCrcValid() ? ' ' : '!', current);
+        return String.format(Locale.ENGLISH, "%06x %-8s %c %s", id, callsign, isValid() ? ' ' : '!', lastValid);
     }
 
     @Override

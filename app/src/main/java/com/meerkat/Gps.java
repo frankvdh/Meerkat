@@ -77,6 +77,8 @@ public class Gps extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
+        if (Settings.simulate)
+            return;
         if (location.hasBearing() && location.getBearing() == 0.0)
             location.removeBearing();
         Log.d("GPS: (%.5f, %.5f) @%.0fm, %.0f %3.0f%c", location.getLatitude(), location.getLongitude(), location.getAltitude(), location.getSpeed(), location.getBearing(), location.hasBearing() ? ' ' : '!');

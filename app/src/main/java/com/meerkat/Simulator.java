@@ -22,13 +22,13 @@ import com.meerkat.measure.Polar;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Speed;
 
-import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 
 public class Simulator {
 
-    private static final Position initialPos = new Position("gps", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0, new Height(5000f, Height.Units.FT), new Speed(100f, Speed.Units.KNOTS), 350f, 0f, true, true, new Date().getTime());
+    private static final Position initialPos = new Position("gps", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0,
+            new Height(5000f, Height.Units.FT), new Speed(100f, Speed.Units.KNOTS), 350f, 0f, true, true, System.currentTimeMillis());
 
     private int nextActionTime;
     private int actionIndex;
@@ -40,7 +40,7 @@ public class Simulator {
     ScheduledFuture<?> thread;
 
     private static final Flight ownShip =
-            new Flight(-1, "ownship", Gdl90Message.Emitter.Light, new Polar(new Distance(0f, Distance.Units.NM), 0, new Height(5000f, Height.Units.FT)),
+            new Flight(-1, "ownship", Gdl90Message.Emitter.Light, new Polar(new Distance(0f, Distance.Units.NM), 0, new Height(0f, Height.Units.FT)),
                     new Speed(100f, Speed.Units.KNOTS), 20, true,
                     new Action[]{
                             new Action(0, 0, 0, 6, false),
@@ -67,7 +67,7 @@ public class Simulator {
                             new Action(0, 0, 0, 300, true),
                     }), 10, false),
 
-            new Simulator(new Flight(3, "ZK-GLI", Gdl90Message.Emitter.Glider, new Polar(new Distance(25f, Distance.Units.NM), 15, new Height(5000f, Height.Units.FT)),
+            new Simulator(new Flight(3, "ZK-GLI", Gdl90Message.Emitter.Glider, new Polar(new Distance(15f, Distance.Units.NM), 15, new Height(5000f, Height.Units.FT)),
                     new Speed(100f, Speed.Units.KNOTS), 180, true,
                     new Action[]{
                             new Action(0, -1080, -9000, 300, true),
@@ -75,7 +75,7 @@ public class Simulator {
                             new Action(0, 0, 0, 60, false),
                     }), 5, false),
 
-            new Simulator(new Flight(4, "ZK-HEL", Gdl90Message.Emitter.Rotor, new Polar(new Distance(25f, Distance.Units.NM), -15, new Height(0f, Height.Units.FT)),
+            new Simulator(new Flight(4, "ZK-HEL", Gdl90Message.Emitter.Rotor, new Polar(new Distance(15f, Distance.Units.NM), -15, new Height(0f, Height.Units.FT)),
                     new Speed(0f, Speed.Units.KNOTS), 180, true,
                     new Action[]{
                             new Action(0, 0, 1500, 100, true),
@@ -111,7 +111,7 @@ public class Simulator {
         nextActionTime = 0;
         this.isGps = isGps;
         this.initialDelay = initialDelay;
-        Log.i("new Sim: %s", flight.position.toString());
+        Log.i("new Sim: %s %s", flight.callsign, flight.position.toString());
     }
 
     public static void startAll() {
@@ -141,13 +141,14 @@ public class Simulator {
         flight.position.setCrcValid(true);
         flight.position.setSpeed(new Speed(flight.position.getSpeedUnits().value + action.accel, Speed.Units.KNOTS));
         flight.position.setTrack((flight.position.getTrack() + action.turn) % 360);
-        flight.position.setTime(new Date().getTime());
-        Polar p = new Polar(new Distance(flight.position.getSpeedMps(), Distance.Units.M), flight.position.getTrack(), new Height(flight.position.getVVel() / 60, Height.Units.FT));
-        flight.position.moveBy(p);
+        flight.position.setTime(System.currentTimeMillis());
         if (isGps)
             Gps.location.set(flight.position);
-        else
-            VehicleList.vehicleList.upsert(flight.callsign, flight.id, flight.position.linearPredict(1), flight.emitterType);
+        else {
+            Polar p = new Polar(new Distance(flight.position.getSpeedMps(), Distance.Units.M), flight.position.getTrack(), new Height(flight.position.getVVel() / 60, Height.Units.FT));
+            flight.position.moveBy(p);
+            VehicleList.vehicleList.upsert(flight.callsign, flight.id, flight.position.linearPredict(1000), flight.emitterType);
+        }
     }
 
     static class Flight {

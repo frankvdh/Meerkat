@@ -10,6 +10,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="0"
+        android:keepScreenOn="true"
         android:outlineProvider="bounds"
         android:showDividers="middle"
         app:layout_constraintStart_toStartOf="parent"

@@ -12,8 +12,9 @@
  */
 package com.meerkat.ui.map;
 
+import static com.meerkat.Settings.displayOrientation;
+import static com.meerkat.Settings.keepScreenOn;
 import static com.meerkat.Settings.screenWidth;
-import static com.meerkat.Settings.trackUp;
 import static com.meerkat.ui.map.AircraftLayer.loadIcon;
 
 import android.content.Context;
@@ -30,6 +31,7 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.meerkat.Compass;
 import com.meerkat.Gps;
 import com.meerkat.databinding.FragmentMapBinding;
 import com.meerkat.gdl90.Gdl90Message;
@@ -38,17 +40,19 @@ import com.meerkat.log.Log;
 public class MapFragment extends Fragment {
 
     private FragmentMapBinding binding;
-    static Background background;
+    Background background;
     public static LayerDrawable layers;
     static float scaleFactor;
     // Used to detect pinch zoom gesture.
     private ScaleGestureDetector scaleGestureDetector = null;
+    public enum DisplayOrientation {NorthUp, TrackUp, HeadingUp}
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d("createView");
         binding = FragmentMapBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         ImageView mapView = binding.mapview;
+        mapView.setKeepScreenOn(keepScreenOn);
         background = new Background(getContext(), binding.compassView, binding.compassText, getWidth(getContext()));
         layers = new LayerDrawable(new Drawable[]{background});
         mapView.setImageDrawable(layers);
@@ -84,11 +88,16 @@ public class MapFragment extends Fragment {
     static Matrix positionMatrix(int centreX, int centreY, float x, float y, float angle) {
         Matrix matrix = new Matrix();
         // Rotate about centre of icon & translate to bitmap position
-        matrix.setRotate(trackUp && Gps.location.hasBearing() ? angle - Gps.location.getBearing() : angle, centreX, centreY);
+        matrix.setRotate(displayOrientation == DisplayOrientation.TrackUp && Gps.location.hasBearing() ? angle - Gps.location.getBearing() : angle, centreX, centreY);
         matrix.postTranslate(x - centreX, y - centreY);
         return matrix;
     }
+static float displayRotation() {
+    if (displayOrientation == MapFragment.DisplayOrientation.HeadingUp) return Compass.degTrue();
+    if (displayOrientation == MapFragment.DisplayOrientation.TrackUp) return Gps.location.getBearing();
+    return 0;
 
+}
     private final View.OnTouchListener handleTouch = (view, event) -> {
 //        getView().performClick();
         // Dispatch activity on touch event to the scale gesture detector.

@@ -18,6 +18,8 @@
  */
 package com.meerkat;
 
+import static com.meerkat.Settings.minHeadingChange;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -104,7 +106,8 @@ public class Compass extends Service implements SensorEventListener {
             Pitch = (float) Math.toDegrees(orientation[1]);
             Roll = (float) Math.toDegrees(orientation[2]);
 
-            if ((int) Heading != (int) prevHeading) {
+            int change = (int) Math.abs(Heading - prevHeading);
+            if (change > minHeadingChange ) {
                  Log.v("Mag %5.1f %5.1f %5.1f | Acc %5.1f %5.1f %5.1f | Mag deg %3.0f",
                         lastMagFields[0], lastMagFields[1], lastMagFields[2],
                         lastAccels[0], lastAccels[1], lastAccels[2],

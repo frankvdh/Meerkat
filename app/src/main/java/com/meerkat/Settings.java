@@ -22,6 +22,7 @@ import com.meerkat.log.Log;
 import com.meerkat.measure.Distance;
 import com.meerkat.measure.Height;
 import com.meerkat.measure.Speed;
+import com.meerkat.ui.map.MapFragment;
 
 public class Settings {
     private static SharedPreferences prefs;
@@ -37,10 +38,11 @@ public class Settings {
     public static int historySeconds;
     public static int purgeSeconds;
     public static int predictionSeconds;
-    public static int polynomialPredictionStepSeconds;
+    public static int polynomialPredictionStepSeconds, polynomialHistorySeconds;
     public static int gradientMaximumDiff;
     public static int gradientMinimumDiff;
     public static int screenYPosPercent;
+    public static int minHeadingChange;
     public static float screenWidth;
     public static float circleRadiusStep;
     public static Distance.Units distanceUnits;
@@ -48,18 +50,24 @@ public class Settings {
     public static Speed.Units speedUnits;
     public static boolean simulate;
     public static String countryCode;
-    public static boolean trackUp, headingUp;
+    public static MapFragment.DisplayOrientation displayOrientation;
+    public static boolean keepScreenOn;
 
     public static void load(Context context) {
+        String currentVersionName = BuildConfig.VERSION_NAME;
         prefs = context.getSharedPreferences("com.meerkat_preferences", MODE_PRIVATE);
-        boolean saveNeeded = prefs.getString("wifiName", null) == null;
+        String settingsVersionName = prefs.getString("version", null);
+        Log.d("Current version = %s, Settings version = %s", currentVersionName, settingsVersionName);
+        boolean saveNeeded = !settingsVersionName.equals(currentVersionName);
+
         wifiName = prefs.getString("wifiName", "Ping-6C7A");
         port = prefs.getInt("port", 4000);
         showLog = prefs.getBoolean("showLog", true);
         fileLog = prefs.getBoolean("fileLog", true);
         try {
-        logLevel = Level.valueOf(prefs.getString("logLevel", "I").toUpperCase().trim().substring(0, 1));
-        } catch(Exception e) {
+            logLevel = Level.valueOf(prefs.getString("logLevel", "I").toUpperCase().trim().substring(0, 1));
+        } catch (Exception e) {
+            Log.e("Invalid logLevel %s", prefs.getString("logLevel", null));
             logLevel = Level.I;
             saveNeeded = true;
         }
@@ -71,33 +79,41 @@ public class Settings {
         purgeSeconds = prefs.getInt("historySeconds", 60);
         predictionSeconds = prefs.getInt("predictionSeconds", 60);
         polynomialPredictionStepSeconds = prefs.getInt("polynomialPredictionStepSeconds", 10);
+        polynomialHistorySeconds = prefs.getInt("polynomialHistorySeconds", 10);
         gradientMaximumDiff = prefs.getInt("gradientMaximumDiff", 5000);
         gradientMinimumDiff = prefs.getInt("gradientMinimumDiff", 1000);
         screenYPosPercent = prefs.getInt("screenYPosPercent", 25);
+        minHeadingChange = prefs.getInt("minHeadingChange", 3);
         screenWidth = prefs.getFloat("screenWidth", 10);
         circleRadiusStep = prefs.getFloat("circleRadiusStep", 5);
         try {
             distanceUnits = Distance.Units.valueOf(prefs.getString("distanceUnits", "NM").toUpperCase().trim());
-        } catch(Exception e) {
+        } catch (Exception e) {
             distanceUnits = Distance.Units.NM;
             saveNeeded = true;
         }
         try {
             altUnits = Height.Units.valueOf(prefs.getString("altUnits", "FT").toUpperCase().trim());
-        } catch(Exception e) {
+        } catch (Exception e) {
             altUnits = Height.Units.FT;
             saveNeeded = true;
         }
         try {
             speedUnits = Speed.Units.valueOf(prefs.getString("speedUnits", "KNOTS").toUpperCase().trim());
-        } catch(Exception e) {
+        } catch (Exception e) {
             speedUnits = Speed.Units.KNOTS;
             saveNeeded = true;
         }
-        simulate = prefs.getBoolean("simulate", false);
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
-        headingUp = prefs.getBoolean("headingUp", true);
-        trackUp = !headingUp && prefs.getBoolean("trackUp", true);
+        try {
+            displayOrientation = MapFragment.DisplayOrientation.valueOf(prefs.getString("displayOrientation", "HeadingUp").trim());
+        } catch (Exception e) {
+            displayOrientation = MapFragment.DisplayOrientation.HeadingUp;
+            saveNeeded = true;
+        }
+        keepScreenOn = prefs.getBoolean("keepScreenOn", true);
+        simulate = prefs.getBoolean("simulate", false);
+//        displayOrientation = MapFragment.DisplayOrientation.NorthUp;
         if (saveNeeded)
             save();
         Log.i("Settings loaded");
@@ -105,6 +121,7 @@ public class Settings {
 
     public static void save() {
         SharedPreferences.Editor edit = prefs.edit();
+        edit.putString("version", BuildConfig.VERSION_NAME);
         edit.putString("wifiName", wifiName);
         edit.putInt("port", port);
         edit.putBoolean("showLog", showLog);
@@ -118,18 +135,20 @@ public class Settings {
         edit.putInt("purgeSeconds", purgeSeconds);
         edit.putInt("predictionSeconds", predictionSeconds);
         edit.putInt("polynomialPredictionStepSeconds", polynomialPredictionStepSeconds);
+        edit.putInt("polynomialHistorySeconds", polynomialHistorySeconds);
         edit.putInt("gradientMaximumDiff", gradientMaximumDiff);
         edit.putInt("gradientMinimumDiff", gradientMinimumDiff);
         edit.putInt("screenYPosPercent", screenYPosPercent);
+        edit.putInt("minHeadingChange", minHeadingChange);
         edit.putFloat("screenWidth", screenWidth);
         edit.putFloat("circleRadiusStep", circleRadiusStep);
         edit.putString("distanceUnits", String.valueOf(distanceUnits));
         edit.putString("altUnits", String.valueOf(altUnits));
         edit.putString("speedUnits", String.valueOf(speedUnits));
-        edit.putBoolean("simulate", simulate);
         edit.putString("countryCode", countryCode);
-        edit.putBoolean("trackUp", trackUp);
-        edit.putBoolean("headingUp", headingUp);
+        edit.putString("displayOrientation", String.valueOf(displayOrientation));
+        edit.putBoolean("keepScreenOn", keepScreenOn);
+        edit.putBoolean("simulate", simulate);
         edit.apply();
         Log.i("Settings saved");
     }

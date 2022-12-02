@@ -28,8 +28,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.Date;
-
 @RunWith(MockitoJUnitRunner.class)
 public class PositionTest extends TestCase {
     @Test
@@ -66,7 +64,7 @@ public class PositionTest extends TestCase {
 
     @Test
     public void testLinearPredict() {
-        long now = new Date().getTime();
+        long now = System.currentTimeMillis();
         when(marton.getTime()).thenReturn(now);
         when(marton.getLatitude()).thenReturn(-(40 + 4 / 60.0 + 9 / 3600.0));
         when(marton.getLongitude()).thenReturn(175 + 22 / 60.0 + 42 / 3600.0);
@@ -77,7 +75,7 @@ public class PositionTest extends TestCase {
         when(marton.getBearing()).thenReturn(0f);
         when(marton.hasBearing()).thenReturn(true);
         when(marton.getVVel()).thenReturn(0f);
-        Position p = marton.linearPredict(3600);
+        Position p = marton.linearPredict(3600000);
         Assert.assertEquals(40.96848700215959, p.getLatitude(), .0001);
         Assert.assertEquals( 175.37833333333333, p.getLongitude(), .0001);
         Assert.assertEquals(5000d/3.28084, p.getAltitude(), 0.1);

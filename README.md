@@ -79,22 +79,26 @@ User settings
 | purgeSeconds                    | How many seconds to wait before an aircraft is removed from the display                                                                                                                           | 60                                              |
 | predictionSeconds               | How many seconds into the future to predict the track of each aircraft. Applies to both linear and polynomial prediction                                                                          | 60                                              |
 | polynomialPredictionStepSeconds | How many seconds each step of the polynomial prediction is                                                                                                                                        | 6                                               |
-| gradientMaximumDiff             | How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green                                                                             | 5000                                          |
+| polynomialHistorySeconds        | How many seconds history should be used by the polynomial predictor. Too large or small a value will seen poor predictions                                                                        | 10                                              |
+| gradientMaximumDiff             | How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green                                                                             | 5000                                            |
 | gradientMinimumDiff             | How many [altitude unit]s above/below the phone's GPS altitude an aircraft displays as completely red                                                                                             | 1000                                            |
 | screenYPosPercent               | Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height                                                                                              | 25%                                             |
+| minHeadingChange                | The minimum number of degrees change in phone orientation needed to force a screen refresh                                                                                           			  | 3                                               |
 | distanceUnits                   | User's preferred distance units KM, NM, M                                                                                                                                                         | NM                                              |
 | screenWidth                     | Distance that the width of the screen represents in the user's distance units                                                                                                                     | 10                                              |
 | circleRadiusStep                | Distance apart of the circles on the screen in the user's distance units                                                                                                                          | 5                                               |
 | altUnits                        | User's preferred altitude units FT, M                                                                                                                                                             | FT                                              |
 | speedUnits                      | User's preferred speed units KTS, MPH, KPH                                                                                                                                                        | KPH                                             |
 | countryCode                     | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed.                                                                      | ZK                                              |
-| headingUp                       | Display orientation... heading-up... if false, trackUp is used                                                                                                                                                      | true                                            |
+| headingUp                       | Display orientation... heading-up... if false, trackUp is used                                                                                                                                    | true                                            |
 | trackUp                         | Display orientation... track-up or North-up                                                                                                                                                       | true                                            |
+| keepScreenOn                    | Keep the display on when in the Map or Aircraft List views                                                                                                                                        | true                                            |
 
 Debugging settings
 ------------------
 | Debugging Setting name          | Usage                                                                                                                                                                                                                   | Default value                                     |
 |---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
+| version                         | The version of Meerkat that saved the settings                                                                                                                                                                          | 1.0                                             |
 | showLog                         | Whether to output logs to a window on the screen                                                                                                                                                                        | false                                             |
 | fileLog                         | Whether to output logs to /storage/sdcard0/Android/data/com.meerkat/files/meerkat.log. NB This file is never erased or shortened. If left alone, this will eventually chew up all the storage at the rate of ~100MB/hr! | false                                             |
 | logLevel                        | Amount of detail to write to logs... Assert, Error, Warning, Info, Debug, V                                                                                                                                             | I                                                 |
@@ -105,10 +109,8 @@ Debugging settings
 TO DO
 -----
 This list is more-or-less in priority order. It is growing rather than shrinking!
-* Keep screen on
 * Make compass a button to toggle between Heading-Up, Track-Up, and North-Up display orientations
-* Screen orientation as an enum
-* Add a version to settings
+* Tidy up the display mode indicator
 * Allow other units for vertical speed (currently only fpm)
 * Ownship track... history and prediction
 * Facility to clear log files

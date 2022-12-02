@@ -13,9 +13,8 @@
 package com.meerkat.ui.map;
 
 import static com.meerkat.Settings.circleRadiusStep;
-import static com.meerkat.Settings.headingUp;
+import static com.meerkat.Settings.displayOrientation;
 import static com.meerkat.Settings.screenYPosPercent;
-import static com.meerkat.Settings.trackUp;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -36,8 +35,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.content.res.AppCompatResources;
 
-import com.meerkat.Compass;
-import com.meerkat.Gps;
 import com.meerkat.R;
 import com.meerkat.log.Log;
 
@@ -45,11 +42,9 @@ public class Background extends Drawable {
     private final Paint redPaint;
     private final Paint circlePaint;
     private final ImageView compassView;
-    private final TextView compassText;
 
     public Background(Context context, ImageView compassView, TextView compassText, int mapWidth) {
         this.compassView = compassView;
-        this.compassText = compassText;
         Paint whitePaint = new Paint();
         whitePaint.setColor(Color.WHITE);
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -79,12 +74,12 @@ public class Background extends Drawable {
         compassText.setTranslationX(-viewSize/2f);
         compassText.setTranslationY(viewSize/2f + compassText.getLineHeight()/2f);
         compassText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        compassText.setText(headingUp ? "H" : trackUp ? "T" : "N");
+        compassText.setText(displayOrientation.toString().substring(0, 1));
     }
 
     @Override
     public void draw(@NonNull Canvas canvas) {
-        Log.v("draw background");
+        Log.d("draw background");
         canvas.drawColor(Color.WHITE, PorterDuff.Mode.SRC);
         Rect bounds = getBounds();
         float xCentre = bounds.width() / 2f;
@@ -98,7 +93,7 @@ public class Background extends Drawable {
         for (float rad = radiusStep; rad < bounds.height(); rad += radiusStep) {
             canvas.drawCircle(0, 0, rad, circlePaint);
         }
-        int rot = (int) ((headingUp ? -Compass.degTrue() : trackUp ? -Gps.location.getBearing() : 0) + 360) % 360;
+        float rot = -MapFragment.displayRotation();
         compassView.setRotation(rot);
         Log.v("finished draw background... rot = %d", rot);
     }

@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.Arrays;
-import java.util.Date;
 
 public class PingComms {
     private final Thread thread;
@@ -95,7 +94,7 @@ public class PingComms {
                             Log.i(sb.toString());
                         }
                         ByteArrayInputStream is = new ByteArrayInputStream(packet);
-                        long now = new Date().getTime();
+                        long now = System.currentTimeMillis();
                         while (is.available() > 0) {
                             Gdl90Message message = Gdl90Message.getMessage(is, now);
                             if (message == null) continue;
