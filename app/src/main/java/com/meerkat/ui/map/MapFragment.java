@@ -45,6 +45,7 @@ public class MapFragment extends Fragment {
     static float scaleFactor;
     // Used to detect pinch zoom gesture.
     private ScaleGestureDetector scaleGestureDetector = null;
+
     public enum DisplayOrientation {NorthUp, TrackUp, HeadingUp}
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -53,7 +54,8 @@ public class MapFragment extends Fragment {
         View root = binding.getRoot();
         ImageView mapView = binding.mapview;
         mapView.setKeepScreenOn(keepScreenOn);
-        background = new Background(getContext(), binding.compassView, binding.compassText, getWidth(getContext()));
+        var context = getContext();
+        background = new Background(context, binding.compassView, binding.compassText);
         layers = new LayerDrawable(new Drawable[]{background});
         mapView.setImageDrawable(layers);
 
@@ -92,12 +94,16 @@ public class MapFragment extends Fragment {
         matrix.postTranslate(x - centreX, y - centreY);
         return matrix;
     }
-static float displayRotation() {
-    if (displayOrientation == MapFragment.DisplayOrientation.HeadingUp) return Compass.degTrue();
-    if (displayOrientation == MapFragment.DisplayOrientation.TrackUp) return Gps.location.getBearing();
-    return 0;
 
-}
+    static float displayRotation() {
+        if (displayOrientation == DisplayOrientation.HeadingUp) return Compass.degTrue();
+        if (displayOrientation == DisplayOrientation.TrackUp) return Gps.location.getBearing();
+        return 0;
+    }
+
+    public void onClick(View view) {
+    }
+
     private final View.OnTouchListener handleTouch = (view, event) -> {
 //        getView().performClick();
         // Dispatch activity on touch event to the scale gesture detector.
@@ -106,9 +112,9 @@ static float displayRotation() {
 
     public static void refresh(AircraftLayer layer) {
         if (layer == null)
-            MapFragment.layers.invalidateSelf();
+            layers.invalidateSelf();
         else
-            MapFragment.layers.invalidateDrawable(layer);
+            layers.invalidateDrawable(layer);
     }
 
     /* This listener is used to listen pinch zoom gesture. */

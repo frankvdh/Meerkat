@@ -42,9 +42,11 @@ public class Background extends Drawable {
     private final Paint redPaint;
     private final Paint circlePaint;
     private final ImageView compassView;
+    private final TextView compassText;
 
-    public Background(Context context, ImageView compassView, TextView compassText, int mapWidth) {
+    public Background(Context context, ImageView compassView, TextView compassText) {
         this.compassView = compassView;
+        this.compassText = compassText;
         Paint whitePaint = new Paint();
         whitePaint.setColor(Color.WHITE);
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -57,24 +59,16 @@ public class Background extends Drawable {
         Path path = new Path();
         path.addCircle(0, 0, 4, Path.Direction.CW);
         circlePaint.setPathEffect(new PathDashPathEffect(path, 16, 0, PathDashPathEffect.Style.TRANSLATE));
-        @NonNull Drawable compass = AppCompatResources.getDrawable(context, R.drawable.compass);
-        int imageSize = Math.max(compass.getIntrinsicWidth(), compass.getIntrinsicHeight());
-        int viewSize = mapWidth / 4;
-        compassView.setTranslationX(-viewSize/2f);
-        compassView.setTranslationY(viewSize/2f);
-        compassView.setLeft(mapWidth -viewSize);
-        compassView.setBottom(viewSize);
-        compassView.setScaleX((float)viewSize/imageSize);
-        compassView.setScaleY((float)viewSize/imageSize);
 
         compassText.setTop(compassView.getTop());
         compassText.setRight(compassView.getRight());
         compassText.setLeft(compassView.getLeft());
         compassText.setBottom(compassView.getBottom());
-        compassText.setTranslationX(-viewSize/2f);
-        compassText.setTranslationY(viewSize/2f + compassText.getLineHeight()/2f);
+        @NonNull Drawable compass = AppCompatResources.getDrawable(context, R.drawable.compass);
+        int imageSize = Math.max(compass.getIntrinsicWidth(), compass.getIntrinsicHeight());
+        compassText.setTranslationX(135);
+        compassText.setTranslationY(135);
         compassText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        compassText.setText(displayOrientation.toString().substring(0, 1));
     }
 
     @Override
@@ -95,6 +89,7 @@ public class Background extends Drawable {
         }
         float rot = -MapFragment.displayRotation();
         compassView.setRotation(rot);
+        compassText.setText(displayOrientation.toString().substring(0, 1));
         Log.v("finished draw background... rot = %d", rot);
     }
 

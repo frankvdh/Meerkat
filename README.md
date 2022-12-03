@@ -83,7 +83,7 @@ User settings
 | gradientMaximumDiff             | How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green                                                                             | 5000                                            |
 | gradientMinimumDiff             | How many [altitude unit]s above/below the phone's GPS altitude an aircraft displays as completely red                                                                                             | 1000                                            |
 | screenYPosPercent               | Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height                                                                                              | 25%                                             |
-| minHeadingChange                | The minimum number of degrees change in phone orientation needed to force a screen refresh                                                                                           			  | 3                                               |
+| sensorSmoothingConstant         | The sensitivity of the display to phone orientation change (0 - 1). Larger values make it more responsive                                                                                         | 0.2                                             |
 | distanceUnits                   | User's preferred distance units KM, NM, M                                                                                                                                                         | NM                                              |
 | screenWidth                     | Distance that the width of the screen represents in the user's distance units                                                                                                                     | 10                                              |
 | circleRadiusStep                | Distance apart of the circles on the screen in the user's distance units                                                                                                                          | 5                                               |
@@ -108,17 +108,15 @@ Debugging settings
 
 TO DO
 -----
-This list is more-or-less in priority order. It is growing rather than shrinking!
-* Make compass a button to toggle between Heading-Up, Track-Up, and North-Up display orientations
-* Tidy up the display mode indicator
-* Allow other units for vertical speed (currently only fpm)
+This list is more-or-less in priority order. At the moment it is shrinking :)
 * Ownship track... history and prediction
 * Facility to clear log files
 * Add a "Quit" button
 * Display zoom level
 * Auto-zoom
+* Allow other units for vertical speed (currently only fpm)
 * Indicate Mode-C traffic presence
-* Fix - Reloading app to restart properly
+* Fix - Layout issue due to bottom nav bar
 * Add a Settings screen to enable all the settings to be changed interactively instead of needing to edit the text file
 * Audio / Haptic alerts of collision threats
 * Use a theme to allow black background

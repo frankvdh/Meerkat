@@ -99,7 +99,7 @@ public class Vehicle implements Comparable<Vehicle> {
     }
 
     public void update(Position point, String callsign, @NonNull Gdl90Message.Emitter emitterType) {
-        Log.d(String.format("%06x, \"%s\", \"%s\", %s", id, callsign, emitterType, point.toString()));
+        Log.d(String.format("%06x, %s, %s, %s", id, callsign, emitterType, point.toString()));
         var now = System.currentTimeMillis();
         final long maxAge = now - historySeconds * 1000L;
         synchronized (history) {

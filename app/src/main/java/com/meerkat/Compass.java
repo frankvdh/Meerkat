@@ -15,10 +15,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
   https://developer.android.com/guide/topics/sensors/sensors_position
+  https://github.com/phishman3579/android-compass @author Justin Wetherell (phishman3579@gmail.com)
+
  */
 package com.meerkat;
-
-import static com.meerkat.Settings.minHeadingChange;
 
 import android.app.Service;
 import android.content.Context;
@@ -39,18 +39,16 @@ public class Compass extends Service implements SensorEventListener {
 
     static GeomagneticField geoField;
     static public float Declination = 0;
-    public volatile static boolean locationChanged;
 
     SensorManager sensorManager;
-    float[] lastMagFields = new float[3];
-    float[] lastAccels = new float[3];
-    // These must
+    float[] mag = new float[3];
+    float[] grav = new float[3];
     private final float[] rotationMatrix = new float[16];
     private final float[] orientation = new float[4];
 
     static public float Heading;
-    static public float Pitch;
-    static public float Roll;
+//    static public float Pitch;
+//    static public float Roll;
 
     public Compass(Context context) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
@@ -58,18 +56,21 @@ public class Compass extends Service implements SensorEventListener {
     }
 
     public static float degTrue() {
-        if (locationChanged) {
-            geoField = new GeomagneticField((float) Gps.location.getLatitude(), (float) Gps.location.getLongitude(), (float) Gps.location.getAltitude(), System.currentTimeMillis());
-            Declination = geoField.getDeclination();
-            locationChanged = false;
-        }
         return (Heading + Declination) % 360;
     }
 
+    public static void updateGeomagneticField() {
+        if (geoField != null)
+            synchronized (geoField) {
+                geoField = new GeomagneticField((float) Gps.location.getLatitude(), (float) Gps.location.getLongitude(), (float) Gps.location.getAltitude(), System.currentTimeMillis());
+                Declination = geoField.getDeclination();
+            }
+    }
+
     public void resume() {
-        locationChanged = true;
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), SensorManager.SENSOR_DELAY_UI);
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_UI);
+        updateGeomagneticField();
     }
 
     public void pause() {
@@ -84,10 +85,10 @@ public class Compass extends Service implements SensorEventListener {
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
-                System.arraycopy(event.values, 0, lastAccels, 0, 3);
+                lowPassFilter(event, grav);
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD:
-                System.arraycopy(event.values, 0, lastMagFields, 0, 3);
+                lowPassFilter(event, mag);
                 break;
             default:
                 return;
@@ -97,28 +98,43 @@ public class Compass extends Service implements SensorEventListener {
 
         // Compute the three orientation angles based on the most recent readings from the accelerometer and magnetometer.
         // Update rotation matrix, which is needed to update orientation angles.
-        if (SensorManager.getRotationMatrix(rotationMatrix, null, lastAccels, lastMagFields)) {
+        if (SensorManager.getRotationMatrix(rotationMatrix, null, grav, mag)) {
             SensorManager.getOrientation(rotationMatrix, orientation);
-            // "orientationAngles" has azimuth (Z axis angle relative to mag north), pitch, roll
+            // "orientation" has azimuth (Z axis angle relative to mag north), pitch, roll
 
-            var prevHeading = Heading;
+            int prevHeading = (int) Heading;
             Heading = (float) (Math.toDegrees(orientation[0]));
-            Pitch = (float) Math.toDegrees(orientation[1]);
-            Roll = (float) Math.toDegrees(orientation[2]);
+//            Pitch = (float) Math.toDegrees(orientation[1]);
+//            Roll = (float) Math.toDegrees(orientation[2]);
 
-            int change = (int) Math.abs(Heading - prevHeading);
-            if (change > minHeadingChange ) {
-                 Log.v("Mag %5.1f %5.1f %5.1f | Acc %5.1f %5.1f %5.1f | Mag deg %3.0f",
-                        lastMagFields[0], lastMagFields[1], lastMagFields[2],
-                        lastAccels[0], lastAccels[1], lastAccels[2],
-                        Heading);
+            Log.v("Mag %5.1f %5.1f %5.1f | Acc %5.1f %5.1f %5.1f | Mag deg %3.0f",
+                    mag[0], mag[1], mag[2],
+                    grav[0], grav[1], grav[2],
+                    Heading);
+            if ((int) Heading != prevHeading)
                 MapFragment.refresh(null);
-            }
+        }
+    }
+
+    /**
+     * Filter the given input against the previous values and return a low-pass
+     * filtered result.
+     *
+     * @param event SensorEvent with values array to smooth.
+     * @param prev  float array representing the previous values.
+     */
+    static void lowPassFilter(SensorEvent event, float[] prev) {
+        if (event == null)
+            throw new NullPointerException("event must be non-NULL");
+        for (int i = 0; i < prev.length; i++) {
+            prev[i] += Settings.sensorSmoothingConstant * (event.values[i] - prev[i]);
         }
     }
 
     @Nullable
     @Override
-    public IBinder onBind(Intent intent) {  return null; }
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
 }
 

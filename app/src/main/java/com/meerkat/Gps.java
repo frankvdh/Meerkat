@@ -85,7 +85,7 @@ public class Gps extends Service implements LocationListener {
         synchronized (Gps.location) {
             Gps.location.set(location);
         }
-        Compass.locationChanged = true;
+        Compass.updateGeomagneticField();
         MapFragment.refresh(null);
     }
 

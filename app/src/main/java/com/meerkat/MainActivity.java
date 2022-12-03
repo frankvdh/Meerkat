@@ -13,6 +13,7 @@
 package com.meerkat;
 
 import static android.os.Environment.MEDIA_MOUNTED;
+import static com.meerkat.Settings.displayOrientation;
 import static com.meerkat.Settings.fileLog;
 import static com.meerkat.Settings.port;
 import static com.meerkat.Settings.simulate;
@@ -43,6 +44,7 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.meerkat.databinding.ActivityMainBinding;
 import com.meerkat.log.Log;
+import com.meerkat.ui.map.MapFragment;
 
 import java.io.File;
 import java.io.IOException;
@@ -208,6 +210,14 @@ private Compass compass;
     }
 
     public void onClick(View view) {
-        Log.e("click in MainActivity... should never be called");
+        Log.e("click... ");
+        if (view.getId() == R.id.compassView) {
+            if (displayOrientation == MapFragment.DisplayOrientation.HeadingUp) displayOrientation = MapFragment.DisplayOrientation.TrackUp;
+            else if (displayOrientation == MapFragment.DisplayOrientation.TrackUp) displayOrientation = MapFragment.DisplayOrientation.NorthUp;
+            else displayOrientation = MapFragment.DisplayOrientation.HeadingUp;
+            MapFragment.refresh(null);
+            return;
+        }
+        Log.e("click noty handled");
     }
 }

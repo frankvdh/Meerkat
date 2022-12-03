@@ -37,12 +37,17 @@ public class Settings {
     public static boolean showPolynomialPredictionTrack;
     public static int historySeconds;
     public static int purgeSeconds;
+
+    /*
+     * Time smoothing constant for low-pass filter 0 ≤ α ≤ 1 ; a smaller value basically means more smoothing
+     * See: http://en.wikipedia.org/wiki/Low-pass_filter#Discrete-time_realization
+     */
     public static int predictionSeconds;
     public static int polynomialPredictionStepSeconds, polynomialHistorySeconds;
     public static int gradientMaximumDiff;
     public static int gradientMinimumDiff;
     public static int screenYPosPercent;
-    public static int minHeadingChange;
+    public static float sensorSmoothingConstant;
     public static float screenWidth;
     public static float circleRadiusStep;
     public static Distance.Units distanceUnits;
@@ -58,7 +63,7 @@ public class Settings {
         prefs = context.getSharedPreferences("com.meerkat_preferences", MODE_PRIVATE);
         String settingsVersionName = prefs.getString("version", null);
         Log.d("Current version = %s, Settings version = %s", currentVersionName, settingsVersionName);
-        boolean saveNeeded = !settingsVersionName.equals(currentVersionName);
+        boolean saveNeeded = settingsVersionName == null || !settingsVersionName.equals(currentVersionName);
 
         wifiName = prefs.getString("wifiName", "Ping-6C7A");
         port = prefs.getInt("port", 4000);
@@ -75,17 +80,17 @@ public class Settings {
         logDecodedMessages = prefs.getBoolean("logDecodedMessages", false);
         showLinearPredictionTrack = prefs.getBoolean("showLinearPredictionTrack", true);
         showPolynomialPredictionTrack = prefs.getBoolean("showPolynomialPredictionTrack", true);
-        historySeconds = prefs.getInt("historySeconds", 60);
-        purgeSeconds = prefs.getInt("historySeconds", 60);
-        predictionSeconds = prefs.getInt("predictionSeconds", 60);
-        polynomialPredictionStepSeconds = prefs.getInt("polynomialPredictionStepSeconds", 10);
-        polynomialHistorySeconds = prefs.getInt("polynomialHistorySeconds", 10);
-        gradientMaximumDiff = prefs.getInt("gradientMaximumDiff", 5000);
-        gradientMinimumDiff = prefs.getInt("gradientMinimumDiff", 1000);
-        screenYPosPercent = prefs.getInt("screenYPosPercent", 25);
-        minHeadingChange = prefs.getInt("minHeadingChange", 3);
-        screenWidth = prefs.getFloat("screenWidth", 10);
-        circleRadiusStep = prefs.getFloat("circleRadiusStep", 5);
+        historySeconds = Math.max(0, Math.min(300, prefs.getInt("historySeconds", 60)));
+        purgeSeconds = Math.max(1, Math.min(300, prefs.getInt("purgeSeconds", 60)));
+        predictionSeconds = Math.max(0, Math.min(300, prefs.getInt("predictionSeconds", 60)));
+        polynomialPredictionStepSeconds = Math.max(1, Math.min(60, prefs.getInt("polynomialPredictionStepSeconds", 10)));
+        polynomialHistorySeconds = Math.max(1, Math.min(60, prefs.getInt("polynomialHistorySeconds", 10)));
+        gradientMaximumDiff = Math.max(1000, Math.min(5000, prefs.getInt("gradientMaximumDiff", 2500)));
+        gradientMinimumDiff = Math.max(100, Math.min(gradientMaximumDiff, prefs.getInt("gradientMinimumDiff", 1000)));
+        screenYPosPercent = Math.max(0, Math.min(100, prefs.getInt("screenYPosPercent", 25)));
+        sensorSmoothingConstant = Math.max(0, Math.min(1, prefs.getFloat("sensorSmoothingConstant", 0.2f)));
+        screenWidth = Math.max(0.5f, Math.min(50, prefs.getFloat("screenWidth", 10)));
+        circleRadiusStep = Math.max(0.1f, Math.min(screenWidth, prefs.getFloat("circleRadiusStep", 5)));
         try {
             distanceUnits = Distance.Units.valueOf(prefs.getString("distanceUnits", "NM").toUpperCase().trim());
         } catch (Exception e) {
@@ -104,7 +109,7 @@ public class Settings {
             speedUnits = Speed.Units.KNOTS;
             saveNeeded = true;
         }
-        countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
+        countryCode = prefs.getString("countryCode", "").toUpperCase();
         try {
             displayOrientation = MapFragment.DisplayOrientation.valueOf(prefs.getString("displayOrientation", "HeadingUp").trim());
         } catch (Exception e) {
@@ -139,7 +144,7 @@ public class Settings {
         edit.putInt("gradientMaximumDiff", gradientMaximumDiff);
         edit.putInt("gradientMinimumDiff", gradientMinimumDiff);
         edit.putInt("screenYPosPercent", screenYPosPercent);
-        edit.putInt("minHeadingChange", minHeadingChange);
+        edit.putFloat("sensorSmoothingConstant", sensorSmoothingConstant);
         edit.putFloat("screenWidth", screenWidth);
         edit.putFloat("circleRadiusStep", circleRadiusStep);
         edit.putString("distanceUnits", String.valueOf(distanceUnits));

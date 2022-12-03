@@ -49,7 +49,7 @@ public class Gdl90Message {
     protected boolean crcValid;
 
     public enum Emitter {
-        Unknown(R.drawable.ic_unknown),
+        Unknown(R.drawable.ic_ufo),
         Light(R.drawable.ic_plane),
         Small(R.drawable.ic_dash8),
         Large(R.drawable.ic_737),
@@ -57,7 +57,7 @@ public class Gdl90Message {
         Heavy(R.drawable.ic_c17),
         Aerobatic(R.drawable.ic_plane),
         Rotor(R.drawable.ic_helicopter),
-        Unused(R.drawable.ic_unknown),
+        Unused(R.drawable.ic_ufo),
         Glider(R.drawable.ic_glider),
         Balloon(R.drawable.ic_balloon),
         Skydiver(R.drawable.ic_parachute),
