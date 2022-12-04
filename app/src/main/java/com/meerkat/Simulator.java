@@ -21,6 +21,7 @@ import com.meerkat.measure.Height;
 import com.meerkat.measure.Polar;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Speed;
+import com.meerkat.measure.VertSpeed;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -28,7 +29,7 @@ import java.util.concurrent.ScheduledFuture;
 public class Simulator {
 
     private static final Position initialPos = new Position("gps", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0,
-            new Height(5000f, Height.Units.FT), new Speed(100f, Speed.Units.KNOTS), 350f, 0f, true, true, System.currentTimeMillis());
+            new Height(5000f, Height.Units.FT), new Speed(100f, Speed.Units.KNOTS), 350f, new VertSpeed(0f, VertSpeed.Units.FPM), true, true, System.currentTimeMillis());
 
     private int nextActionTime;
     private int actionIndex;
@@ -151,7 +152,7 @@ public class Simulator {
         if (isGps)
             Gps.setLocation(flight.position);
         else {
-            Polar p = new Polar(new Distance(flight.position.getSpeedMps(), Distance.Units.M), flight.position.getTrack(), new Height(flight.position.getVVel() / 60, Height.Units.FT));
+            Polar p = new Polar(new Distance(flight.position.getSpeedMps(), Distance.Units.M), flight.position.getTrack(), new Height(flight.position.getVVel().value * flight.position.getVVel().units.factor, Height.Units.M));
             flight.position.moveBy(p);
             VehicleList.vehicleList.upsert(flight.callsign, flight.id, flight.position.linearPredict(1000), flight.emitterType);
         }
@@ -173,7 +174,7 @@ public class Simulator {
             position = new Position(initialPos, p);
             position.setSpeed(speed);
             position.setTrack(track);
-            position.setVVel(0);
+            position.setVVel(new VertSpeed(0f, VertSpeed.Units.FPM));
             position.setAirborne(airborne);
         }
 
@@ -182,14 +183,14 @@ public class Simulator {
     static class Action {
         final float accel;
         final float turn;
-        final float climb;
+        final VertSpeed climb;
         final int duration;
         final boolean airborne;
 
         Action(float accel, float turn, float climb, int dur, boolean airborne) {
             this.accel = accel / dur;
             this.turn = turn / dur;
-            this.climb = climb / dur;
+            this.climb = new VertSpeed(climb * 60 / dur, VertSpeed.Units.FPM);
             duration = dur;
             this.airborne = airborne;
         }

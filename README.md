@@ -89,6 +89,7 @@ User settings
 | circleRadiusStep                | Distance apart of the circles on the screen in the user's distance units                                                                                                                          | 5                                               |
 | altUnits                        | User's preferred altitude units FT, M                                                                                                                                                             | FT                                              |
 | speedUnits                      | User's preferred speed units KTS, MPH, KPH                                                                                                                                                        | KPH                                             |
+| vertSpeedUnits                  | User's preferred vertical speed units FPM, MPS                                                                                                                                                    | FPM                                             |
 | countryCode                     | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed.                                                                      | ZK                                              |
 | headingUp                       | Display orientation... heading-up... if false, trackUp is used                                                                                                                                    | true                                            |
 | trackUp                         | Display orientation... track-up or North-up                                                                                                                                                       | true                                            |
@@ -115,7 +116,6 @@ TO DO
 This list is more-or-less in priority order. At the moment it is shrinking :)
 * Ownship track... history and prediction
 * Auto-zoom
-* Allow other units for vertical speed (currently only fpm)
 * Indicate Mode-C traffic presence
 * Fix - Layout issue due to bottom nav bar -- Change to Fullscreen display
 * Add a "Quit" button

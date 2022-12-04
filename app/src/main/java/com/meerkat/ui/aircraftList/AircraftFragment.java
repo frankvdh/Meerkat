@@ -38,6 +38,7 @@ import com.meerkat.VehicleList;
 import com.meerkat.databinding.FragmentAircraftBinding;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Speed;
+import com.meerkat.measure.VertSpeed;
 
 import java.util.Iterator;
 import java.util.Locale;
@@ -92,7 +93,7 @@ public class AircraftFragment extends Fragment {
 
     private void refreshAircraftDisplay() {
         try {
-            Log.v("swapData: ", VehicleList.vehicleList.keySet().size());
+            Log.d("refreshAircraftDisplay: ", VehicleList.vehicleList.keySet().size());
             Stream<Vehicle> s = VehicleList.vehicleList.getVehicles().stream().sorted();
             int i = 1; // row 0 is header
             for (Iterator<Vehicle> it = s.iterator(); it.hasNext(); i++) {
@@ -101,7 +102,7 @@ public class AircraftFragment extends Fragment {
                 float distance = Gps.distanceTo(v.lastValid) / 1852;
                 float track = v.lastValid.getTrack();
                 Speed speed = v.lastValid.getSpeedUnits();
-                float vVel = v.lastValid.getVVel();
+                VertSpeed vVel = v.lastValid.getVVel();
                 if (i < tableAircraft.getChildCount()) {
                     TableRow row = (TableRow) tableAircraft.getChildAt(i);
                     uiActivity.runOnUiThread(() -> {
@@ -111,7 +112,7 @@ public class AircraftFragment extends Fragment {
                         ((TextView) row.getChildAt(3)).setText(String.format(Locale.ENGLISH, "%s", v.lastValid.getAlt()));
                         ((TextView) row.getChildAt(4)).setText(Float.isNaN(track) ? "---" : String.format(Locale.ENGLISH, "%03.0f", track));
                         ((TextView) row.getChildAt(5)).setText(speed == null ? "----" : speed.toString());
-                        ((TextView) row.getChildAt(6)).setText(vVel == 32256 /* NaN */ ? "----" : String.format(Locale.ENGLISH, "%.0f%s", vVel, "fpm"));
+                        ((TextView) row.getChildAt(6)).setText(vVel == null ? "----" : vVel.toString());
                         row.postInvalidate();
                     });
                 } else {
@@ -123,7 +124,7 @@ public class AircraftFragment extends Fragment {
                     row.addView(view(String.format(Locale.ENGLISH, "%s", v.lastValid.getAlt())));
                     row.addView(view(Float.isNaN(track) ? "---" : String.format(Locale.ENGLISH, "%03.0f", track)));
                     row.addView(view(speed == null || Float.isNaN(speed.value) ? "----" : speed.toString()));
-                    row.addView(view(Float.isNaN(vVel) ? "----" : String.format(Locale.ENGLISH, "%.0f%s", vVel, "fpm")));
+                    row.addView(view(vVel == null ? "----" : vVel.toString()));
                     uiActivity.runOnUiThread(() -> tableAircraft.addView(row));
                 }
             }

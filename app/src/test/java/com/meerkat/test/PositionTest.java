@@ -19,6 +19,7 @@ import static java.lang.Math.PI;
 import com.meerkat.measure.Height;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Speed;
+import com.meerkat.measure.VertSpeed;
 
 import junit.framework.TestCase;
 
@@ -74,7 +75,7 @@ public class PositionTest extends TestCase {
         when(marton.hasSpeed()).thenReturn(true);
         when(marton.getBearing()).thenReturn(0f);
         when(marton.hasBearing()).thenReturn(true);
-        when(marton.getVVel()).thenReturn(0f);
+        when(marton.getVVel()).thenReturn(new VertSpeed(0f, VertSpeed.Units.FPM));
         Position p = marton.linearPredict(3600000);
         Assert.assertEquals(40.96848700215959, p.getLatitude(), .0001);
         Assert.assertEquals( 175.37833333333333, p.getLongitude(), .0001);
@@ -85,7 +86,7 @@ public class PositionTest extends TestCase {
     @Test
     public void testMovePoint() {
         Position p = new Position("test", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0, new Height(5000f, FT),
-                new Speed(123f, Speed.Units.KNOTS), 0, 0, true, true, 0).linearPredict(3600000);
+                new Speed(123f, Speed.Units.KNOTS), 0, new VertSpeed(0f, VertSpeed.Units.FPM), true, true, 0).linearPredict(3600000);
         Assert.assertNotNull(p);
         Assert.assertEquals(-39.1698463311738, p.getLatitude(), .00001);
         Assert.assertEquals(175.37833333333333, p.getLongitude(), .00001);

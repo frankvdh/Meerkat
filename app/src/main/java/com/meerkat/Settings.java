@@ -22,6 +22,7 @@ import com.meerkat.log.Log;
 import com.meerkat.measure.Distance;
 import com.meerkat.measure.Height;
 import com.meerkat.measure.Speed;
+import com.meerkat.measure.VertSpeed;
 import com.meerkat.ui.map.MapFragment;
 
 public class Settings {
@@ -59,6 +60,7 @@ public class Settings {
     public static Distance.Units distanceUnits;
     public static Height.Units altUnits;
     public static Speed.Units speedUnits;
+    public static VertSpeed.Units vertSpeedUnits;
     public static boolean simulate;
     public static String countryCode;
     public static MapFragment.DisplayOrientation displayOrientation;
@@ -116,6 +118,12 @@ public class Settings {
             speedUnits = Speed.Units.KNOTS;
             saveNeeded = true;
         }
+        try {
+            vertSpeedUnits = VertSpeed.Units.valueOf(prefs.getString("vertSpeedUnits", "FPM").toUpperCase().trim());
+        } catch (Exception e) {
+            vertSpeedUnits = VertSpeed.Units.FPM;
+            saveNeeded = true;
+        }
         countryCode = prefs.getString("countryCode", "").toUpperCase();
         try {
             displayOrientation = MapFragment.DisplayOrientation.valueOf(prefs.getString("displayOrientation", "HeadingUp").trim());
@@ -161,6 +169,7 @@ public class Settings {
         edit.putString("distanceUnits", String.valueOf(distanceUnits));
         edit.putString("altUnits", String.valueOf(altUnits));
         edit.putString("speedUnits", String.valueOf(speedUnits));
+        edit.putString("vertSpeedUnits", String.valueOf(vertSpeedUnits));
         edit.putString("countryCode", countryCode);
         edit.putString("displayOrientation", String.valueOf(displayOrientation));
         edit.putBoolean("keepScreenOn", keepScreenOn);

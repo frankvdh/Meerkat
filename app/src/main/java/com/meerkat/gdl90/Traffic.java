@@ -13,7 +13,6 @@
 package com.meerkat.gdl90;
 
 import static java.lang.Float.NaN;
-import static java.lang.Float.isNaN;
 
 import android.hardware.GeomagneticField;
 
@@ -23,6 +22,7 @@ import com.meerkat.log.Log;
 import com.meerkat.measure.Height;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Speed;
+import com.meerkat.measure.VertSpeed;
 
 import java.io.ByteArrayInputStream;
 import java.util.Locale;
@@ -98,7 +98,7 @@ public class Traffic extends Gdl90Message {
         int p = b >> 4;
         priority = priorityLookup[p < Priority.values().length ? p : Priority.values().length - 1];
         checkCrc();
-        point = new Position("ADS-B", lat, lon, new Height((float) alt, Height.Units.FT), new Speed((float) hVel, Speed.Units.KNOTS), trueTrack(track, trackType, lat, lon, alt), vVel, crcValid, airborne, time);
+        point = new Position("ADS-B", lat, lon, new Height((float) alt, Height.Units.FT), new Speed((float) hVel, Speed.Units.KNOTS), trueTrack(track, trackType, lat, lon, alt), new VertSpeed((float) vVel, VertSpeed.Units.FPM), crcValid, airborne, time);
         Log.v(point.toString());
     }
 
@@ -108,7 +108,7 @@ public class Traffic extends Gdl90Message {
             case True:
                 return track;
             case Mag:
-                return (float) ((track + new GeomagneticField((float) lat, (float) lon, alt, System.currentTimeMillis()).getDeclination()) % 360);
+                return (track + new GeomagneticField((float) lat, (float) lon, alt, System.currentTimeMillis()).getDeclination()) % 360;
             // Track
             case TRK:
                 return track;
@@ -120,11 +120,11 @@ public class Traffic extends Gdl90Message {
 
     @NonNull
     public String toString() {
-        float vVel = point.getVVel();
+        VertSpeed vVel = point.getVVel();
         return String.format(Locale.ENGLISH, "%c%c: %8s %s %s %s %03.0f %s %s NIC=%2d NAC=%2d %s %s %o",
                 ownShip ? 'O' : 'T', crcValidChar(),
                 callsign, point, point.getSpeedUnits().toString(),
-                isNaN(vVel) ? "----   " : String.format(Locale.ENGLISH, "%4f%s", vVel, "fpm"),
+                vVel == null ? "----   " : String.format(Locale.ENGLISH, "%4f%s", vVel.value, vVel.units.label),
                 point.getTrack(),
                 priority, (alertStatus == 0 ? "No alert" : "Traffic Alert"), nic, nac, (extrapolated ? "Extrap" : "Report"),
                 addrType, participantAddr);

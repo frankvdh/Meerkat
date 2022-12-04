@@ -25,13 +25,13 @@ import android.location.Location;
 import androidx.annotation.NonNull;
 
 public class Position extends Location {
-    private float vVelFpm; // feet per minute
+    private VertSpeed vVel;
     private boolean crcValid;
     private boolean airborne;
     private Speed speed;
     private Height alt;
 
-    public Position(String provider, double lat, double lon, Height alt, Speed speed, float track, float vVelFpm, boolean crcValid, boolean airborne, long time) {
+    public Position(String provider, double lat, double lon, Height alt, Speed speed, float track, VertSpeed vVel, boolean crcValid, boolean airborne, long time) {
         super(provider);
         setTime(time);
         if (!Double.isNaN(lat)) setLatitude(lat);
@@ -40,7 +40,7 @@ public class Position extends Location {
         if (speed != null && !Float.isNaN(speed.value))
             setSpeed(speed.value * speed.units.factor);
         if (!Float.isNaN(track)) setTrack(track);
-        this.vVelFpm = vVelFpm;
+        this.vVel = vVel;
         this.crcValid = crcValid;
         this.airborne = airborne;
         this.speed = speed;
@@ -48,7 +48,7 @@ public class Position extends Location {
     }
 
     public Position(String provider, double lat, double lon, Height alt, long time) {
-        this(provider, lat, lon, alt, null, Float.NaN, Float.NaN, true, true, time);
+        this(provider, lat, lon, alt, null, Float.NaN, null, true, true, time);
     }
 
     public Position(Location l, Polar p) {
@@ -59,6 +59,7 @@ public class Position extends Location {
         moveBy(p);
     }
 
+    @SuppressWarnings("CopyConstructorMissesField")
     public Position(Position p) {
         super(p.getProvider());
         set(p);
@@ -133,8 +134,7 @@ public class Position extends Location {
          setProvider("predicted from " + getProvider());
         setLatitude(rad2latLonDeg(latitudeResult));
         setLongitude(rad2latLonDeg(longitudeResult));
-        assert alt.units == p.altDifference.units: "Mismatched alt units: " + alt.units + " vs " + p.altDifference.units;
-        setAlt(new Height(alt.value + p.altDifference.value, alt.units));
+        setAlt(new Height(alt.value + p.altDifference.value * p.altDifference.units.factor /alt.units.factor, alt.units));
         return this;
     }
 
@@ -145,13 +145,13 @@ public class Position extends Location {
         this.airborne = p.airborne;
         setSpeed(new Speed(p.speed.value, p.speed.units));
         setAlt(new Height(p.alt.value, p.alt.units));
-        setVVel(p.vVelFpm);
+        setVVel(p.vVel);
         setTrack(p.getTrack());
     }
 
     //        Return new Point seconds into the future, given initial coordinates, altitude, speed and track, and vertical speed
     public Position linearPredict(long elapsedMs) {
-        Polar p = new Polar(new Distance(getSpeedMps()*elapsedMs/1000f, Distance.Units.M), getTrack(), new Height(vVelFpm * elapsedMs/60000f, Height.Units.FT));
+        Polar p = new Polar(new Distance(getSpeedMps()*elapsedMs/1000f, Distance.Units.M), getTrack(), new Height(vVel.value * vVel.units.factor * elapsedMs/60000f, Height.Units.M));
         return new Position(this).moveBy(p);
     }
 
@@ -167,12 +167,12 @@ public class Position extends Location {
         setBearing(track);
     }
 
-    public float getVVel() {
-        return vVelFpm;
+    public VertSpeed getVVel() {
+        return vVel;
     }
 
-    public void setVVel(float vVel) {
-        this.vVelFpm = vVel;
+    public void setVVel(VertSpeed vVel) {
+        this.vVel = vVel;
     }
 
     public boolean isCrcValid() {
@@ -199,7 +199,7 @@ public class Position extends Location {
         double lat = getLatitude();
         double lon = getLongitude();
         Height alt = getAlt();
-        return (Double.isNaN(lat) ? "(-----, -----) " : String.format("(%.5f, %.5f) ", lat, lon)) + " " + alt.toString() + ", " + speed.toString() + ", " + getTrack() + ", " + vVelFpm;
+        return (Double.isNaN(lat) ? "(-----, -----) " : String.format("(%.5f, %.5f) ", lat, lon)) + " " + alt.toString() + ", " + speed.toString() + ", " + getTrack() + ", " + vVel;
     }
 
     public boolean isAirborne() {

@@ -42,6 +42,6 @@ public class Speed {
     @SuppressLint("DefaultLocale")
     @Override
     public String toString() {
-        return String.format("%.0f%s", value, units.label);
+        return String.format(value < 10 ?  "%.1f%s": "%.0f%s", value, units.label);
     }
 }
