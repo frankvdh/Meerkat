@@ -40,7 +40,7 @@ public class Simulator {
     ScheduledFuture<?> thread;
 
     private static final Flight ownShip =
-            new Flight(-1, "ownship", Gdl90Message.Emitter.Light, new Polar(new Distance(0f, Distance.Units.NM), 0, new Height(0f, Height.Units.FT)),
+            new Flight("ownship", Gdl90Message.Emitter.Light, new Polar(new Distance(0f, Distance.Units.NM), 0, new Height(0f, Height.Units.FT)),
                     new Speed(100f, Speed.Units.KNOTS), 20, true,
                     new Action[]{
                             new Action(0, 0, 0, 6, false),
@@ -51,7 +51,7 @@ public class Simulator {
                     });
 
     private static final Simulator[] traffic = {
-            new Simulator(new Flight(1, "test", Gdl90Message.Emitter.Light, new Polar(new Distance(5f, Distance.Units.NM), 0, new Height(0f, Height.Units.FT)),
+            new Simulator(new Flight("test", Gdl90Message.Emitter.Light, new Polar(new Distance(5f, Distance.Units.NM), 0, new Height(0f, Height.Units.FT)),
                     new Speed(100f, Speed.Units.KNOTS), 0, false,
                     new Action[]{
                             new Action(0, 0, 0, 6, false),
@@ -61,13 +61,19 @@ public class Simulator {
                             new Action(0, -360, -10000, 120, true),
                     }), 5, false),
 
-            new Simulator(new Flight(2, "ZK-HVY", Gdl90Message.Emitter.Heavy, new Polar(new Distance(20f, Distance.Units.NM), 225, new Height(20000f, Height.Units.FT)),
+            new Simulator(new Flight("ZK-HVY", Gdl90Message.Emitter.Heavy, new Polar(new Distance(20f, Distance.Units.NM), 225, new Height(40000f, Height.Units.FT)),
                     new Speed(500f, Speed.Units.KNOTS), 20, true,
                     new Action[]{
                             new Action(0, 0, 0, 300, true),
                     }), 10, false),
 
-            new Simulator(new Flight(3, "ZK-GLI", Gdl90Message.Emitter.Glider, new Polar(new Distance(15f, Distance.Units.NM), 15, new Height(5000f, Height.Units.FT)),
+            new Simulator(new Flight("ANZ123", Gdl90Message.Emitter.Small, new Polar(new Distance(10f, Distance.Units.NM), 215, new Height(20000f, Height.Units.FT)),
+                    new Speed(250f, Speed.Units.KNOTS), 20, true,
+                    new Action[]{
+                            new Action(0, 0, 0, 300, true),
+                    }), 10, false),
+
+            new Simulator(new Flight("ZK-GLI", Gdl90Message.Emitter.Glider, new Polar(new Distance(15f, Distance.Units.NM), 15, new Height(5000f, Height.Units.FT)),
                     new Speed(100f, Speed.Units.KNOTS), 180, true,
                     new Action[]{
                             new Action(0, -1080, -9000, 300, true),
@@ -75,7 +81,7 @@ public class Simulator {
                             new Action(0, 0, 0, 60, false),
                     }), 5, false),
 
-            new Simulator(new Flight(4, "ZK-HEL", Gdl90Message.Emitter.Rotor, new Polar(new Distance(15f, Distance.Units.NM), -15, new Height(0f, Height.Units.FT)),
+            new Simulator(new Flight("ZK-HEL", Gdl90Message.Emitter.Rotor, new Polar(new Distance(15f, Distance.Units.NM), -15, new Height(0f, Height.Units.FT)),
                     new Speed(0f, Speed.Units.KNOTS), 180, true,
                     new Action[]{
                             new Action(0, 0, 1500, 100, true),
@@ -83,21 +89,21 @@ public class Simulator {
                             new Action(0, 0, 0, 60, true),
                     }), 15, false),
 
-            new Simulator(new Flight(5, "UAV", Gdl90Message.Emitter.UAV, new Polar(new Distance(15f, Distance.Units.NM), -30, new Height(0f, Height.Units.FT)),
+            new Simulator(new Flight("UAV", Gdl90Message.Emitter.UAV, new Polar(new Distance(15f, Distance.Units.NM), -30, new Height(0f, Height.Units.FT)),
                     new Speed(0f, Speed.Units.KNOTS), 0, true,
                     new Action[]{
                             new Action(10, 0, 500, 10, true),
                             new Action(0, 0, -500, 10, true),
                     }), 5, false),
 
-            new Simulator(new Flight(5, "UAV", Gdl90Message.Emitter.UAV, new Polar(new Distance(15f, Distance.Units.NM), -30, new Height(0f, Height.Units.FT)),
+            new Simulator(new Flight("UAV", Gdl90Message.Emitter.UAV, new Polar(new Distance(15f, Distance.Units.NM), -30, new Height(0f, Height.Units.FT)),
                     new Speed(0f, Speed.Units.KNOTS), 0, true,
                     new Action[]{
                             new Action(10, 0, 500, 10, true),
                             new Action(0, 0, -500, 10, true),
                     }), 120, false),
 
-            new Simulator(new Flight(6, "UAW", Gdl90Message.Emitter.UAV, new Polar(new Distance(16f, Distance.Units.NM), -30, new Height(0f, Height.Units.FT)),
+            new Simulator(new Flight("UAW", Gdl90Message.Emitter.UAV, new Polar(new Distance(16f, Distance.Units.NM), -30, new Height(0f, Height.Units.FT)),
                     new Speed(0f, Speed.Units.KNOTS), 0, true,
                     new Action[]{
                             new Action(10, 0, 500, 100, true),
@@ -157,9 +163,10 @@ public class Simulator {
         final String callsign;
         final Gdl90Message.Emitter emitterType;
         final Action[] actions;
+        static int idNum = 0;
 
-        Flight(int id, String callsign, Gdl90Message.Emitter emitterType, Polar p, Speed speed, float track, boolean airborne, Action[] actions) {
-            this.id = id;
+        Flight(String callsign, Gdl90Message.Emitter emitterType, Polar p, Speed speed, float track, boolean airborne, Action[] actions) {
+            this.id = idNum++;
             this.callsign = callsign;
             this.emitterType = emitterType;
             this.actions = actions;

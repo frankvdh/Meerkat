@@ -127,7 +127,8 @@ public class Settings {
         minGpsDistanceChangeMetres = prefs.getInt("minGpsDistanceChangeMetres", 10);
         minGpsUpdateIntervalSeconds = prefs.getInt("minGpsUpdateIntervalSeconds", 10);
         simulate = prefs.getBoolean("simulate", false);
-//        displayOrientation = MapFragment.DisplayOrientation.NorthUp;
+        if (simulate)
+            displayOrientation = MapFragment.DisplayOrientation.NorthUp;
         if (saveNeeded)
             save();
         Log.i("Settings loaded");

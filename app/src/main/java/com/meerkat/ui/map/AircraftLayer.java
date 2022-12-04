@@ -12,7 +12,6 @@
  */
 package com.meerkat.ui.map;
 
-import static com.meerkat.Settings.displayOrientation;
 import static com.meerkat.Settings.gradientMaximumDiff;
 import static com.meerkat.Settings.gradientMinimumDiff;
 import static com.meerkat.Settings.historySeconds;
@@ -190,7 +189,7 @@ public class AircraftLayer extends Drawable {
             if (aircraftPoint.x > bounds.left - bmpWidth / 2 && aircraftPoint.x < bounds.right + bmpWidth / 2 && aircraftPoint.y > bounds.top - bmpWidth / 2 && aircraftPoint.y < bounds.bottom + bmpWidth / 2) {
                 canvas.drawBitmap(replaceColor(emitter.bitmap, altColour(altDiff, isAirborne)),
                         positionMatrix(emitter.bitmap.getWidth() / 2, emitter.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
-                                track - MapFragment.displayRotation()), null);
+                                (isNaN(track) ? 0 : track) - MapFragment.displayRotation()), null);
                 int lineHeight = (int) (textPaint.getTextSize() + 1);
                 String[] text = {String.format(Locale.ENGLISH, "%s%c", v.getLabel(), v.isValid() ? ' ' : '!'),
                         isNaN(altDiff.value) ? "" : altDiff.toString()};
@@ -218,8 +217,7 @@ public class AircraftLayer extends Drawable {
     static Matrix positionMatrix(int centreX, int centreY, float x, float y, float angle) {
         Matrix matrix = new Matrix();
         // Rotate about centre of icon & translate to bitmap position
-        var track = Gps.getTrack();
-        matrix.setRotate(displayOrientation == MapFragment.DisplayOrientation.TrackUp && Float.isNaN(track)? angle : angle - track, centreX, centreY);
+        matrix.setRotate(angle, centreX, centreY);
         matrix.postTranslate(x - centreX, y - centreY);
         return matrix;
     }
