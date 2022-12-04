@@ -30,6 +30,7 @@ public class Settings {
     public static int port;
     public static boolean showLog;
     public static boolean fileLog;
+    public static boolean appendLogFile;
     public static Level logLevel;
     public static boolean logRawMessages;
     public static boolean logDecodedMessages;
@@ -37,6 +38,11 @@ public class Settings {
     public static boolean showPolynomialPredictionTrack;
     public static int historySeconds;
     public static int purgeSeconds;
+    // The minimum distance to change Updates in meters
+    public static int minGpsDistanceChangeMetres; // 10 meters
+
+    // The minimum time between updates in milliseconds
+    public static int minGpsUpdateIntervalSeconds; // 10 seconds
 
     /*
      * Time smoothing constant for low-pass filter 0 ≤ α ≤ 1 ; a smaller value basically means more smoothing
@@ -69,6 +75,7 @@ public class Settings {
         port = prefs.getInt("port", 4000);
         showLog = prefs.getBoolean("showLog", true);
         fileLog = prefs.getBoolean("fileLog", true);
+        appendLogFile = prefs.getBoolean("appendLogFile", false);
         try {
             logLevel = Level.valueOf(prefs.getString("logLevel", "I").toUpperCase().trim().substring(0, 1));
         } catch (Exception e) {
@@ -117,6 +124,8 @@ public class Settings {
             saveNeeded = true;
         }
         keepScreenOn = prefs.getBoolean("keepScreenOn", true);
+        minGpsDistanceChangeMetres = prefs.getInt("minGpsDistanceChangeMetres", 10);
+        minGpsUpdateIntervalSeconds = prefs.getInt("minGpsUpdateIntervalSeconds", 10);
         simulate = prefs.getBoolean("simulate", false);
 //        displayOrientation = MapFragment.DisplayOrientation.NorthUp;
         if (saveNeeded)
@@ -131,6 +140,7 @@ public class Settings {
         edit.putInt("port", port);
         edit.putBoolean("showLog", showLog);
         edit.putBoolean("fileLog", fileLog);
+        edit.putBoolean("appendLogFile", appendLogFile);
         edit.putString("logLevel", String.valueOf(logLevel));
         edit.putBoolean("logRawMessages", logRawMessages);
         edit.putBoolean("logDecodedMessages", logDecodedMessages);
@@ -153,6 +163,8 @@ public class Settings {
         edit.putString("countryCode", countryCode);
         edit.putString("displayOrientation", String.valueOf(displayOrientation));
         edit.putBoolean("keepScreenOn", keepScreenOn);
+        edit.putInt("minGpsDistanceChangeMetres", minGpsDistanceChangeMetres);
+        edit.putInt("minGpsUpdateIntervalSeconds", minGpsUpdateIntervalSeconds);
         edit.putBoolean("simulate", simulate);
         edit.apply();
         Log.i("Settings saved");

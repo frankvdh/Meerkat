@@ -12,6 +12,9 @@
  */
 package com.meerkat;
 
+import static com.meerkat.Settings.minGpsDistanceChangeMetres;
+import static com.meerkat.Settings.minGpsUpdateIntervalSeconds;
+
 import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Intent;
@@ -22,29 +25,71 @@ import android.os.IBinder;
 import android.widget.Toast;
 
 import com.meerkat.log.Log;
+import com.meerkat.measure.Polar;
+import com.meerkat.measure.Position;
 import com.meerkat.ui.map.MapFragment;
 
 public class Gps extends Service implements LocationListener {
 
     public static volatile boolean isEnabled;
 
-    public static volatile Location location;
-
-    // The minimum distance to change Updates in meters
-    private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 5; // 10 meters
-
-    // The minimum time between updates in milliseconds
-    private static final long MIN_UPDATE_INTERVAL = 10000; // 10 seconds
+    private static final Location location = new Location("gps");
 
     // Declaring a Location Manager
     private final LocationManager locationManager;
 
     public Gps(LocationManager locationManager) {
         this.locationManager = locationManager;
-        location = new Location("gps");
         if (Settings.simulate)
             return;
         resume();
+    }
+
+    public static float distanceTo(Location other) {
+        synchronized (location) {
+            return location.distanceTo(other);
+        }
+    }
+
+    public static float getAltitude() {
+        synchronized (location) {
+            if (location.hasAltitude())
+                return (float) location.getAltitude();
+        }
+        return Float.NaN;
+    }
+
+    public static float getTrack() {
+        synchronized (location) {
+            if (location.hasBearing())
+                return location.getBearing();
+        }
+        return Float.NaN;
+    }
+
+    public static float bearingTo(Location other) {
+        synchronized (location) {
+            return location.bearingTo(other);
+        }
+    }
+
+    public static void getLatLonAlt(Location copy) {
+        synchronized (location) {
+            copy.set(location);
+        }
+    }
+
+    // For simulator
+    public static void setLocation(Location copy) {
+        synchronized (location) {
+            location.set(copy);
+        }
+    }
+
+    public static void getPolar(Position other, Polar p) {
+        synchronized (location) {
+            p.set(location, other);
+        }
     }
 
     /**
@@ -64,10 +109,10 @@ public class Gps extends Service implements LocationListener {
             isEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
             if (isEnabled) {
                 // First get location from Network Provider
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_UPDATE_INTERVAL, MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minGpsUpdateIntervalSeconds * 1000L, minGpsDistanceChangeMetres, this);
                 Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 if (location != null)
-                    Gps.location.set(location);
+                    location.set(location);
                 Log.d("GPS Enabled: %s", location);
             }
         } catch (Exception e) {

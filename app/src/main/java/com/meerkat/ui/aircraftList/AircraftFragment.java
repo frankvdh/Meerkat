@@ -9,7 +9,8 @@
  * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
  * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
  * NonCommercial — You may not use the material for commercial purposes.
- */package com.meerkat.ui.aircraftList;
+ */
+package com.meerkat.ui.aircraftList;
 
 import static com.meerkat.Settings.keepScreenOn;
 import static com.meerkat.log.Log.useLogWriter;
@@ -19,7 +20,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -30,7 +30,6 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.meerkat.Gps;
@@ -76,7 +75,6 @@ public class AircraftFragment extends Fragment {
         return root;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onResume() {
         super.onResume();
@@ -92,7 +90,6 @@ public class AircraftFragment extends Fragment {
         task.cancel(true);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     private void refreshAircraftDisplay() {
         try {
             Log.v("swapData: ", VehicleList.vehicleList.keySet().size());
@@ -101,7 +98,7 @@ public class AircraftFragment extends Fragment {
             for (Iterator<Vehicle> it = s.iterator(); it.hasNext(); i++) {
                 Vehicle v = it.next();
                 Log.i(v.toString());
-                float distance = Gps.location.distanceTo(v.lastValid) / 1852;
+                float distance = Gps.distanceTo(v.lastValid) / 1852;
                 float track = v.lastValid.getTrack();
                 Speed speed = v.lastValid.getSpeedUnits();
                 float vVel = v.lastValid.getVVel();
@@ -110,7 +107,7 @@ public class AircraftFragment extends Fragment {
                     uiActivity.runOnUiThread(() -> {
                         ((TextView) row.getChildAt(0)).setText(v.getLabel());
                         ((TextView) row.getChildAt(1)).setText(String.format(Locale.ENGLISH, distance < 10 ? "%.1f%s" : "%.0f%s", distance, "nm"));
-                        ((TextView) row.getChildAt(2)).setText(String.format(Locale.ENGLISH, "%03.0f", (Gps.location.bearingTo(v.lastValid) + 360) % 360));
+                        ((TextView) row.getChildAt(2)).setText(String.format(Locale.ENGLISH, "%03.0f", (Gps.bearingTo(v.lastValid) + 360) % 360));
                         ((TextView) row.getChildAt(3)).setText(String.format(Locale.ENGLISH, "%s", v.lastValid.getAlt()));
                         ((TextView) row.getChildAt(4)).setText(Float.isNaN(track) ? "---" : String.format(Locale.ENGLISH, "%03.0f", track));
                         ((TextView) row.getChildAt(5)).setText(speed == null ? "----" : speed.toString());
@@ -122,13 +119,13 @@ public class AircraftFragment extends Fragment {
                     row.setLayoutParams(tableAircraft.getChildAt(0).getLayoutParams()); // Copy layout from heading row
                     row.addView(view(v.getLabel()));
                     row.addView(view(String.format(Locale.ENGLISH, distance < 10 ? "%.1f%s" : "%.0f%s", distance, "nm")));
-                    row.addView(view(String.format(Locale.ENGLISH, "%03.0f", (Gps.location.bearingTo(v.lastValid) + 360) % 360)));
+                    row.addView(view(String.format(Locale.ENGLISH, "%03.0f", (Gps.bearingTo(v.lastValid) + 360) % 360)));
                     row.addView(view(String.format(Locale.ENGLISH, "%s", v.lastValid.getAlt())));
                     row.addView(view(Float.isNaN(track) ? "---" : String.format(Locale.ENGLISH, "%03.0f", track)));
                     row.addView(view(speed == null || Float.isNaN(speed.value) ? "----" : speed.toString()));
                     row.addView(view(Float.isNaN(vVel) ? "----" : String.format(Locale.ENGLISH, "%.0f%s", vVel, "fpm")));
                     uiActivity.runOnUiThread(() -> tableAircraft.addView(row));
-                 }
+                }
             }
             // If the number of aircraft in range decreases, there will be some entries in tableAircraft that are out of date and should not be displayed
             for (int j = tableAircraft.getChildCount() - 1; j >= i; j--) {

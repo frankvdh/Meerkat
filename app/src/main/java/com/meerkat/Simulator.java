@@ -143,7 +143,7 @@ public class Simulator {
         flight.position.setTrack((flight.position.getTrack() + action.turn) % 360);
         flight.position.setTime(System.currentTimeMillis());
         if (isGps)
-            Gps.location.set(flight.position);
+            Gps.setLocation(flight.position);
         else {
             Polar p = new Polar(new Distance(flight.position.getSpeedMps(), Distance.Units.M), flight.position.getTrack(), new Height(flight.position.getVVel() / 60, Height.Units.FT));
             flight.position.moveBy(p);

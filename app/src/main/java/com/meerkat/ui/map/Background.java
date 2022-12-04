@@ -14,7 +14,9 @@ package com.meerkat.ui.map;
 
 import static com.meerkat.Settings.circleRadiusStep;
 import static com.meerkat.Settings.displayOrientation;
+import static com.meerkat.Settings.distanceUnits;
 import static com.meerkat.Settings.screenYPosPercent;
+import static com.meerkat.ui.map.MapFragment.scaleFactor;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -33,9 +35,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.content.res.AppCompatResources;
 
-import com.meerkat.R;
+import com.meerkat.databinding.FragmentMapBinding;
 import com.meerkat.log.Log;
 
 public class Background extends Drawable {
@@ -43,10 +44,12 @@ public class Background extends Drawable {
     private final Paint circlePaint;
     private final ImageView compassView;
     private final TextView compassText;
+    private final TextView scaleText;
 
-    public Background(Context context, ImageView compassView, TextView compassText) {
-        this.compassView = compassView;
-        this.compassText = compassText;
+    public Background(Context context, FragmentMapBinding binding) {
+        this.compassView = binding.compassView;
+        this.compassText = binding.compassText;
+        this.scaleText = binding.scaleText;
         Paint whitePaint = new Paint();
         whitePaint.setColor(Color.WHITE);
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -64,8 +67,6 @@ public class Background extends Drawable {
         compassText.setRight(compassView.getRight());
         compassText.setLeft(compassView.getLeft());
         compassText.setBottom(compassView.getBottom());
-        @NonNull Drawable compass = AppCompatResources.getDrawable(context, R.drawable.compass);
-        int imageSize = Math.max(compass.getIntrinsicWidth(), compass.getIntrinsicHeight());
         compassText.setTranslationX(135);
         compassText.setTranslationY(135);
         compassText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
@@ -83,25 +84,23 @@ public class Background extends Drawable {
         canvas.translate(xCentre, bounds.height() * (100f - screenYPosPercent) / 100);
         canvas.drawLine(-xCentre, 0, xCentre, 0, circlePaint);
         canvas.drawCircle(0, 0, 100, redPaint);
-        float radiusStep = circleRadiusStep * MapFragment.scaleFactor;
+        float radiusStep = circleRadiusStep * scaleFactor;
         for (float rad = radiusStep; rad < bounds.height(); rad += radiusStep) {
             canvas.drawCircle(0, 0, rad, circlePaint);
         }
         float rot = -MapFragment.displayRotation();
         compassView.setRotation(rot);
         compassText.setText(displayOrientation.toString().substring(0, 1));
+        float screenDistance  = getBounds().width() / (scaleFactor*2);
+        scaleText.setText(String.format(screenDistance < 10 ? "%.1f%s" :"%.0f%s", screenDistance, distanceUnits.label));
         Log.v("finished draw background... rot = %d", rot);
     }
 
     @Override
-    public void setAlpha(int alpha) {
-
-    }
+    public void setAlpha(int alpha) {  }
 
     @Override
-    public void setColorFilter(@Nullable ColorFilter colorFilter) {
-
-    }
+    public void setColorFilter(@Nullable ColorFilter colorFilter) {  }
 
     @Override
     public int getOpacity() {

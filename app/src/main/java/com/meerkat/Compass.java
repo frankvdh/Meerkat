@@ -28,6 +28,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
 import android.os.IBinder;
 
 import androidx.annotation.Nullable;
@@ -38,15 +39,15 @@ import com.meerkat.ui.map.MapFragment;
 public class Compass extends Service implements SensorEventListener {
 
     static GeomagneticField geoField;
-    static public float Declination = 0;
+    private static float Declination = 0;
 
-    SensorManager sensorManager;
-    float[] mag = new float[3];
-    float[] grav = new float[3];
-    private final float[] rotationMatrix = new float[16];
-    private final float[] orientation = new float[4];
-
-    static public float Heading;
+    private static SensorManager sensorManager;
+    private static final float[] mag = new float[3];
+    private static final float[] grav = new float[3];
+    private static final float[] rotationMatrix = new float[16];
+    private static final float[] orientation = new float[4];
+    private static final Location GpsLocation = new Location("");
+    private static float Heading;
 //    static public float Pitch;
 //    static public float Roll;
 
@@ -60,11 +61,9 @@ public class Compass extends Service implements SensorEventListener {
     }
 
     public static void updateGeomagneticField() {
-        if (geoField != null)
-            synchronized (geoField) {
-                geoField = new GeomagneticField((float) Gps.location.getLatitude(), (float) Gps.location.getLongitude(), (float) Gps.location.getAltitude(), System.currentTimeMillis());
-                Declination = geoField.getDeclination();
-            }
+        Gps.getLatLonAlt(GpsLocation);
+        geoField = new GeomagneticField((float) GpsLocation.getLatitude(), (float) GpsLocation.getLongitude(), (float) GpsLocation.getAltitude(), System.currentTimeMillis());
+        Declination = geoField.getDeclination();
     }
 
     public void resume() {
@@ -100,8 +99,8 @@ public class Compass extends Service implements SensorEventListener {
         // Update rotation matrix, which is needed to update orientation angles.
         if (SensorManager.getRotationMatrix(rotationMatrix, null, grav, mag)) {
             SensorManager.getOrientation(rotationMatrix, orientation);
-            // "orientation" has azimuth (Z axis angle relative to mag north), pitch, roll
 
+            // "orientation" has azimuth (Z axis angle relative to mag north), pitch, roll
             int prevHeading = (int) Heading;
             Heading = (float) (Math.toDegrees(orientation[0]));
 //            Pitch = (float) Math.toDegrees(orientation[1]);
@@ -117,8 +116,7 @@ public class Compass extends Service implements SensorEventListener {
     }
 
     /**
-     * Filter the given input against the previous values and return a low-pass
-     * filtered result.
+     * Filter the given input against the previous values and return a low-pass filtered result.
      *
      * @param event SensorEvent with values array to smooth.
      * @param prev  float array representing the previous values.

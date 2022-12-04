@@ -49,4 +49,15 @@
         app:layout_constraintTop_toTopOf="@id/compassView"
         tools:ignore="SpeakableTextPresentCheck" />
 
+    <TextView
+        android:id="@+id/scaleText"
+        android:layout_width="500sp"
+        android:layout_height="100sp"
+        android:textAlignment="textEnd"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/mapview"
+        app:layout_constraintEnd_toEndOf="@+id/mapview"
+        tools:ignore="SpeakableTextPresentCheck" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

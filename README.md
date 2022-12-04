@@ -6,7 +6,7 @@ The objective is to use this app in an aircraft to detect nearby traffic equippe
 Project Status & Functionality
 ------------------------------
 This is very much in the pre-release state. Currently it does
-* Connect to a PingUSB device via WiFi (I believe that it *should* work with other devices e.g. ForeFlight Sentry https://www.foreflight.com/support/sentry/ but I haven't tested with anything other than my Ping-USB)
+* Connect to a PingUSB device via WiFi (I believe that it *should* work with other devices e.g. ForeFlight Sentry https://www.foreflight.com/support/sentry/ or Stratux but I haven't tested with anything other than my Ping-USB)
 * Receive GDL90 messages from the device, including Traffic and Ownship messages
 * Parse those messages 
 * Read Settings from /data/data/com.meerkat/shared_prefs/com.meerkat_preferences.xml
@@ -14,7 +14,7 @@ This is very much in the pre-release state. Currently it does
 * A simulator to generate "traffic" for testing (turned on by default!)
 * Display logs & raw messages on the screen
 * Display nearby traffic in a text window
-* Display nearby traffic in a graphic map window, either Heading-Up, Track-Up, or North-Up
+* Display nearby traffic in a zoomable graphic map window, either Heading-Up, Track-Up, or North-Up
 
 In the map window, the current GPS position is located at the lower centre of the screen. The background has some circles and lines to make it easier to estimate distance and direction.
 The map window is zoomable with a pinch gesture.
@@ -22,7 +22,7 @@ The map window is zoomable with a pinch gesture.
 In Heading-Up mode, the phone's orientation is used to orientate the map display, so that (assuming the phone is orientated in the same direction as the aircraft), the view
 on the screen should match with the view out the window... i.e. the screen display is oriented with the real world. The downside is that this will be inaccurate in accelerated flight (turns, acceleration/decelleration, changes in climb/descent rate).
 
-In Track-Up mode, the aircraft GPS track is used to orientate the map display. In nil-wind and non-sideslip conditions, this will be the same as Heading-Up,
+In Track-Up mode, only the aircraft GPS track is used to orientate the map display. In nil-wind and non-sideslip conditions, this will be the same as Heading-Up,
 and it will not be affected by accelerated flight.
 
 In North-Up mode, the map display is aligned with Grid North.
@@ -93,35 +93,37 @@ User settings
 | headingUp                       | Display orientation... heading-up... if false, trackUp is used                                                                                                                                    | true                                            |
 | trackUp                         | Display orientation... track-up or North-up                                                                                                                                                       | true                                            |
 | keepScreenOn                    | Keep the display on when in the Map or Aircraft List views                                                                                                                                        | true                                            |
+| minGpsDistanceChangeMetres      | Minimum Gps distance between updates in metres                                                                                                                                       			  | 5                                               |
+| minGpsUpdateIntervalSeconds     | Minimum Gps update interval in seconds                                                                                                                                       					  | 10                                              |
 
 Debugging settings
 ------------------
-| Debugging Setting name          | Usage                                                                                                                                                                                                                   | Default value                                     |
-|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
-| version                         | The version of Meerkat that saved the settings                                                                                                                                                                          | 1.0                                             |
-| showLog                         | Whether to output logs to a window on the screen                                                                                                                                                                        | false                                             |
-| fileLog                         | Whether to output logs to /storage/sdcard0/Android/data/com.meerkat/files/meerkat.log. NB This file is never erased or shortened. If left alone, this will eventually chew up all the storage at the rate of ~100MB/hr! | false                                             |
-| logLevel                        | Amount of detail to write to logs... Assert, Error, Warning, Info, Debug, V                                                                                                                                             | I                                                 |
-| logRawMessages                  | Whether to write the raw messages, as received from the device, to the logs                                                                                                                                             | false                                             |
-| logDecodedMessages              | Whether to write the decoded messages, as interpreted by the GDL90 parser, to the logs                                                                                                                                  | false                                             |
-| simulate                        | Play the simulated traffic instead of real traffic                                                                                                                                                                      | false                                             |
+| Debugging Setting name          | Usage                                                                                                                                           | Default value                                     |
+|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
+| version                         | The version of Meerkat that saved the settings                                                                                                  | 1.0                                               |
+| showLog                         | Whether to output logs to a window on the screen                                                                                                | false                                             |
+| fileLog                         | Whether to output logs to /storage/sdcard0/Android/data/com.meerkat/files/meerkat.log. 															| false                                             |
+| appendLogFile                   | Whether to append to the existing log file, or erase it and start a new one.                                                                    | false                                             |
+|                                 | If this is false, this file is never erased or shortened. If left alone, this will eventually chew up all the storage at the rate of ~100MB/hr! |                                                   |
+| logLevel                        | Amount of detail to write to logs... Assert, Error, Warning, Info, Debug, Verbose                                                               | I                                                 |
+| logRawMessages                  | Whether to write the raw messages, as received from the device, to the logs                                                                     | false                                             |
+| logDecodedMessages              | Whether to write the decoded messages, as interpreted by the GDL90 parser, to the logs                                                          | false                                             |
+| simulate                        | Play the simulated traffic instead of real traffic                                                                                              | false                                             |
 
 TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :)
 * Ownship track... history and prediction
-* Facility to clear log files
-* Add a "Quit" button
-* Display zoom level
 * Auto-zoom
 * Allow other units for vertical speed (currently only fpm)
 * Indicate Mode-C traffic presence
-* Fix - Layout issue due to bottom nav bar
+* Fix - Layout issue due to bottom nav bar -- Change to Fullscreen display
+* Add a "Quit" button
 * Add a Settings screen to enable all the settings to be changed interactively instead of needing to edit the text file
 * Audio / Haptic alerts of collision threats
 * Use a theme to allow black background
 * Digital filtering of path to predict tracks
-* Expand to be able to use other Wifi-enabled ADS-B In devices
+* Test usage with other Wifi-enabled ADS-B In devices (Stratux, Foreflight, etc)
 * Improve the code style
 * Write some documentation
 * Lots more testing

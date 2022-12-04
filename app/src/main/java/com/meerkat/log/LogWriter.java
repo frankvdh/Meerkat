@@ -38,17 +38,20 @@ class FileLogWriter implements LogWriter {
     static final DateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS");
 
     BufferedWriter bw;
-final File file;
-    public FileLogWriter(File file) {
+    final File file;
+    final boolean append;
+
+    public FileLogWriter(File file, boolean append) {
         this.file = file;
+        this.append = append;
         append(Log.Level.A, "Log restarted", new Date().toString());
     }
 
-    public void append(Log.Level level, String tag, String msg)  {
+    public void append(Log.Level level, String tag, String msg) {
         try {
             if (bw == null)
-                bw = new BufferedWriter(new FileWriter(file, true));
-            bw.write(String.format("%s %s/%s %s\r\n",  sdf.format(new Date()), tag, level, msg));
+                bw = new BufferedWriter(new FileWriter(file, append));
+            bw.write(String.format("%s %s/%s %s\r\n", sdf.format(new Date()), tag, level, msg));
         } catch (IOException e) {
             bw = null;
         }
@@ -86,9 +89,9 @@ class AndroidLogWriter implements LogWriter {
     private final Method[] mLogMethods;
 
     public AndroidLogWriter() throws ClassNotFoundException {
-        mLogMethods = new Method[Log.Level.A.value +1];
+        mLogMethods = new Method[Log.Level.A.value + 1];
         Class<?> logClass = Class.forName("android.util.Log");
-        for (Log.Level l: Log.Level.values()) {
+        for (Log.Level l : Log.Level.values()) {
             try {
                 mLogMethods[l.value] = logClass.getMethod(l.name().toLowerCase(), String.class, String.class);
             } catch (NoSuchMethodException | SecurityException e) {

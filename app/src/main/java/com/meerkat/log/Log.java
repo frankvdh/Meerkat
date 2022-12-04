@@ -64,8 +64,8 @@ public final class Log {
         }
     }
 
-    public static synchronized void useFilePrinter(File file) throws IOException {
-        FileLogWriter fp = new FileLogWriter(file);
+    public static synchronized void useFileWriter(File file, boolean append) throws IOException {
+        FileLogWriter fp = new FileLogWriter(file, append);
         mPrinters.add(fp);
     }
 

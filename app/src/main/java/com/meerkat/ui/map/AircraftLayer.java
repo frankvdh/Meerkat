@@ -12,6 +12,7 @@
  */
 package com.meerkat.ui.map;
 
+import static com.meerkat.Settings.displayOrientation;
 import static com.meerkat.Settings.gradientMaximumDiff;
 import static com.meerkat.Settings.gradientMinimumDiff;
 import static com.meerkat.Settings.historySeconds;
@@ -28,6 +29,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathDashPathEffect;
@@ -54,11 +56,12 @@ import java.util.List;
 import java.util.Locale;
 
 public class AircraftLayer extends Drawable {
-    private Vehicle v;
     private static final PathEffect historyEffect;
     private static final PathEffect predictEffect;
     private static final Paint textPaint = new Paint(Color.BLACK);
     private static final Paint trackPaint = new Paint();
+    private Vehicle v;
+    private final Polar spPolar;
 
     static {
         trackPaint.setStrokeWidth(10);
@@ -78,6 +81,7 @@ public class AircraftLayer extends Drawable {
     }
 
     public AircraftLayer(Vehicle v) {
+        spPolar = new Polar();
         set(v);
     }
 
@@ -113,8 +117,7 @@ public class AircraftLayer extends Drawable {
     }
 
     Point screenPoint(Position p) {
-        Polar spPolar = new Polar();
-        spPolar.set(Gps.location, p);
+        Gps.getPolar(p, spPolar);
         double b = Position.bearingToRad(spPolar.bearing - MapFragment.displayRotation());
         // new point is relative to (0, 0) of the canvas, which is at the ownShip position
         return new Point((int) (cos(b) * spPolar.distance.value * MapFragment.scaleFactor), (int) (-sin(b) * spPolar.distance.value * MapFragment.scaleFactor));
@@ -147,18 +150,18 @@ public class AircraftLayer extends Drawable {
         return point;
     }
 
-    private void polyLine(Canvas canvas, Point c1, final List<Position> l, PathEffect effect) {
+    private void polyLine(Canvas canvas, Point c1, final List<Position> list, PathEffect effect) {
         Point current = new Point(c1);
-        if (l == null || l.size() == 0) return;
-        synchronized (l) {
-            for (Position p: l) {
+        if (list == null || list.size() == 0) return;
+        synchronized (list) {
+            for (Position p: list) {
                 current = line(canvas, current, p, effect);
             }
         }
     }
 
     private Height altDiff(Height h) {
-        return new Height(h.value - (float) Gps.location.getAltitude() / h.units.factor, h.units);
+        return new Height(h.value - Gps.getAltitude() / h.units.factor, h.units);
     }
 
     @Override
@@ -183,10 +186,10 @@ public class AircraftLayer extends Drawable {
             var bmpWidth = emitter.bitmap.getWidth();
             Point aircraftPoint = screenPoint(currentPos);
             // Draw the icon if part of it is visible
-            Height altDiff = new Height((float) ((currentPos.getAltitude() - Gps.location.getAltitude()) / currentPos.getAlt().units.factor), currentPos.getAlt().units);
+            Height altDiff = new Height((float) ((currentPos.getAltitude() - Gps.getAltitude()) / currentPos.getAlt().units.factor), currentPos.getAlt().units);
             if (aircraftPoint.x > bounds.left - bmpWidth / 2 && aircraftPoint.x < bounds.right + bmpWidth / 2 && aircraftPoint.y > bounds.top - bmpWidth / 2 && aircraftPoint.y < bounds.bottom + bmpWidth / 2) {
                 canvas.drawBitmap(replaceColor(emitter.bitmap, altColour(altDiff, isAirborne)),
-                        MapFragment.positionMatrix(emitter.bitmap.getWidth() / 2, emitter.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
+                        positionMatrix(emitter.bitmap.getWidth() / 2, emitter.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
                                 track - MapFragment.displayRotation()), null);
                 int lineHeight = (int) (textPaint.getTextSize() + 1);
                 String[] text = {String.format(Locale.ENGLISH, "%s%c", v.getLabel(), v.isValid() ? ' ' : '!'),
@@ -210,6 +213,15 @@ public class AircraftLayer extends Drawable {
                 polyLine(canvas, aircraftPoint, v.history, historyEffect);
             }
         }
+    }
+
+    static Matrix positionMatrix(int centreX, int centreY, float x, float y, float angle) {
+        Matrix matrix = new Matrix();
+        // Rotate about centre of icon & translate to bitmap position
+        var track = Gps.getTrack();
+        matrix.setRotate(displayOrientation == MapFragment.DisplayOrientation.TrackUp && Float.isNaN(track)? angle : angle - track, centreX, centreY);
+        matrix.postTranslate(x - centreX, y - centreY);
+        return matrix;
     }
 
     private void drawText(Canvas canvas, final Point aircraftPos, int textHeight, String[] text, Rect bounds, int bmpWidth) {

@@ -18,7 +18,6 @@ import static com.meerkat.Settings.screenWidth;
 import static com.meerkat.ui.map.AircraftLayer.loadIcon;
 
 import android.content.Context;
-import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
@@ -55,7 +54,7 @@ public class MapFragment extends Fragment {
         ImageView mapView = binding.mapview;
         mapView.setKeepScreenOn(keepScreenOn);
         var context = getContext();
-        background = new Background(context, binding.compassView, binding.compassText);
+        background = new Background(context, binding);
         layers = new LayerDrawable(new Drawable[]{background});
         mapView.setImageDrawable(layers);
 
@@ -87,17 +86,9 @@ public class MapFragment extends Fragment {
         binding = null;
     }
 
-    static Matrix positionMatrix(int centreX, int centreY, float x, float y, float angle) {
-        Matrix matrix = new Matrix();
-        // Rotate about centre of icon & translate to bitmap position
-        matrix.setRotate(displayOrientation == DisplayOrientation.TrackUp && Gps.location.hasBearing() ? angle - Gps.location.getBearing() : angle, centreX, centreY);
-        matrix.postTranslate(x - centreX, y - centreY);
-        return matrix;
-    }
-
     static float displayRotation() {
         if (displayOrientation == DisplayOrientation.HeadingUp) return Compass.degTrue();
-        if (displayOrientation == DisplayOrientation.TrackUp) return Gps.location.getBearing();
+        if (displayOrientation == DisplayOrientation.TrackUp) return Gps.getTrack();
         return 0;
     }
 

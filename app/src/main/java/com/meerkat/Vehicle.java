@@ -56,7 +56,7 @@ public class Vehicle implements Comparable<Vehicle> {
         history.addFirst(point);
         // Always accept the first point, even if it isn't valid
         lastValid = point;
-        distance = Gps.location.distanceTo(point);
+        distance = Gps.distanceTo(point);
         if (showLinearPredictionTrack)
             predictedPosition = point.linearPredict(predictionSeconds * 1000L);
         else
@@ -114,7 +114,7 @@ public class Vehicle implements Comparable<Vehicle> {
         synchronized (this) {
             if (point.isValid())
                 lastValid = point;
-            distance = Gps.location.distanceTo(point); // metres
+            distance = Gps.distanceTo(point); // metres
 
         Log.v("Current: %s", lastValid.toString());
             if (emitterType != Gdl90Message.Emitter.Unknown) {

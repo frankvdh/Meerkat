@@ -13,6 +13,7 @@
 package com.meerkat;
 
 import static android.os.Environment.MEDIA_MOUNTED;
+import static com.meerkat.Settings.appendLogFile;
 import static com.meerkat.Settings.displayOrientation;
 import static com.meerkat.Settings.fileLog;
 import static com.meerkat.Settings.port;
@@ -155,9 +156,9 @@ private Compass compass;
             }
 
             if (fileLog && Environment.getExternalStorageState().equals(MEDIA_MOUNTED)) {
-                File appSpecificExternalDir = new File(this.getExternalFilesDir(null), "meerkat.log");
+                File logFile = new File(this.getExternalFilesDir(null), "meerkat.log");
                 try {
-                    Log.useFilePrinter(appSpecificExternalDir);
+                    Log.useFileWriter(logFile, appendLogFile);
                 } catch (IOException e) {
                     e.printStackTrace();
                     throw new RuntimeException(e);
