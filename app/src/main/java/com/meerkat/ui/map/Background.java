@@ -12,11 +12,14 @@
  */
 package com.meerkat.ui.map;
 
+import static com.meerkat.Settings.autoZoom;
 import static com.meerkat.Settings.circleRadiusStep;
 import static com.meerkat.Settings.displayOrientation;
 import static com.meerkat.Settings.distanceUnits;
 import static com.meerkat.Settings.screenYPosPercent;
+import static com.meerkat.ui.map.MapFragment.defaultScaleFactor;
 import static com.meerkat.ui.map.MapFragment.scaleFactor;
+import static com.meerkat.ui.map.MapFragment.screenPoint;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -26,6 +29,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathDashPathEffect;
 import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -36,8 +40,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.meerkat.VehicleList;
 import com.meerkat.databinding.FragmentMapBinding;
 import com.meerkat.log.Log;
+import com.meerkat.measure.Position;
 
 public class Background extends Drawable {
     private final Paint redPaint;
@@ -54,7 +60,7 @@ public class Background extends Drawable {
         whitePaint.setColor(Color.WHITE);
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
         redPaint = new Paint();
-        redPaint.setColor(Color.WHITE);
+        redPaint.setColor(Color.RED);
         redPaint.setStyle(Paint.Style.STROKE);
         circlePaint = new Paint();
         circlePaint.setStyle(Paint.Style.STROKE);
@@ -78,12 +84,18 @@ public class Background extends Drawable {
         canvas.drawColor(Color.WHITE, PorterDuff.Mode.SRC);
         Rect bounds = getBounds();
         float xCentre = bounds.width() / 2f;
+        float yCentre = bounds.height() * (100f - screenYPosPercent) / 100;
         canvas.drawLine(xCentre, 0, xCentre, bounds.height(), circlePaint);
         // Translate canvas so that 0,0 is at specified location
         // All screen locations are relative to this point
-        canvas.translate(xCentre, bounds.height() * (100f - screenYPosPercent) / 100);
+        canvas.translate(xCentre, yCentre);
         canvas.drawLine(-xCentre, 0, xCentre, 0, circlePaint);
         canvas.drawCircle(0, 0, 100, redPaint);
+
+        if (autoZoom) {
+            scaleFactor = getScaleFactor(canvas.getClipBounds(), VehicleList.vehicleList.getMaxDistance());
+            Log.v("Scale factor %f", scaleFactor);
+        }
         float radiusStep = circleRadiusStep * scaleFactor;
         for (float rad = radiusStep; rad < bounds.height(); rad += radiusStep) {
             canvas.drawCircle(0, 0, rad, circlePaint);
@@ -91,16 +103,36 @@ public class Background extends Drawable {
         float rot = -MapFragment.displayRotation();
         compassView.setRotation(rot);
         compassText.setText(displayOrientation.toString().substring(0, 1));
-        float screenDistance  = getBounds().width() / (scaleFactor*2);
-        scaleText.setText(String.format(screenDistance < 10 ? "%.1f%s" :"%.0f%s", screenDistance, distanceUnits.label));
+        float screenDistance = bounds.width() / (scaleFactor * 2);
+        scaleText.setText(String.format(screenDistance < 10 ? "%.1f%s" : "%.0f%s", screenDistance, distanceUnits.label));
         Log.v("finished draw background... rot = %d", rot);
     }
 
-    @Override
-    public void setAlpha(int alpha) {  }
+    private float getScaleFactor(Rect bounds, Position furthest) {
+        if (furthest == null) return defaultScaleFactor;
+        Point aircraftPoint = screenPoint(furthest);
+
+        if (aircraftPoint.x == 0) {
+            if (aircraftPoint.y == 0) return defaultScaleFactor;
+            // X coordinate is 0 -- Scale the Y coordinate to the edge of the screen
+            if (aircraftPoint.y < 0)
+                return scaleFactor * (float) (bounds.top + 32) / aircraftPoint.y;
+            return scaleFactor * (float) (bounds.bottom - 32) / aircraftPoint.y;
+        }
+        float xScale = (float) (aircraftPoint.x < 0 ? (bounds.left + 64) : (bounds.right - 64)) / aircraftPoint.x;
+        if (aircraftPoint.y == 0) return scaleFactor * xScale;
+        float yScale = (float) (aircraftPoint.y < 0 ? (bounds.top + 64) : (bounds.bottom - 64)) / aircraftPoint.y;
+        Log.v("xScale %f yScale %f", xScale, yScale);
+        return scaleFactor * (Math.min(xScale, yScale));
+    }
 
     @Override
-    public void setColorFilter(@Nullable ColorFilter colorFilter) {  }
+    public void setAlpha(int alpha) {
+    }
+
+    @Override
+    public void setColorFilter(@Nullable ColorFilter colorFilter) {
+    }
 
     @Override
     public int getOpacity() {

@@ -40,8 +40,8 @@ public class Vehicle implements Comparable<Vehicle> {
     public @NonNull
     Gdl90Message.Emitter emitterType;
     public Position lastValid;
-    public Position predictedPosition;
-    private float distance;
+    public final Position predictedPosition;
+    public float distance;
     final AircraftLayer layer;
 
     public Vehicle(int id, String callsign, Position point, @NonNull Gdl90Message.Emitter emitterType) {
@@ -87,15 +87,17 @@ public class Vehicle implements Comparable<Vehicle> {
     }
 
     public String getLabel() {
+        char valChar = isValid() ? ' ' : '!';
         if (callsign == null)
-            return String.format("%07x", id);
-        if (countryCode.isBlank()) return callsign;
-        if (callsign.toUpperCase().startsWith(countryCode)) {
-            int start = countryCode.length();
-            if (callsign.charAt(start) == '-') start++;
-            return callsign.substring(start).toUpperCase();
+            return String.format("%07x%c", id, valChar);
+        if (!countryCode.isBlank()) {
+            if (callsign.toUpperCase().startsWith(countryCode)) {
+                int start = countryCode.length();
+                if (callsign.charAt(start) == '-') start++;
+                return callsign.substring(start).toUpperCase() + valChar;
+            }
         }
-        return callsign;
+        return callsign + valChar;
     }
 
     public void update(Position point, String callsign, @NonNull Gdl90Message.Emitter emitterType) {
@@ -116,7 +118,7 @@ public class Vehicle implements Comparable<Vehicle> {
                 lastValid = point;
             distance = Gps.distanceTo(point); // metres
 
-        Log.v("Current: %s", lastValid.toString());
+            Log.v("Current: %s", lastValid.toString());
             if (emitterType != Gdl90Message.Emitter.Unknown) {
                 if (this.emitterType != emitterType) {
                     this.emitterType = emitterType;
@@ -126,8 +128,10 @@ public class Vehicle implements Comparable<Vehicle> {
                 this.callsign = callsign;
 
             if (showLinearPredictionTrack && lastValid != null) {
-                predictedPosition = lastValid.linearPredict(now - lastValid.getTime() + predictionSeconds * 1000L);
-                predictedPosition.setTime(now + predictionSeconds * 1000L);
+                synchronized (predictedPosition) {
+                    predictedPosition.set(lastValid.linearPredict(now - lastValid.getTime() + predictionSeconds * 1000L));
+                    predictedPosition.setTime(now + predictionSeconds * 1000L);
+                }
             }
         }
         if (showPolynomialPredictionTrack) {

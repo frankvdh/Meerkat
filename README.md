@@ -6,7 +6,7 @@ The objective is to use this app in an aircraft to detect nearby traffic equippe
 Project Status & Functionality
 ------------------------------
 This is very much in the pre-release state. Currently it does
-* Connect to a PingUSB device via WiFi (I believe that it *should* work with other devices e.g. ForeFlight Sentry https://www.foreflight.com/support/sentry/ or Stratux but I haven't tested with anything other than my Ping-USB)
+* Connect to a PingUSB device via WiFi (I believe that it *should* also work with other devices e.g. ForeFlight Sentry https://www.foreflight.com/support/sentry/ or Stratux but I haven't tested with anything other than my Ping-USB)
 * Receive GDL90 messages from the device, including Traffic and Ownship messages
 * Parse those messages 
 * Read Settings from /data/data/com.meerkat/shared_prefs/com.meerkat_preferences.xml
@@ -33,7 +33,7 @@ Each aircraft's icon is coloured to indicate the altitude relative to the phone'
 * green if 5000ft or more below, transitioning to red if less than 1000ft below 
 * blue if 5000ft or more above, transitioning to red if less than 1000ft above
 * black if not airborne.
-* The 5000ft and 1000ft limits are settable by changing the gradientMaximumDiff and gradientMinimumDiff (and altUnits) settings
+* The 5000ft and 1000ft limits are settable by changing the [gradientMaximumDiff] and [gradientMinimumDiff] (and [altUnits]) settings
 
 Each icon has text alongside, giving
 * The aircraft's callsign (if available)
@@ -41,10 +41,15 @@ Each icon has text alongside, giving
 * If airborne, the altitude of the aircraft relative to the phone's GPS altitude
 
 Each icon can also optionally (controlled by Settings) have associated with it:
-* The aircraft's history track
-* A "linear" predicted track, assuming the aircraft continues at the same speed, rate of climb, and track for the next 60 seconds (settable).
-* A "polynomial" predicted track, based on the previous 60 (settable) seconds, so it predicts a turning flight path.
+* The aircraft's history track, for the previous [historySeconds] seconds
+* A "linear" predicted track, assuming the aircraft continues at the same speed, rate of climb, and track for the next 60 seconds (settable via [predictionSeconds]).
+* A "polynomial" predicted track, based on the previous 10 (settable via [polynomialHistorySeconds]) seconds, so it predicts a turning flight path.
 These use the same colour coding as the icon
+
+The app may also be put into an "auto-Zoom" mode, where it automatically zooms in or out so that the furthest aircraft is at the edge of the screen.
+Rotating the screen while in Heading mode will continue automatically zooming in/out.
+
+NB: In auto-zoom mode (and in manual zoom mode), *nearer* aircraft may be off the side or bottom of the screen. 
 
 Contributing & Licensing
 ------------------------
@@ -85,21 +90,28 @@ User settings
 | screenYPosPercent               | Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height                                                                                              | 25%                                             |
 | sensorSmoothingConstant         | The sensitivity of the display to phone orientation change (0 - 1). Larger values make it more responsive                                                                                         | 0.2                                             |
 | distanceUnits                   | User's preferred distance units KM, NM, M                                                                                                                                                         | NM                                              |
-| screenWidth                     | Distance that the width of the screen represents in the user's distance units                                                                                                                     | 10                                              |
-| circleRadiusStep                | Distance apart of the circles on the screen in the user's distance units                                                                                                                          | 5                                               |
 | altUnits                        | User's preferred altitude units FT, M                                                                                                                                                             | FT                                              |
 | speedUnits                      | User's preferred speed units KTS, MPH, KPH                                                                                                                                                        | KPH                                             |
 | vertSpeedUnits                  | User's preferred vertical speed units FPM, MPS                                                                                                                                                    | FPM                                             |
+| screenWidth                     | Distance that the width of the screen represents in the user's [distance unit]s                                                                                                                   | 10                                              |
+| circleRadiusStep                | Distance apart of the circles on the screen in the user's [distance unit]s                                                                                                                        | 5                                               |
 | countryCode                     | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed.                                                                      | ZK                                              |
 | headingUp                       | Display orientation... heading-up... if false, trackUp is used                                                                                                                                    | true                                            |
 | trackUp                         | Display orientation... track-up or North-up                                                                                                                                                       | true                                            |
 | keepScreenOn                    | Keep the display on when in the Map or Aircraft List views                                                                                                                                        | true                                            |
 | minGpsDistanceChangeMetres      | Minimum Gps distance between updates in metres                                                                                                                                       			  | 5                                               |
 | minGpsUpdateIntervalSeconds     | Minimum Gps update interval in seconds                                                                                                                                       					  | 10                                              |
+| autoZoom		                  | Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen.                                                                            | true                                            |
 
 Debugging settings
 ------------------
-| Debugging Setting name          | Usage                                                                                                                                           | Default value                                     |
+Logging of received messages and the app's processing of those messages is intended as an aid in debugging. Log records are sent to
+Android's system log (aka logcat). They can optionally also be sent to a tab on the screen and/or to a file. Raw messages (in hex)
+can be sent to the logs, and/or decoded messages.
+
+Setting the [simulate] setting to "true" results in the app processing a series of simulated events from several simulated aircraft.
+
+| Setting name          | Usage                                                                                                                                                     | Default value                                     |
 |---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
 | version                         | The version of Meerkat that saved the settings                                                                                                  | 1.0                                               |
 | showLog                         | Whether to output logs to a window on the screen                                                                                                | false                                             |
@@ -109,13 +121,13 @@ Debugging settings
 | logLevel                        | Amount of detail to write to logs... Assert, Error, Warning, Info, Debug, Verbose                                                               | I                                                 |
 | logRawMessages                  | Whether to write the raw messages, as received from the device, to the logs                                                                     | false                                             |
 | logDecodedMessages              | Whether to write the decoded messages, as interpreted by the GDL90 parser, to the logs                                                          | false                                             |
-| simulate                        | Play the simulated traffic instead of real traffic                                                                                              | false                                             |
+| simulate                        | Play built-in simulated traffic instead of real traffic. No Wifi connection is made.                                                            | false                                             |
 
 TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :)
 * Ownship track... history and prediction
-* Auto-zoom
+* Auto-zoom -- all aircraft
 * Indicate Mode-C traffic presence
 * Fix - Layout issue due to bottom nav bar -- Change to Fullscreen display
 * Add a "Quit" button

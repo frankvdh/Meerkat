@@ -17,11 +17,10 @@ import static com.meerkat.Settings.gradientMinimumDiff;
 import static com.meerkat.Settings.historySeconds;
 import static com.meerkat.Settings.showLinearPredictionTrack;
 import static com.meerkat.Settings.showPolynomialPredictionTrack;
+import static com.meerkat.ui.map.MapFragment.screenPoint;
 import static java.lang.Double.isNaN;
 import static java.lang.Math.abs;
-import static java.lang.Math.cos;
 import static java.lang.Math.min;
-import static java.lang.Math.sin;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -48,11 +47,9 @@ import com.meerkat.Vehicle;
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Height;
-import com.meerkat.measure.Polar;
 import com.meerkat.measure.Position;
 
 import java.util.List;
-import java.util.Locale;
 
 public class AircraftLayer extends Drawable {
     private static final PathEffect historyEffect;
@@ -60,7 +57,6 @@ public class AircraftLayer extends Drawable {
     private static final Paint textPaint = new Paint(Color.BLACK);
     private static final Paint trackPaint = new Paint();
     private Vehicle v;
-    private final Polar spPolar;
 
     static {
         trackPaint.setStrokeWidth(10);
@@ -80,7 +76,6 @@ public class AircraftLayer extends Drawable {
     }
 
     public AircraftLayer(Vehicle v) {
-        spPolar = new Polar();
         set(v);
     }
 
@@ -113,13 +108,6 @@ public class AircraftLayer extends Drawable {
         int BG = (int) min(255, (magnitude - gradientMinimumDiff) / (gradientMaximumDiff - gradientMinimumDiff) * 255);
         int R = 255 - BG;
         return 0xff000000 | R << 16 | BG << (altDifference.value > 0 ? 0 : 8);
-    }
-
-    Point screenPoint(Position p) {
-        Gps.getPolar(p, spPolar);
-        double b = Position.bearingToRad(spPolar.bearing - MapFragment.displayRotation());
-        // new point is relative to (0, 0) of the canvas, which is at the ownShip position
-        return new Point((int) (cos(b) * spPolar.distance.value * MapFragment.scaleFactor), (int) (-sin(b) * spPolar.distance.value * MapFragment.scaleFactor));
     }
 
     static public Bitmap loadIcon(Context context, int iconId) {
@@ -169,17 +157,15 @@ public class AircraftLayer extends Drawable {
         boolean isAirborne;
         Gdl90Message.Emitter emitter;
         Position currentPos;
-        String callsign;
         if (!this.isVisible()) return;
         synchronized (this) {
-            synchronized (v.lastValid) {
-                track = v.lastValid.getTrack();
-                isAirborne = v.lastValid.isAirborne();
-                emitter = v.emitterType;
+            synchronized (v) {
                 currentPos = new Position(v.lastValid);
-                callsign = v.callsign;
-            }
-            Log.d("draw %d %s %s", v.id, callsign, currentPos);
+                emitter = v.emitterType;
+             }
+            track = currentPos.getTrack();
+            isAirborne = currentPos.isAirborne();
+            Log.d("draw %d %s %s", v.id, v.callsign, currentPos);
             // Canvas is already translated so that 0,0 is at the ownShip point
             Rect bounds = canvas.getClipBounds();
             var bmpWidth = emitter.bitmap.getWidth();
@@ -191,8 +177,7 @@ public class AircraftLayer extends Drawable {
                         positionMatrix(emitter.bitmap.getWidth() / 2, emitter.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
                                 (isNaN(track) ? 0 : track) - MapFragment.displayRotation()), null);
                 int lineHeight = (int) (textPaint.getTextSize() + 1);
-                String[] text = {String.format(Locale.ENGLISH, "%s%c", v.getLabel(), v.isValid() ? ' ' : '!'),
-                        isNaN(altDiff.value) ? "" : altDiff.toString()};
+                String[] text = {v.getLabel(), isNaN(altDiff.value) ? "" : altDiff.toString()};
                 drawText(canvas, aircraftPoint, lineHeight, text, bounds, bmpWidth);
             }
 

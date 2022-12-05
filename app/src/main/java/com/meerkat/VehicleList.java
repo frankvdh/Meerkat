@@ -67,4 +67,18 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         }
     }
 
+    public Position getMaxDistance() {
+        synchronized (this) {
+            if (this.isEmpty()) return null;
+            float maxDistance = 0;
+            Position furthest = null;
+            for (Vehicle v: values()) {
+                if (v.distance > maxDistance) {
+                    maxDistance = v.distance;
+                    furthest = v.lastValid;
+                }
+            }
+            return furthest;
+        }
+    }
 }

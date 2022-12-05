@@ -65,6 +65,7 @@ public class Settings {
     public static String countryCode;
     public static MapFragment.DisplayOrientation displayOrientation;
     public static boolean keepScreenOn;
+    public static boolean autoZoom;
 
     public static void load(Context context) {
         String currentVersionName = BuildConfig.VERSION_NAME;
@@ -132,6 +133,7 @@ public class Settings {
             saveNeeded = true;
         }
         keepScreenOn = prefs.getBoolean("keepScreenOn", true);
+        autoZoom = prefs.getBoolean("autoZoom", true);
         minGpsDistanceChangeMetres = prefs.getInt("minGpsDistanceChangeMetres", 10);
         minGpsUpdateIntervalSeconds = prefs.getInt("minGpsUpdateIntervalSeconds", 10);
         simulate = prefs.getBoolean("simulate", false);
@@ -173,6 +175,7 @@ public class Settings {
         edit.putString("countryCode", countryCode);
         edit.putString("displayOrientation", String.valueOf(displayOrientation));
         edit.putBoolean("keepScreenOn", keepScreenOn);
+        edit.putBoolean("autoZoom", autoZoom);
         edit.putInt("minGpsDistanceChangeMetres", minGpsDistanceChangeMetres);
         edit.putInt("minGpsUpdateIntervalSeconds", minGpsUpdateIntervalSeconds);
         edit.putBoolean("simulate", simulate);

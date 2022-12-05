@@ -17,7 +17,11 @@ import static com.meerkat.Settings.keepScreenOn;
 import static com.meerkat.Settings.screenWidth;
 import static com.meerkat.ui.map.AircraftLayer.loadIcon;
 
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+
 import android.content.Context;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
@@ -35,13 +39,15 @@ import com.meerkat.Gps;
 import com.meerkat.databinding.FragmentMapBinding;
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
+import com.meerkat.measure.Polar;
+import com.meerkat.measure.Position;
 
 public class MapFragment extends Fragment {
 
     private FragmentMapBinding binding;
     Background background;
     public static LayerDrawable layers;
-    static float scaleFactor;
+    static float defaultScaleFactor, scaleFactor;
     // Used to detect pinch zoom gesture.
     private ScaleGestureDetector scaleGestureDetector = null;
 
@@ -72,7 +78,7 @@ public class MapFragment extends Fragment {
     @Override
     public void onViewStateRestored(Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
-        scaleFactor = getWidth(getContext()) / screenWidth / 2;
+        defaultScaleFactor = getWidth(getContext()) / screenWidth / 2;
     }
 
     //get width screen
@@ -90,6 +96,15 @@ public class MapFragment extends Fragment {
         if (displayOrientation == DisplayOrientation.HeadingUp) return Compass.degTrue();
         if (displayOrientation == DisplayOrientation.TrackUp) return Gps.getTrack();
         return 0;
+    }
+
+
+    public static Point screenPoint(Position p) {
+        final Polar spPolar = new Polar();
+        Gps.getPolar(p, spPolar);
+        double b = Position.bearingToRad(spPolar.bearing - displayRotation());
+        // new point is relative to (0, 0) of the canvas, which is at the ownShip position
+        return new Point((int) (cos(b) * spPolar.distance.value * scaleFactor), (int) (-sin(b) * spPolar.distance.value * scaleFactor));
     }
 
     public void onClick(View view) {
