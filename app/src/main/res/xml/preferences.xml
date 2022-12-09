@@ -1,0 +1,284 @@
+<androidx.preference.PreferenceScreen xmlns:androidx="http://schemas.android.com/apk/res-auto">
+    <androidx.preference.PreferenceCategory
+        androidx:icon="@drawable/ic_wifi"
+        androidx:title="Wifi Connection">
+
+        <Preference androidx:layout="@layout/wifi_preference_layout" />
+
+        <androidx.preference.EditTextPreference
+            androidx:key="port"
+            androidx:persistent="true"
+            androidx:defaultValue="4000"
+            androidx:title="Port" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        androidx:icon="@drawable/ic_gauge"
+        androidx:title="Units">
+        <androidx.preference.DropDownPreference
+            androidx:defaultValue="NM"
+            androidx:entries="@array/distance_units"
+            androidx:entryValues="@array/distance_values"
+            androidx:key="distanceUnits"
+            androidx:persistent="true"
+            androidx:title="Distance"
+            androidx:useSimpleSummaryProvider="true" />
+
+        <androidx.preference.DropDownPreference
+            androidx:defaultValue="FT"
+            androidx:entries="@array/altitude_units"
+            androidx:entryValues="@array/altitude_values"
+            androidx:key="altitudeUnits"
+            androidx:persistent="true"
+            androidx:title="Altitude"
+            androidx:useSimpleSummaryProvider="true" />
+
+        <androidx.preference.DropDownPreference
+            androidx:defaultValue="KTS"
+            androidx:entries="@array/speed_units"
+            androidx:entryValues="@array/speed_values"
+            androidx:key="speedUnits"
+            androidx:persistent="true"
+            androidx:title="Speed"
+            androidx:useSimpleSummaryProvider="true" />
+
+        <androidx.preference.DropDownPreference
+            androidx:defaultValue="FPM"
+            androidx:entries="@array/vert_speed_units"
+            androidx:entryValues="@array/vert_speed_values"
+            androidx:key="vertSpeedUnits"
+            androidx:persistent="true"
+            androidx:title="Vertical Speed"
+            androidx:useSimpleSummaryProvider="true" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        androidx:icon="@drawable/ic_phone"
+        androidx:title="Screen">
+        <androidx.preference.SeekBarPreference
+            androidx:key="scrYPos"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height"
+            androidx:title="Y Position" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:dependency="distanceUnits"
+            androidx:key="scrWidth"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="Distance that the width of the screen represents in [your Distance units]"
+            androidx:title="Screen Width in [Distance Units]" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:dependency="distanceUnits"
+            androidx:key="circleStep"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="Distance apart of the circles on the screen in [your Distance unit]s"
+            androidx:title="Circle Radius Step" />
+
+        <androidx.preference.DropDownPreference
+            androidx:defaultValue="HeadingUp"
+            androidx:entries="@array/displayOrientation_values"
+            androidx:entryValues="@array/displayOrientation_values"
+            androidx:key="displayOrientation"
+            androidx:persistent="true"
+            androidx:title="Initial Display Orientation"
+            androidx:useSimpleSummaryProvider="true" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="true"
+            androidx:key="keepScreenOn"
+            androidx:persistent="true"
+            androidx:summaryOff="Allow screen to turn off while map is displayed"
+            androidx:summaryOn="Keep Screen On while map is displayed"
+            androidx:title="Keep Screen On" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="true"
+            androidx:key="autoZoom"
+            androidx:persistent="true"
+            androidx:summaryOff="Manual zoom"
+            androidx:summaryOn="Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen."
+            androidx:title="Auto zoom" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:dependency="altitudeUnits"
+            androidx:key="gradMaxDiff"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green"
+            androidx:title="Maximum altitude for colour gradient" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:dependency="altitudeUnits"
+            androidx:key="gradMinDiff"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely red"
+            androidx:title="Minimum altitude for colour gradient" />
+
+        <androidx.preference.EditTextPreference
+            androidx:defaultValue="ZK"
+            androidx:dialogMessage="Country prefix which is stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed."
+            androidx:key="countryCode"
+            androidx:persistent="true"
+            androidx:title="Country code to strip"
+            androidx:useSimpleSummaryProvider="true" />
+    </androidx.preference.PreferenceCategory>
+    <androidx.preference.PreferenceCategory
+        androidx:icon="@drawable/ic_vibrate"
+        androidx:title="Sensitivity">
+        <androidx.preference.SeekBarPreference
+            androidx:defaultValue="20"
+            androidx:key="sensorSmoothingConstant"
+            androidx:min="1"
+            androidx:showSeekBarValue="true"
+            androidx:summary="The sensitivity of the display to phone orientation change in HeadingUp mode. Larger values make it more sensitive"
+            androidx:title="Sensor Smoothing" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:key="minGpsDistMetres"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="How far the phone may travel (in metres) before the display is refreshed. Smaller values = more frequent refreshes"
+            androidx:title="Minimum Gps distance between updates in metres" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:key="minGpsIntervalSeconds"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="How long (in seconds) before the display is refreshed. Smaller values = more frequent refreshes"
+            androidx:title="Minimum Gps update interval in seconds" />
+
+    </androidx.preference.PreferenceCategory>
+    <androidx.preference.PreferenceCategory
+        androidx:icon="@drawable/ic_history"
+        androidx:title="History">
+        <androidx.preference.SeekBarPreference
+            androidx:key="historySecs"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="How many seconds of history track to display for each aircraft."
+            androidx:title="History track seconds" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:key="purgeSecs"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="How many seconds on no contact to wait before an aircraft is removed from the display"
+            androidx:title="Inactive purge time in seconds" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        androidx:icon="@drawable/ic_predict"
+        androidx:summary="Aircraft prediction assuming that they maintain their current speed, track, and vertical speed"
+        androidx:title="Linear Prediction">
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="true"
+            androidx:key="showLinearPredictionTrack"
+            androidx:persistent="true"
+            androidx:summaryOff="Not displayed"
+            androidx:summaryOn="Display the predicted track for each aircraft"
+            androidx:title="Show Linear Prediction Tracks" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:key="predictionSecs"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="How many seconds into the future to predict the track of each aircraft."
+            androidx:title="Prediction seconds" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        androidx:icon="@drawable/ic_turn"
+        androidx:summary="Aircraft prediction based on recent history of changes in their current speed, track, and vertical speed"
+        androidx:title="Polynomial Prediction">
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="true"
+            androidx:key="showPolynomialPredictionTrack"
+            androidx:persistent="true"
+            androidx:summaryOff="Not displayed"
+            androidx:summaryOn="Display the predicted track for each aircraft"
+            androidx:title="Show Polynomial Prediction Tracks" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:key="polynomialPredictionStepSecs"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="How many seconds each step of the polynomial prediction is. Smaller numbers give more detailed prediction paths."
+            androidx:title="Prediction step seconds" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:key="polynomialHistorySecs"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="How many seconds of history the polynomial prediction uses to make its prediction. Large numbers for fast-manoeuvring aircraft give bad predictions."
+            androidx:title="Prediction History seconds" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        androidx:icon="@drawable/ic_debug"
+        androidx:title="Debug Settings">
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="false"
+            androidx:key="showLog"
+            androidx:persistent="true"
+            androidx:summaryOff="Not displayed"
+            androidx:summaryOn="Display log entries on the screen"
+            androidx:title="Show Log" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="false"
+            androidx:key="fileLog"
+            androidx:persistent="true"
+            androidx:summaryOff="Not saved"
+            androidx:summaryOn="Save logs to /storage/sdcard0/Android/data/com.meerkat/files/meerkat.log"
+            androidx:title="Save Log to a file" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="false"
+            androidx:key="appendLogFile"
+            androidx:persistent="true"
+            androidx:summaryOff="Erase Log file at startup"
+            androidx:summaryOn="Keep pre-existing logs in file"
+            androidx:title="Append to existing Log file" />
+
+        <androidx.preference.DropDownPreference
+            androidx:defaultValue="Info"
+            androidx:entries="@array/logLevel_values"
+            androidx:entryValues="@array/logLevel_values"
+            androidx:key="logLevel"
+            androidx:persistent="true"
+            androidx:title="Amount of detail to write to logs"
+            androidx:useSimpleSummaryProvider="true" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="false"
+            androidx:key="logRawMessages"
+            androidx:persistent="true"
+            androidx:summaryOff="Not logged"
+            androidx:summaryOn="Log raw messages, as received from the device"
+            androidx:title="Log Raw Messages" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="false"
+            androidx:key="logDecodedMessages"
+            androidx:persistent="true"
+            androidx:summaryOff="Not logged"
+            androidx:summaryOn="Log decoded messages, as interpreted by the GDL90 parser"
+            androidx:title="Log Decoded Messages" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="false"
+            androidx:key="simulate"
+            androidx:persistent="false"
+            androidx:summaryOff="Live data"
+            androidx:summaryOn="Simulate without live data"
+            androidx:title="Simulate" />
+    </androidx.preference.PreferenceCategory>
+
+</androidx.preference.PreferenceScreen>

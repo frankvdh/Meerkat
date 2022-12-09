@@ -1,0 +1,9 @@
+<LinearLayout xmlns:androidx="http://schemas.android.com/apk/res/android"
+    androidx:layout_width="match_parent"
+    androidx:layout_height="match_parent">
+
+    <FrameLayout
+        androidx:id="@+id/settings"
+        androidx:layout_width="match_parent"
+        androidx:layout_height="match_parent" />
+</LinearLayout>

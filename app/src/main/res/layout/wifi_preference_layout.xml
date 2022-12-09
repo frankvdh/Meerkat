@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:androidx="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    androidx:id="@+id/linearLayout"
+    androidx:layout_width="match_parent"
+    androidx:layout_height="wrap_content">
+
+    <TextView
+        androidx:id="@+id/titleWifiName"
+        androidx:layout_width="wrap_content"
+        androidx:layout_height="48dp"
+        androidx:layout_marginStart="64dp"
+        androidx:layout_marginTop="24dp"
+        androidx:labelFor="@+id/editTextWifiName"
+        androidx:minHeight="48dp"
+        androidx:text="@string/wifi_name"
+        androidx:textAlignment="center"
+        app:layout_constraintEnd_toStartOf="@+id/editTextWifiName"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        androidx:id="@+id/editTextWifiName"
+        androidx:layout_width="240dp"
+        androidx:layout_height="wrap_content"
+        androidx:ems="10"
+        androidx:minHeight="48dp"
+        androidx:text=""
+        androidx:key="wifiName"
+        androidx:textAlignment="center"
+        app:layout_constraintBaseline_toBaselineOf="@+id/titleWifiName"
+        app:layout_constraintStart_toEndOf="@+id/titleWifiName"
+        app:layout_constraintTop_toTopOf="@+id/titleWifiName"
+        androidx:inputType="textNoSuggestions"
+        androidx:autofillHints="no" />
+
+    <com.meerkat.wifi.ScanButton
+        androidx:id="@+id/wifiScanButton"
+        androidx:layout_width="wrap_content"
+        androidx:layout_height="wrap_content"
+        androidx:layout_marginTop="24dp"
+        androidx:layout_marginBottom="24dp"
+        androidx:icon="@drawable/ic_wifi"
+        androidx:text="@string/scan"
+        androidx:textAlignment="center"
+        androidx:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextWifiName" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
