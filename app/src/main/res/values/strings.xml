@@ -28,4 +28,12 @@
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="title_activity_aircraft_list">AircraftListActivity</string>
+    <string name="wifi_name">Wifi Name</string>
+    <string name="scan">Scan</string>
+    <string name="dist">Dist</string>
+    <string name="brg">Brg</string>
+    <string name="trk">Trk</string>
+    <string name="v_speed">V Speed</string>
+    <string name="rescan">Rescan</string>
+    <string name="aircraft_list">Aircraft List</string>
 </resources>
