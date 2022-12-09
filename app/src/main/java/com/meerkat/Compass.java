@@ -34,7 +34,7 @@ import android.os.IBinder;
 import androidx.annotation.Nullable;
 
 import com.meerkat.log.Log;
-import com.meerkat.ui.map.MapFragment;
+import com.meerkat.map.MapActivity;
 
 public class Compass extends Service implements SensorEventListener {
 
@@ -111,7 +111,7 @@ public class Compass extends Service implements SensorEventListener {
                     grav[0], grav[1], grav[2],
                     Heading);
             if ((int) Heading != prevHeading)
-                MapFragment.refresh(null);
+                MapActivity.mapView.refresh(null);
         }
     }
 
@@ -125,7 +125,7 @@ public class Compass extends Service implements SensorEventListener {
         if (event == null)
             throw new NullPointerException("event must be non-NULL");
         for (int i = 0; i < prev.length; i++) {
-            prev[i] += Settings.sensorSmoothingConstant * (event.values[i] - prev[i]);
+            prev[i] += SettingsActivity.sensorSmoothingConstant * (event.values[i] - prev[i]);
         }
     }
 

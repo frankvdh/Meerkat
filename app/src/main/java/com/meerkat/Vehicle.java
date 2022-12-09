@@ -12,21 +12,21 @@
  */
 package com.meerkat;
 
-import static com.meerkat.Settings.countryCode;
-import static com.meerkat.Settings.historySeconds;
-import static com.meerkat.Settings.polynomialHistorySeconds;
-import static com.meerkat.Settings.polynomialPredictionStepSeconds;
-import static com.meerkat.Settings.predictionSeconds;
-import static com.meerkat.Settings.showLinearPredictionTrack;
-import static com.meerkat.Settings.showPolynomialPredictionTrack;
+import static com.meerkat.SettingsActivity.countryCode;
+import static com.meerkat.SettingsActivity.historySeconds;
+import static com.meerkat.SettingsActivity.polynomialHistorySeconds;
+import static com.meerkat.SettingsActivity.polynomialPredictionStepSeconds;
+import static com.meerkat.SettingsActivity.predictionSeconds;
+import static com.meerkat.SettingsActivity.showLinearPredictionTrack;
+import static com.meerkat.SettingsActivity.showPolynomialPredictionTrack;
 
 import androidx.annotation.NonNull;
 
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
+import com.meerkat.map.MapActivity;
 import com.meerkat.measure.Position;
-import com.meerkat.ui.map.AircraftLayer;
-import com.meerkat.ui.map.MapFragment;
+import com.meerkat.map.AircraftLayer;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -66,22 +66,22 @@ public class Vehicle implements Comparable<Vehicle> {
 
     // If an invisible layer exists, re-use it. Otherwise create a new layer for this vehicle
     AircraftLayer findLayer(Vehicle v) {
-        AircraftLayer result = (AircraftLayer) MapFragment.layers.findDrawableByLayerId(v.id);
+        AircraftLayer result = (AircraftLayer) MapActivity.mapView.layers.findDrawableByLayerId(v.id);
         if (result != null) return result;
-        for (int i = 1; i < MapFragment.layers.getNumberOfLayers(); i++) {
-            AircraftLayer d = (AircraftLayer) MapFragment.layers.getDrawable(i);
+        for (int i = 1; i < MapActivity.mapView.layers.getNumberOfLayers(); i++) {
+            AircraftLayer d = (AircraftLayer) MapActivity.mapView.layers.getDrawable(i);
             if (!d.isVisible()) {
-                Log.i("ReUse layer %d was %d", i, MapFragment.layers.getId(i));
-                synchronized (MapFragment.layers) {
-                    MapFragment.layers.setId(i, v.id);
+                Log.i("ReUse layer %d was %d", i, MapActivity.mapView.layers.getId(i));
+                synchronized (MapActivity.mapView.layers) {
+                    MapActivity.mapView.layers.setId(i, v.id);
                     d.set(v);
                     return d;
                 }
             }
         }
         AircraftLayer d = new AircraftLayer(v);
-        synchronized (MapFragment.layers) {
-            MapFragment.layers.addLayer(d);
+        synchronized (MapActivity.mapView.layers) {
+            MapActivity.mapView.layers.addLayer(d);
             return d;
         }
     }
@@ -90,7 +90,7 @@ public class Vehicle implements Comparable<Vehicle> {
         char valChar = isValid() ? ' ' : '!';
         if (callsign == null)
             return String.format("%07x%c", id, valChar);
-        if (!countryCode.isBlank()) {
+        if (countryCode != null && !countryCode.isEmpty()) {
             if (callsign.toUpperCase().startsWith(countryCode)) {
                 int start = countryCode.length();
                 if (callsign.charAt(start) == '-') start++;
@@ -182,7 +182,7 @@ public class Vehicle implements Comparable<Vehicle> {
                 }
             }
         }
-        MapFragment.refresh(layer);
+        MapActivity.mapView.refresh(layer);
     }
 
     public boolean isValid() {

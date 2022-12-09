@@ -12,8 +12,6 @@
  */
 package com.meerkat.log;
 
-import com.meerkat.ui.log.LogFragment;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -23,6 +21,7 @@ import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 interface LogWriter {
     void append(Log.Level level, String tag, String msg);
@@ -35,7 +34,7 @@ class SystemOutLogWriter implements LogWriter {
 }
 
 class FileLogWriter implements LogWriter {
-    static final DateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS");
+    static final DateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault());
 
     BufferedWriter bw;
     final File file;
@@ -70,15 +69,15 @@ class FileLogWriter implements LogWriter {
 }
 
 class ViewLogWriter implements LogWriter {
-    private final LogFragment logFragment;
+    private final LogActivity logActivity;
 
-    public ViewLogWriter(LogFragment logFragment) {
-        this.logFragment = logFragment;
+    public ViewLogWriter(LogActivity logActivity) {
+        this.logActivity = logActivity;
     }
 
     public void append(Log.Level level, String tag, String message) {
-        if (logFragment != null && !message.isEmpty()) {
-            logFragment.append(message);
+        if (logActivity != null && !message.isEmpty()) {
+            logActivity.append(message);
         }
     }
 

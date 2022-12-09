@@ -9,10 +9,10 @@
  * Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
  * You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
  * NonCommercial — You may not use the material for commercial purposes.
- */package com.meerkat.measure;
+ */
+package com.meerkat.measure;
 
-import static com.meerkat.Settings.altUnits;
-import static com.meerkat.Settings.speedUnits;
+import static com.meerkat.SettingsActivity.*;
 import static java.lang.Math.PI;
 import static java.lang.Math.asin;
 import static java.lang.Math.atan2;

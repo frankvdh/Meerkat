@@ -1,13 +1,57 @@
 <resources>
-    <!-- Reply Preference -->
-    <string-array name="log_level_entries">
-        <item>All</item>
-        <item>Verbose</item>
-        <item>Debug</item>
-        <item>Info</item>
-        <item>Warning</item>
-        <item>Error</item>
-        <item>Assert</item>
-        <item>None</item>
+    <string-array name="distance_units">
+        <item>Nautical miles</item>
+        <item>Kilometres</item>
+        <item>Metres</item>
     </string-array>
+    <string-array name="distance_values">
+        <item>NM</item>
+        <item>KM</item>
+        <item>M</item>
+    </string-array>
+
+    <string-array name="altitude_units">
+        <item>Feet</item>
+        <item>Metres</item>
+    </string-array>
+    <string-array name="altitude_values">
+        <item>FT</item>
+        <item>M</item>
+    </string-array>
+
+    <string-array name="speed_units">
+        <item>Knots</item>
+        <item>Miles per hour</item>
+        <item>Kilometres per hour</item>
+    </string-array>
+    <string-array name="speed_values">
+        <item>KTS</item>
+        <item>MPH</item>
+        <item>KPH</item>
+    </string-array>
+
+    <string-array name="vert_speed_units">
+        <item>Feet per minute</item>
+        <item>Metres per second</item>
+    </string-array>
+    <string-array name="vert_speed_values">
+        <item>FPM</item>
+        <item>MPS</item>
+    </string-array>
+
+    <string-array name="displayOrientation_values">
+        <item>NorthUp</item>
+        <item>TrackUp</item>
+        <item>HeadingUp</item>
+    </string-array>
+
+    <string-array name="logLevel_values">
+        <item>Assert</item>
+        <item>Error</item>
+        <item>Warning</item>
+        <item>Info</item>
+        <item>Debug</item>
+        <item>Verbose</item>
+    </string-array>
+
 </resources>

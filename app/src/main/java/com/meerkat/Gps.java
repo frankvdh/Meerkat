@@ -12,8 +12,10 @@
  */
 package com.meerkat;
 
-import static com.meerkat.Settings.minGpsDistanceChangeMetres;
-import static com.meerkat.Settings.minGpsUpdateIntervalSeconds;
+import static com.meerkat.SettingsActivity.minGpsDistanceChangeMetres;
+import static com.meerkat.SettingsActivity.minGpsUpdateIntervalSeconds;
+
+import static java.lang.Float.NaN;
 
 import android.annotation.SuppressLint;
 import android.app.Service;
@@ -25,9 +27,9 @@ import android.os.IBinder;
 import android.widget.Toast;
 
 import com.meerkat.log.Log;
+import com.meerkat.map.MapActivity;
 import com.meerkat.measure.Polar;
 import com.meerkat.measure.Position;
-import com.meerkat.ui.map.MapFragment;
 
 public class Gps extends Service implements LocationListener {
 
@@ -40,7 +42,7 @@ public class Gps extends Service implements LocationListener {
 
     public Gps(LocationManager locationManager) {
         this.locationManager = locationManager;
-        if (Settings.simulate)
+        if (SettingsActivity.simulate)
             return;
         resume();
     }
@@ -56,15 +58,15 @@ public class Gps extends Service implements LocationListener {
             if (location.hasAltitude())
                 return (float) location.getAltitude();
         }
-        return Float.NaN;
+        return NaN;
     }
 
     public static float getTrack() {
         synchronized (location) {
-            if (location.hasBearing())
+            if (location.hasBearing() && location.getBearing() != 0.0)
                 return location.getBearing();
         }
-        return Float.NaN;
+        return NaN;
     }
 
     public static float bearingTo(Location other) {
@@ -122,16 +124,14 @@ public class Gps extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
-        if (Settings.simulate)
+        if (SettingsActivity.simulate)
             return;
-        if (location.hasBearing() && location.getBearing() == 0.0)
-            location.removeBearing();
         Log.d("GPS: (%.5f, %.5f) @%.0fm, %.0f %3.0f%c", location.getLatitude(), location.getLongitude(), location.getAltitude(), location.getSpeed(), location.getBearing(), location.hasBearing() ? ' ' : '!');
         synchronized (Gps.location) {
             Gps.location.set(location);
         }
         Compass.updateGeomagneticField();
-        MapFragment.refresh(null);
+        MapActivity.mapView.refresh(null);
     }
 
     @Override

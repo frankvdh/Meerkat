@@ -12,8 +12,6 @@
  */
 package com.meerkat.log;
 
-import com.meerkat.ui.log.LogFragment;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -69,8 +67,8 @@ public final class Log {
         mPrinters.add(fp);
     }
 
-    public static synchronized void useViewLogWriter(LogFragment logFragment) {
-        viewLogWriter = new ViewLogWriter(logFragment);
+    public static synchronized void useViewLogWriter(LogActivity logActivity) {
+        viewLogWriter = new ViewLogWriter(logActivity);
         mPrinters.add(viewLogWriter);
     }
 
@@ -106,7 +104,7 @@ public final class Log {
 
     }
 
-    private static void log(Level level, String msg, Object... args) {
+    public static void log(Level level, String msg, Object... args) {
         if (level.value < mMinLevel.value) {
             return;
         }

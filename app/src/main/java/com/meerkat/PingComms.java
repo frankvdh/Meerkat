@@ -12,8 +12,8 @@
  */
 package com.meerkat;
 
-import static com.meerkat.Settings.logDecodedMessages;
-import static com.meerkat.Settings.logRawMessages;
+import static com.meerkat.SettingsActivity.logDecodedMessages;
+import static com.meerkat.SettingsActivity.logRawMessages;
 
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.gdl90.Traffic;

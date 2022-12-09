@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Meerkat"
+rootProject.name = "com.meerkat"
 include ':app'

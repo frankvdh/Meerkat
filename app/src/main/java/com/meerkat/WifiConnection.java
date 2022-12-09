@@ -12,15 +12,17 @@
  */
 package com.meerkat;
 
-import static com.meerkat.Settings.wifiName;
+import static com.meerkat.SettingsActivity.wifiName;
 
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import android.net.wifi.WifiNetworkSpecifier;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.meerkat.log.Log;
 
@@ -40,6 +42,7 @@ public class WifiConnection {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     public static void init(ConnectivityManager cm, String ssId, String password) {
         Log.i("Connecting to Wifi %s", ssId);
         WifiNetworkSpecifier.Builder builder = new WifiNetworkSpecifier.Builder().setSsid(ssId);

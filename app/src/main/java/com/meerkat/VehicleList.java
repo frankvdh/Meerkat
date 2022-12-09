@@ -12,13 +12,13 @@
  */
 package com.meerkat;
 
-import static com.meerkat.Settings.purgeSeconds;
+import static com.meerkat.SettingsActivity.purgeSeconds;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
+import com.meerkat.map.MapActivity;
 import com.meerkat.measure.Position;
-import com.meerkat.ui.map.MapFragment;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,7 +38,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
                 if (age > purgeSeconds * 1000L) {
                     Log.i("Purge: %s, %d",entry.getValue().callsign, age);
                     entry.getValue().layer.setVisible(false, false);
-                    MapFragment.layers.invalidateDrawable(entry.getValue().layer);
+                    MapActivity.mapView.layers.invalidateDrawable(entry.getValue().layer);
                     iterator.remove();
                 }
             }
@@ -58,7 +58,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
             v = new Vehicle(participantAddr, callsign, point, emitterType);
             put(participantAddr, v);
         }
-        MapFragment.refresh(v.layer);
+        MapActivity.mapView.refresh(v.layer);
     }
 
     public Collection<Vehicle> getVehicles() {
@@ -67,12 +67,13 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         }
     }
 
-    public Position getMaxDistance() {
-        synchronized (this) {
-            if (this.isEmpty()) return null;
+    static public Position getMaxDistance() {
+        if (vehicleList == null) return null;
+        synchronized (vehicleList) {
+            if (vehicleList.isEmpty()) return null;
             float maxDistance = 0;
             Position furthest = null;
-            for (Vehicle v: values()) {
+            for (Vehicle v: vehicleList.values()) {
                 if (v.distance > maxDistance) {
                     maxDistance = v.distance;
                     furthest = v.lastValid;
