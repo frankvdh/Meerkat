@@ -12,11 +12,7 @@
  */
 package com.meerkat.map;
 
-import static com.meerkat.SettingsActivity.autoZoom;
-import static com.meerkat.SettingsActivity.circleRadiusStep;
-import static com.meerkat.SettingsActivity.displayOrientation;
-import static com.meerkat.SettingsActivity.distanceUnits;
-import static com.meerkat.SettingsActivity.screenYPosPercent;
+import static com.meerkat.SettingsActivity.*;
 import static java.lang.Float.isNaN;
 
 import android.graphics.Canvas;
@@ -77,7 +73,7 @@ public class Background extends Drawable {
         // All screen locations are relative to this point
         canvas.translate(xCentre, yCentre);
         canvas.drawLine(-xCentre, 0, xCentre, 0, circlePaint);
-        canvas.drawCircle(0, 0, 100, redPaint);
+        canvas.drawCircle(0, 0, dangerRadius * mapView.scaleFactor, redPaint);
 
         if (autoZoom) {
             mapView.scaleFactor = getScaleFactor(canvas.getClipBounds(), VehicleList.getMaxDistance());

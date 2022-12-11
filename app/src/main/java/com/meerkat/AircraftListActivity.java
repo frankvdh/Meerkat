@@ -24,9 +24,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.meerkat.Gps;
-import com.meerkat.Vehicle;
-import com.meerkat.VehicleList;
 import com.meerkat.databinding.ActivityAircraftListBinding;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Speed;
@@ -72,7 +69,6 @@ public class AircraftListActivity extends AppCompatActivity {
         try {
             Log.d("refreshAircraftDisplay: ", VehicleList.vehicleList.keySet().size());
             Stream<Vehicle> s = VehicleList.vehicleList.getVehicles().stream().sorted();
-            synchronized (tableAircraft) {
                 int i = 1; // row 0 is header
                 for (Iterator<Vehicle> it = s.iterator(); it.hasNext(); i++) {
                     Vehicle v = it.next();
@@ -113,11 +109,9 @@ public class AircraftListActivity extends AppCompatActivity {
                     runOnUiThread(() -> tableAircraft.removeViewAt(finalJ));
                 }
                 tableAircraft.notifyAll();
-            }
         } catch (Exception ex) {
-            Log.e("Exception in AircraftFragment scheduled task: %s", ex.getMessage());
+            Log.e("Exception in AircraftListActivity scheduled task: %s", ex.getMessage());
         }
-
     }
 
     private TextView view(String text) {

@@ -60,7 +60,7 @@ public class SettingsActivity extends AppCompatActivity {
     public static int screenYPosPercent;
     public static float sensorSmoothingConstant;
     public static float screenWidth;
-    public static float circleRadiusStep;
+    public static float circleRadiusStep, dangerRadius;
     public static Distance.Units distanceUnits;
     public static Height.Units altUnits;
     public static Speed.Units speedUnits;
@@ -110,6 +110,7 @@ public class SettingsActivity extends AppCompatActivity {
         sensorSmoothingConstant = Math.max(0, Math.min(100, prefs.getInt("sensorSmoothingConstant", 20))) / 100f;
         screenWidth = Math.max(0.5f, Math.min(50, prefs.getFloat("screenWidth", 10)));
         circleRadiusStep = Math.max(0.1f, Math.min(screenWidth, prefs.getFloat("circleRadiusStep", 5)));
+        dangerRadius = prefs.getFloat("dangerRadius", 1);
         try {
             distanceUnits = Distance.Units.valueOf(prefs.getString("distanceUnits", "NM").toUpperCase().trim());
         } catch (Exception e) {
@@ -176,6 +177,7 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putInt("sensorSmoothingConstant", (int) (sensorSmoothingConstant * 100));
         edit.putFloat("screenWidth", screenWidth);
         edit.putFloat("circleRadiusStep", circleRadiusStep);
+        edit.putFloat("dangerRadius", dangerRadius);
         edit.putString("distanceUnits", String.valueOf(distanceUnits));
         edit.putString("altUnits", String.valueOf(altUnits));
         edit.putString("speedUnits", String.valueOf(speedUnits));
@@ -212,8 +214,7 @@ public class SettingsActivity extends AppCompatActivity {
     // The "Home" button is clicked
     @Override
     public boolean onSupportNavigateUp() {
-        String prevWifiName = prefs.getString("wifiName", "Ping-6C7A");
-        int prevPort = prefs.getInt("port", 4000);
+
         load(getApplicationContext());
         // Close Settings activity which returns to the Map activity
         finish();
@@ -229,6 +230,7 @@ public class SettingsActivity extends AppCompatActivity {
             setRange("scrYPos", 5, 25, 95, 5);
             setRange("scrWidth", 1, 10, 50, 1);
             setRange("circleStep", 1, 5, 25, 1);
+            setRange("dangerRadius", 1, 1, 5, 1);
             setRange("gradMaxDiff", 2100, 5000, 10000, 100);
             setRange("gradMinDiff", 100, 1000, 2000, 100);
             setRange("minGpsDistMetres", 1, 10, 50, 1);

@@ -60,10 +60,6 @@ public class WifiScanActivity extends AppCompatActivity implements ApListAdapter
         myAdapter = new ApListAdapter(accessPoints, this);
         Log.i("Scanning WiFi");
         wifiName = null;
-        if (PingComms.pingComms != null) {
-            PingComms.pingComms.stop();
-            PingComms.pingComms = null;
-        }
         getApplicationContext().registerReceiver(wifiScanReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         apListView = binding.apListView;
         // Improve performance if you know that changes in content do not change the layout size of the RecyclerView
@@ -119,16 +115,10 @@ public class WifiScanActivity extends AppCompatActivity implements ApListAdapter
         // User has selected a Wifi SSID -- save it for future use, and connect to it
         SettingsActivity.save();
         Log.i("Connecting to " + wifiName);
-        WifiConnection.init(getApplicationContext(), wifiName, "");
-        if (PingComms.pingComms != null) {
-            Log.i("Stopping Ping comms to change WiFi");
-            PingComms.pingComms.stop();
-            PingComms.pingComms = null;
-        }
+        Context context = getApplicationContext();
+        context.stopService(new Intent(context, PingComms.class));
         Log.i("Starting Ping comms");
-        PingComms.pingComms = new PingComms(port);
-        // Configured, but not connected to Wifi, or connected to the wrong Wifi
-        PingComms.pingComms.start();
+        context.startService(new Intent(context, PingComms.class));
         finish();
     }
 

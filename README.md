@@ -19,13 +19,17 @@ This is very much in the pre-release state. Currently it does
 
 The Main Map Screen
 -------------------
-In the main map screen, the current GPS position is located at the lower centre of the screen. The background has some circles and lines to make it easier to estimate distance and direction.
+In the main map screen, the current GPS position is located at the lower centre of the screen. 
+The background has some circles and lines to make it easier to estimate distance and direction.
+There is a red "danger" circle around the phone's GPS location. Eventually, if another aircraft
+is predicted to enter that circle, a warning will be issued.
+
 In manual zoom mode, the map window is zoomable with a pinch gesture. The current zoom level is indicated by a number at the bottom right of the screen... this is the distance in [distance unit]s from the centre to the edge of the screen.
 The app may also be put into an "auto-Zoom" mode via a Setting, so that it automatically zooms in or out so that the furthest aircraft is at the edge of the screen.
 
 In Heading-Up mode, the phone's orientation is used to orientate the map display, so that (assuming the phone is orientated in the same direction as the aircraft), the view
 on the screen should match with the view out the window... i.e. the screen display is oriented with the real world. The downside is that this will be inaccurate in accelerated flight 
-(turns, acceleration/decelleration, changes in climb/descent rate). Rotating the screen while in Heading mode will continue automatically zooming in/out.
+(turns, acceleration/deceleration, changes in climb/descent rate). Rotating the screen while in Heading mode will continue automatically zooming in/out.
 NB: In auto-zoom mode (and in manual zoom mode), *nearer* aircraft may be off the side or bottom of the screen. 
 
 In Track-Up mode, only the aircraft GPS track is used to orientate the map display. In nil-wind and non-sideslip conditions, this will be the same as Heading-Up,
@@ -89,7 +93,8 @@ Alternatively, you can type the name into the WiFi Name text box.
 |---------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
 | screenYPos          | Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height                         | 25%           |
 | screenWidth         | Distance that the width of the screen represents in the user's [distance unit]s                                              | 10            |
-| circleRadiusStep    | Distance apart of the circles on the screen in the user's [distance unit]s                                                   | 5             |
+| circleStep          | Distance apart of the circles on the screen in the user's [distance unit]s                                                   | 5             |
+| dangerRadius        | Radius of "danger" circle on the screen in the user's [distance unit]s                                                       | 1             |
 | displayOrientation  | Display orientation... Heading-up, Track-up, or North-up                                                                     | Heading-up    |
 | keepScreenOn        | Keep the display on when in the Map or Aircraft List views                                                                   | true          |
 | autoZoom		      | Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen.       | true          |
@@ -174,6 +179,7 @@ have devices other than the PingUSB.
 TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :)
+* There's still some oddities in switching from one activity to another
 * Ownship track... history and prediction
 * Auto-zoom -- all aircraft
 * Indicate Mode-C traffic presence

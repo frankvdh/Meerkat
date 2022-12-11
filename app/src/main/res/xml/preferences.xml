@@ -3,12 +3,13 @@
         androidx:icon="@drawable/ic_wifi"
         androidx:title="Wifi Connection">
 
-        <Preference androidx:layout="@layout/wifi_preference_layout" />
+        <com.meerkat.wifi.WifiPreference
+            androidx:layout="@layout/wifi_preference_layout" />
 
         <androidx.preference.EditTextPreference
+            androidx:defaultValue="4000"
             androidx:key="port"
             androidx:persistent="true"
-            androidx:defaultValue="4000"
             androidx:title="Port" />
     </androidx.preference.PreferenceCategory>
 
@@ -77,6 +78,14 @@
             androidx:showSeekBarValue="true"
             androidx:summary="Distance apart of the circles on the screen in [your Distance unit]s"
             androidx:title="Circle Radius Step" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:dependency="distanceUnits"
+            androidx:key="dangerRadius"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="Radius of 'danger' circle on the screen in [your Distance unit]s"
+            androidx:title="Danger Circle Radius" />
 
         <androidx.preference.DropDownPreference
             androidx:defaultValue="HeadingUp"

@@ -13,7 +13,12 @@
 package com.meerkat.map;
 
 import static android.os.Environment.MEDIA_MOUNTED;
-import static com.meerkat.SettingsActivity.*;
+import static com.meerkat.SettingsActivity.appendLogFile;
+import static com.meerkat.SettingsActivity.fileLog;
+import static com.meerkat.SettingsActivity.load;
+import static com.meerkat.SettingsActivity.port;
+import static com.meerkat.SettingsActivity.simulate;
+import static com.meerkat.SettingsActivity.wifiName;
 import static java.lang.Thread.sleep;
 
 import android.Manifest;
@@ -24,7 +29,6 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -44,18 +48,16 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.meerkat.AircraftListActivity;
 import com.meerkat.Compass;
 import com.meerkat.Gps;
-import com.meerkat.PingComms;
 import com.meerkat.R;
 import com.meerkat.SettingsActivity;
 import com.meerkat.Simulator;
-import com.meerkat.VehicleList;
 import com.meerkat.databinding.ActivityFullscreenBinding;
 import com.meerkat.log.Log;
-import com.meerkat.AircraftListActivity;
 import com.meerkat.log.LogActivity;
-import com.meerkat.wifi.WifiConnection;
+import com.meerkat.wifi.PingComms;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,6 +94,7 @@ public class MapActivity extends AppCompatActivity {
     private static boolean firstRun = true;
     private Gps gps;
     private Compass compass;
+    PingComms pingComms;
 
     private void hide() {
         // Hide UI first
@@ -157,6 +160,7 @@ public class MapActivity extends AppCompatActivity {
         }
     };
 
+     @RequiresApi(api = Build.VERSION_CODES.Q)
      @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -247,7 +251,17 @@ public class MapActivity extends AppCompatActivity {
 
             gps = new Gps((LocationManager) this.getSystemService(LOCATION_SERVICE));
             compass = new Compass(getApplicationContext());
-            VehicleList.vehicleList = new VehicleList();
+
+            Log.i("Connecting: %s", wifiName, port);
+            if (wifiName == null) {
+                Intent taskIntent = new Intent(this, SettingsActivity.class);
+                this.startActivity(taskIntent);
+            } else {
+                // Already configured
+                Log.i("Starting Ping comms: %s %d", wifiName, port);
+                pingComms = new PingComms(getApplicationContext());
+            }
+
             firstRun = false;
         }
 
@@ -261,7 +275,7 @@ public class MapActivity extends AppCompatActivity {
         compassText.setTranslationX(135);
         compassText.setTranslationY(135);
         compassText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-    }
+     }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -280,6 +294,7 @@ public class MapActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        compass.resume();
         if (simulate) {
             Simulator.startAll();
             firstRun = false;
@@ -295,16 +310,18 @@ public class MapActivity extends AppCompatActivity {
                 throw new RuntimeException(e);
             }
         }
+    }
 
-        Log.i("Connecting");
-        if (wifiName == null) {
-            Intent taskIntent = new Intent(this, SettingsActivity.class);
-            this.startActivity(taskIntent);
-        } else {
-            // Already configured
-            WifiConnection.init(getApplicationContext(), wifiName, "");
-            Log.i("Connected to Wifi %s", WifiConnection.ssId);
-        }
+    @Override
+    protected void onPause() {
+         super.onPause();
+        compass.pause();
+    }
+    @Override
+    protected void onDestroy() {
+        pingComms.stop();
+        gps.pause();
+        super.onDestroy();
     }
 
     private void toggle() {

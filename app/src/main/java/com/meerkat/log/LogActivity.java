@@ -70,14 +70,6 @@ public class LogActivity extends AppCompatActivity {
         });
     }
 
-    private TextView view(String text) {
-        TextView tv = new TextView(getApplicationContext());
-        tv.setText(text);
-        tv.setTextColor(Color.BLACK);
-        tv.setGravity(Gravity.CENTER);
-        return tv;
-    }
-
     // The "Home" button is clicked
     @Override
     public boolean onSupportNavigateUp() {

@@ -14,7 +14,18 @@ package com.meerkat.wifi;
 
 import static com.meerkat.SettingsActivity.logDecodedMessages;
 import static com.meerkat.SettingsActivity.logRawMessages;
+import static com.meerkat.SettingsActivity.wifiName;
 
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Binder;
+import android.os.Build;
+import android.os.IBinder;
+
+import androidx.annotation.RequiresApi;
+
+import com.meerkat.SettingsActivity;
 import com.meerkat.VehicleList;
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.gdl90.Traffic;
@@ -25,73 +36,91 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.Arrays;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 public class PingComms {
-    private final Thread thread;
     private final int port;
-    public static long lastVehicleChange;
-    private boolean stopped = false;
-    static public PingComms pingComms;
-    public DatagramSocket recvSocket = null;
+    private WifiConnection wifiConnection = null;
+    private boolean stopped = true;
+    private final Thread thread;
 
-    public PingComms(final int port) {
-        Log.d("constructor");
-        this.port = port;
+     @RequiresApi(api = Build.VERSION_CODES.Q)
+     public PingComms(Context context) {
+        Log.i("constructor %s", stopped ? "stopped" : "running");
+        assert stopped: "PingComms started while already running";
+
+        if (wifiConnection == null) {
+            wifiConnection = new WifiConnection(context, wifiName, "");
+            wifiConnection.waitForWifiConnection();
+        }
+        this.port = SettingsActivity.port;
         thread = new Thread(receiveData);
-    }
-
-    public void start() {
-        Log.i("start");
         stopped = false;
-        if (thread.isAlive()) return;
         try {
             thread.start();
         } catch (IllegalThreadStateException e) {
-            // do nothing
+            throw new RuntimeException("Thread illegal state");
         }
     }
 
     public void stop() {
-        Log.i("stop");
+        Log.i("Stopping Ping comms");
         stopped = true;
-        recvSocket.close();
-        recvSocket = null;
+        try {
+            if (thread != null)
+                thread.join(1000);
+        } catch (InterruptedException e) {
+            // Do nothing
+        }
+        if (wifiConnection != null) {
+            wifiConnection.close();
+            wifiConnection = null;
+        }
     }
 
     final Runnable receiveData = new Runnable() {
         @Override
         public void run() {
             Log.d("receiveData");
-            recvSocket = null;
+            DatagramSocket recvSocket = null;
             byte[] recvBuffer = new byte[132];
             DatagramPacket recvDatagram = new DatagramPacket(recvBuffer, recvBuffer.length);
             while (!stopped) {
                 Log.d("init socket");
-                try {
-                    if (recvSocket == null) {
-                        recvSocket = new DatagramSocket(port);
-                    }
-                    recvSocket.setSoTimeout(10000);
-                    recvSocket.setBroadcast(true);
-                    recvSocket.setReuseAddress(true);
-                } catch (IOException e) {
-                    Log.e("Socket creation IO Exception: %s", e.toString());
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException ignored) {
-                    }
-                    if (recvSocket != null && !recvSocket.isClosed())
-                        recvSocket.close();
-                    recvSocket = null;
-                    continue;
-                }
+                // For handling retries
+                RetryOnException retryHandler = new RetryOnException(120, 1000);
 
+                while (!stopped) {
+                    wifiConnection.waitForWifiConnection();
+                    try {
+                        recvSocket = new DatagramSocket(port);
+                        recvSocket.setSoTimeout(10000);
+                        recvSocket.setBroadcast(true);
+                        recvSocket.setReuseAddress(true);
+                        retryHandler.reset();
+                        break;
+                    } catch (IOException ex) {
+                        // Catch exception and retry.
+                        // If beyond retry limit, this will throw an exception.
+                        try {
+                            retryHandler.exceptionOccurred();
+                            if (recvSocket != null)
+                                recvSocket.close();
+                            recvSocket = null;
+                        } catch (Exception fatal) {
+                            Log.a("Socket create IO Exception: %s", fatal.getMessage());
+                            throw new RuntimeException(fatal);
+                        }
+                    }
+                }
                 while (!stopped && recvSocket != null) {
                     try {
                         //                     if (recvSocket == null) return;
                         Log.v("Waiting for next datagram: %s", recvSocket.isBound());
                         // Blocks until a message returns on this socket from a remote host.
                         recvSocket.receive(recvDatagram);
+                        retryHandler.reset();
                         Log.v("received datagram %d bytes", recvDatagram.getLength());
                         byte[] packet = Arrays.copyOfRange(recvDatagram.getData(), 0, recvDatagram.getLength());
                         if (logRawMessages) {
@@ -111,19 +140,73 @@ public class PingComms {
                                 Traffic traffic1 = (Traffic) message;
                                 if (traffic1.callsign.equals("********") || traffic1.point.getLatitude() == 0 && traffic1.point.getLongitude() == 0)
                                     continue;
-                                lastVehicleChange = now;
                                 VehicleList.vehicleList.upsert(traffic1.callsign, traffic1.participantAddr, traffic1.point, traffic1.emitterType);
                             }
                         }
                     } catch (IOException e) {
-                        Log.e("Socket read IO Exception: %s", e.toString());
-                        recvSocket = null;
+                        try {
+                            retryHandler.exceptionOccurred();
+                        } catch (Exception fatal) {
+                            Log.a("Socket read IO Exception: %s", fatal.getMessage());
+                            recvSocket.close();
+                            recvSocket = null;
+                        }
                     }
                 }
-                Log.i("Closing socket");
-                if (recvSocket != null && !recvSocket.isClosed())
+                Log.i("Socket thread stopped");
+                if (recvSocket != null)
                     recvSocket.close();
+                recvSocket = null;
             }
         }
     };
+
+    /**
+     * Encapsulates retry-on-exception operations
+     */
+    private static class RetryOnException {
+        private int numRetries;
+        private final int maxRetries, timeToWaitMS;
+
+        RetryOnException(int maxRetries, int timeToWaitMS) {
+            this.numRetries = this.maxRetries = maxRetries;
+            this.timeToWaitMS = timeToWaitMS;
+        }
+
+        void reset() {
+            this.numRetries = maxRetries;
+        }
+
+        /**
+         * @return True if retries attempts remain; else false
+         */
+        boolean shouldRetry() {
+            return (numRetries >= 0);
+        }
+
+        /**
+         * Waits for timeToWaitMS. Ignores any interrupted exception
+         */
+        public void waitUntilNextTry() {
+            try {
+                Thread.sleep(timeToWaitMS);
+            } catch (InterruptedException iex) {
+                // Do nothing
+            }
+        }
+
+        /**
+         * Called when an exception has occurred in the block. If the
+         * retry limit is exceeded, throws an exception.
+         * Else waits for the specified time.
+         */
+        public void exceptionOccurred() throws Exception {
+            numRetries--;
+            if (!shouldRetry()) {
+                throw new Exception("Retry limit exceeded.");
+            }
+            waitUntilNextTry();
+        }
+    }
 }
+
