@@ -56,8 +56,8 @@ public class Vehicle implements Comparable<Vehicle> {
         history.addFirst(point);
         // Always accept the first point, even if it isn't valid
         lastValid = point;
-        distance = Gps.distanceTo(point);
-        if (showLinearPredictionTrack)
+        distance = Gps.distanceTo(point); // metres
+        if (MapActivity.mapView != null && MapActivity.mapView.isActivated() && showLinearPredictionTrack)
             predictedPosition = point.linearPredict(predictionSeconds * 1000L);
         else
             predictedPosition = null;
@@ -88,7 +88,7 @@ public class Vehicle implements Comparable<Vehicle> {
 
     public String getLabel() {
         char valChar = isValid() ? ' ' : '!';
-        if (callsign == null)
+        if (callsign.isBlank())
             return String.format("%07x%c", id, valChar);
         if (countryCode != null && !countryCode.isEmpty()) {
             if (callsign.toUpperCase().startsWith(countryCode)) {
@@ -127,7 +127,7 @@ public class Vehicle implements Comparable<Vehicle> {
             if (callsign != null && !callsign.equals(this.callsign))
                 this.callsign = callsign;
 
-            if (showLinearPredictionTrack && lastValid != null) {
+            if (showLinearPredictionTrack && lastValid != null && predictedPosition != null) {
                 synchronized (predictedPosition) {
                     predictedPosition.set(lastValid.linearPredict(now - lastValid.getTime() + predictionSeconds * 1000L));
                     predictedPosition.setTime(now + predictionSeconds * 1000L);

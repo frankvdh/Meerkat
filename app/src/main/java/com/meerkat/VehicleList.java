@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.concurrent.Executors;
 
 public class VehicleList extends HashMap<Integer, Vehicle> {
-    static public VehicleList vehicleList;
+    static public VehicleList vehicleList = new VehicleList();
 
     private void purge() {
         long now = System.currentTimeMillis();

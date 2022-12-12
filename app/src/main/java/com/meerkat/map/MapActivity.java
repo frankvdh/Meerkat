@@ -160,13 +160,14 @@ public class MapActivity extends AppCompatActivity {
         }
     };
 
-     @RequiresApi(api = Build.VERSION_CODES.Q)
-     @Override
+    @RequiresApi(api = Build.VERSION_CODES.Q)
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         load(getApplicationContext());
         ActivityFullscreenBinding binding = ActivityFullscreenBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        mapView = binding.mapView;
         actionbarVisible = true;
         actionbarView = binding.fullscreenContentControls;
         // Upon interacting with UI controls, delay any scheduled hide()
@@ -261,11 +262,9 @@ public class MapActivity extends AppCompatActivity {
                 Log.i("Starting Ping comms: %s %d", wifiName, port);
                 pingComms = new PingComms(getApplicationContext());
             }
-
             firstRun = false;
         }
 
-        mapView = binding.mapView;
         CompassView compassView = binding.compassView;
         TextView compassText = binding.compassText;
         compassText.setTop(compassView.getTop());
@@ -275,7 +274,7 @@ public class MapActivity extends AppCompatActivity {
         compassText.setTranslationX(135);
         compassText.setTranslationY(135);
         compassText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-     }
+    }
 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -285,9 +284,7 @@ public class MapActivity extends AppCompatActivity {
         delayedHide(10000);
 
         Background background = new Background(findViewById(R.id.mapView), findViewById(R.id.compassView), findViewById(R.id.compassText), findViewById(R.id.scaleText));
-        mapView.layers = new LayerDrawable(new Drawable[]{background});
-        mapView.setImageDrawable(mapView.layers);
-
+        mapView.layers.addLayer(background);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -314,9 +311,10 @@ public class MapActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-         super.onPause();
+        super.onPause();
         compass.pause();
     }
+
     @Override
     protected void onDestroy() {
         pingComms.stop();

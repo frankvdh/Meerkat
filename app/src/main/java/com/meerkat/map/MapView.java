@@ -20,6 +20,7 @@ import static java.lang.Math.sin;
 
 import android.content.Context;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.util.AttributeSet;
 import android.view.ScaleGestureDetector;
@@ -29,6 +30,7 @@ import androidx.annotation.Nullable;
 
 import com.meerkat.Compass;
 import com.meerkat.Gps;
+import com.meerkat.R;
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Polar;
@@ -38,7 +40,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
 
     public enum DisplayOrientation {NorthUp, TrackUp, HeadingUp}
 
-    public LayerDrawable layers;
+    public final LayerDrawable layers;
     final float defaultScaleFactor;
     float scaleFactor;
     // Used to detect pinch zoom gesture.
@@ -48,10 +50,12 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         super(context, attrs);
         Log.d("createView");
         setKeepScreenOn(keepScreenOn);
-        defaultScaleFactor = getWidth(getContext()) / screenWidth;
+        defaultScaleFactor = (float) getWidth(getContext()) / screenWidth;
         for (var emitterType : Gdl90Message.Emitter.values()) {
             emitterType.bitmap = AircraftLayer.loadIcon(getContext(), emitterType.iconId);
         }
+        layers = new LayerDrawable(new Drawable[]{});
+        setImageDrawable(layers);
 
         // Attach a pinch zoom listener to the map view
         scaleGestureDetector = new ScaleGestureDetector(getContext(), new PinchListener(this));

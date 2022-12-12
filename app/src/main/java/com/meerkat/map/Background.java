@@ -52,6 +52,7 @@ public class Background extends Drawable {
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
         redPaint = new Paint();
         redPaint.setColor(Color.RED);
+        redPaint.setStrokeWidth(3);
         redPaint.setStyle(Paint.Style.STROKE);
         circlePaint = new Paint();
         circlePaint.setStyle(Paint.Style.STROKE);

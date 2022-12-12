@@ -59,8 +59,8 @@ public class SettingsActivity extends AppCompatActivity {
     public static int gradientMinimumDiff;
     public static int screenYPosPercent;
     public static float sensorSmoothingConstant;
-    public static float screenWidth;
-    public static float circleRadiusStep, dangerRadius;
+    public static int screenWidth;
+    public static int circleRadiusStep, dangerRadius;
     public static Distance.Units distanceUnits;
     public static Height.Units altUnits;
     public static Speed.Units speedUnits;
@@ -108,9 +108,9 @@ public class SettingsActivity extends AppCompatActivity {
         gradientMinimumDiff = Math.max(100, Math.min(gradientMaximumDiff, prefs.getInt("gradientMinimumDiff", 1000)));
         screenYPosPercent = Math.max(0, Math.min(100, prefs.getInt("screenYPosPercent", 25)));
         sensorSmoothingConstant = Math.max(0, Math.min(100, prefs.getInt("sensorSmoothingConstant", 20))) / 100f;
-        screenWidth = Math.max(0.5f, Math.min(50, prefs.getFloat("screenWidth", 10)));
-        circleRadiusStep = Math.max(0.1f, Math.min(screenWidth, prefs.getFloat("circleRadiusStep", 5)));
-        dangerRadius = prefs.getFloat("dangerRadius", 1);
+        screenWidth = Math.max(2, Math.min(50, prefs.getInt("screenWidth", 10)));
+        circleRadiusStep = Math.max(1, Math.min(screenWidth, prefs.getInt("circleRadiusStep", 5)));
+        dangerRadius = Math.max(1, Math.min(screenWidth, prefs.getInt("dangerRadius", 1)));
         try {
             distanceUnits = Distance.Units.valueOf(prefs.getString("distanceUnits", "NM").toUpperCase().trim());
         } catch (Exception e) {
@@ -175,9 +175,9 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putInt("gradientMinimumDiff", gradientMinimumDiff);
         edit.putInt("screenYPosPercent", screenYPosPercent);
         edit.putInt("sensorSmoothingConstant", (int) (sensorSmoothingConstant * 100));
-        edit.putFloat("screenWidth", screenWidth);
-        edit.putFloat("circleRadiusStep", circleRadiusStep);
-        edit.putFloat("dangerRadius", dangerRadius);
+        edit.putInt("screenWidth", screenWidth);
+        edit.putInt("circleRadiusStep", circleRadiusStep);
+        edit.putInt("dangerRadius", dangerRadius);
         edit.putString("distanceUnits", String.valueOf(distanceUnits));
         edit.putString("altUnits", String.valueOf(altUnits));
         edit.putString("speedUnits", String.valueOf(speedUnits));

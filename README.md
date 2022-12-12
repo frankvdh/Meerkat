@@ -180,12 +180,14 @@ TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :)
 * There's still some oddities in switching from one activity to another
+* Swipe for back button recentres screen on traffic / sets scale to 0?
 * Ownship track... history and prediction
 * Auto-zoom -- all aircraft
 * Indicate Mode-C traffic presence
 * Audio / Haptic alerts of collision threats
 * Use a theme to allow black background
 * Digital filtering of path to predict tracks
+* Handling of Float preference values (custom SeekBar?)
 * Improve the code style
 * Improve documentation with screenshots
 * Lots more testing
