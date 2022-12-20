@@ -17,28 +17,37 @@ import static com.meerkat.SettingsActivity.displayOrientation;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
 public class CompassView extends androidx.appcompat.widget.AppCompatImageView {
+
+    private MapView mapView;
     public CompassView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        this.setOnTouchListener(touchListener);
+        this.setOnTouchListener((view, motionEvent) -> view.performClick());
     }
 
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    final View.OnTouchListener touchListener = (view, motionEvent) -> performClick();
+    public void setMap(MapView mapView, TextView compassText) {
+        this.mapView = mapView;
+        compassText.setTop(getTop());
+        compassText.setRight(getRight());
+        compassText.setLeft(getLeft());
+        compassText.setBottom(getBottom());
+        compassText.setTranslationX(135);
+        compassText.setTranslationY(135);
+        compassText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
+    }
+
+    @Override
     public boolean performClick() {
         super.performClick();
         if (displayOrientation == MapView.DisplayOrientation.HeadingUp) displayOrientation = MapView.DisplayOrientation.TrackUp;
         else if (displayOrientation == MapView.DisplayOrientation.TrackUp) displayOrientation = MapView.DisplayOrientation.NorthUp;
         else displayOrientation = MapView.DisplayOrientation.HeadingUp;
-        MapActivity.mapView.refresh(null);
+        mapView.refresh(null);
         return true;
     }
 }

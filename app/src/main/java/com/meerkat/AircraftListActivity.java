@@ -12,8 +12,11 @@
  */
 package com.meerkat;
 
+import static com.meerkat.SettingsActivity.altUnits;
 import static com.meerkat.SettingsActivity.distanceUnits;
 import static com.meerkat.SettingsActivity.keepScreenOn;
+import static com.meerkat.SettingsActivity.speedUnits;
+import static com.meerkat.SettingsActivity.vertSpeedUnits;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.graphics.Color;
@@ -27,13 +30,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.meerkat.databinding.ActivityAircraftListBinding;
 import com.meerkat.log.Log;
-import com.meerkat.measure.Distance;
-import com.meerkat.measure.Height;
-import com.meerkat.measure.Speed;
-import com.meerkat.measure.VertSpeed;
+import com.meerkat.map.MapActivity;
 
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Stream;
@@ -57,7 +56,6 @@ public class AircraftListActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         Log.i("%s resumed", this.getLocalClassName());
-
         task = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::refreshAircraftDisplay, 1, 1, SECONDS);
     }
 
@@ -68,51 +66,52 @@ public class AircraftListActivity extends AppCompatActivity {
         Log.i("%s paused", this.getLocalClassName());
     }
 
+    @SuppressWarnings("unused")
     private void refreshAircraftDisplay() {
         try {
-            Log.d("refreshAircraftDisplay: ", VehicleList.vehicleList.keySet().size());
-            Stream<Vehicle> s = VehicleList.vehicleList.getVehicles().stream().sorted();
+            Log.d("refreshAircraftDisplay: ", MapActivity.vehicleList.keySet().size());
+            Stream<Vehicle> s = MapActivity.vehicleList.getVehicles().stream().sorted();
             int i = 1; // row 0 is header
             for (Iterator<Vehicle> it = s.iterator(); it.hasNext(); i++) {
                 Vehicle v = it.next();
+                Log.i(v.toString());
+                double distance;
+                String bearing;
+                String track;
+                float speed;
+               double vVel;
+                double alt;
                 synchronized (v.lastValid) {
-                    Log.i(v.toString());
-                    Distance distance;
-                    String bearing;
-                    String track;
-                    Speed speed;
-                    VertSpeed vVel;
-                    Height alt;
-                    distance = new Distance(v.distance / distanceUnits.factor, distanceUnits);
+                    distance = v.distance;
                     bearing = String.format("%03d", (int) (Gps.bearingTo(v.lastValid) + 360) % 360);
                     track = Float.isNaN(v.lastValid.getTrack()) ? "---" : String.format("%03.0f", v.lastValid.getTrack());
-                    speed = v.lastValid.getSpeedUnits();
+                    speed = v.lastValid.getSpeed();
                     vVel = v.lastValid.getVVel();
-                    alt = v.lastValid.getAlt();
-                    if (i < tableAircraft.getChildCount()) {
-                        TableRow row = (TableRow) tableAircraft.getChildAt(i);
-                        runOnUiThread(() -> {
-                            ((TextView) row.getChildAt(0)).setText(v.getLabel());
-                            ((TextView) row.getChildAt(1)).setText(distance.toString());
-                            ((TextView) row.getChildAt(2)).setText(bearing);
-                            ((TextView) row.getChildAt(3)).setText(alt.toString());
-                            ((TextView) row.getChildAt(4)).setText(track);
-                            ((TextView) row.getChildAt(5)).setText(speed == null ? "----" : speed.toString());
-                            ((TextView) row.getChildAt(6)).setText(vVel == null ? "----" : vVel.toString());
-                            row.postInvalidate();
-                        });
-                    } else {
-                        TableRow row = new TableRow(getApplicationContext());
-                        row.setLayoutParams(tableAircraft.getChildAt(0).getLayoutParams()); // Copy layout from heading row
-                        row.addView(view(v.getLabel()));
-                        row.addView(view(distance.toString()));
-                        row.addView(view(bearing));
-                        row.addView(view(alt.toString()));
-                        row.addView(view(track));
-                        row.addView(view(speed == null || Float.isNaN(speed.value) ? "----" : speed.toString()));
-                        row.addView(view(vVel == null ? "----" : vVel.toString()));
-                        runOnUiThread(() -> tableAircraft.addView(row));
-                    }
+                    alt = v.lastValid.getAltitude();
+                }
+                if (i < tableAircraft.getChildCount()) {
+                    TableRow row = (TableRow) tableAircraft.getChildAt(i);
+                    runOnUiThread(() -> {
+                        ((TextView) row.getChildAt(0)).setText(v.getLabel());
+                        ((TextView) row.getChildAt(1)).setText(distanceUnits.toString(distance));
+                        ((TextView) row.getChildAt(2)).setText(bearing);
+                        ((TextView) row.getChildAt(3)).setText(altUnits.toString(alt));
+                        ((TextView) row.getChildAt(4)).setText(track);
+                        ((TextView) row.getChildAt(5)).setText(speedUnits.toString(speed));
+                        ((TextView) row.getChildAt(6)).setText(vertSpeedUnits.toString(vVel));
+                        row.postInvalidate();
+                    });
+                } else {
+                    TableRow row = new TableRow(getApplicationContext());
+                    row.setLayoutParams(tableAircraft.getChildAt(0).getLayoutParams()); // Copy layout from heading row
+                    row.addView(view(v.getLabel()));
+                    row.addView(view(distanceUnits.toString(distance)));
+                    row.addView(view(bearing));
+                    row.addView(view(altUnits.toString(alt)));
+                    row.addView(view(track));
+                    row.addView(view(speedUnits.toString(speed)));
+                    row.addView(view(vertSpeedUnits.toString(vVel)));
+                    runOnUiThread(() -> tableAircraft.addView(row));
                 }
             }
 
@@ -130,9 +129,9 @@ public class AircraftListActivity extends AppCompatActivity {
         }
     }
 
-    private TextView view(String text) {
+    private TextView view(@SuppressWarnings("unused") String txt) {
         TextView tv = new TextView(getApplicationContext());
-        tv.setText(text);
+        tv.setText(txt);
         tv.setTextColor(Color.BLACK);
         tv.setGravity(Gravity.CENTER);
         return tv;

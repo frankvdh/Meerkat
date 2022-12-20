@@ -41,6 +41,7 @@ public class ApListAdapter extends RecyclerView.Adapter<ViewHolder> {
 
     private final List<String> accessPoints;
 
+    @SuppressWarnings("unused")
     public ApListAdapter(List<String> list, ScanResultClickListener scanResultClickListener) {
         accessPoints = list;
         this.scanResultClickListener = scanResultClickListener;
@@ -105,17 +106,16 @@ public class ApListAdapter extends RecyclerView.Adapter<ViewHolder> {
         return position == HEADER_POSITION ? TYPE_HEADER : TYPE_ITEM;
     }
 
+    @SuppressWarnings("unused")
     public void clear() {
         int size = accessPoints.size();
         accessPoints.clear();
         notifyItemRangeRemoved(0, size);
-
     }
 
-    // Used to inform the class containing the RecyclerView that one of the ScanResult items in the
-    // list was clicked.
+    // Inform the class containing the RecyclerView that one of the ScanResult items in the list was clicked.
     public interface ScanResultClickListener {
-        void onScanResultItemClick(String scanResult);
+        void onScanResultItemClick(@SuppressWarnings("unused") String scanResult);
     }
 }
 

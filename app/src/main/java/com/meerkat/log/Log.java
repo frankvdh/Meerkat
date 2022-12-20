@@ -13,7 +13,6 @@
 package com.meerkat.log;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -36,20 +35,20 @@ public final class Log {
     }
 
     private static final Set<LogWriter> mPrinters = new HashSet<>();
-    public static final AndroidLogWriter ANDROID;
-    public static ViewLogWriter viewLogWriter;
+    private static final AndroidLogWriter ANDROID_LOG_WRITER;
 
     private static Level mMinLevel = Level.V;
 
     static {
         try {
-            ANDROID = new AndroidLogWriter();
-            useLogWriter(ANDROID, true);
+            ANDROID_LOG_WRITER = new AndroidLogWriter();
+            useLogWriter(ANDROID_LOG_WRITER, true);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("java.util.log class not found");
         }
     }
 
+    @SuppressWarnings("unused")
     public static synchronized void level(Level minLevel) {
         mMinLevel = minLevel;
     }
@@ -62,14 +61,13 @@ public final class Log {
         }
     }
 
-    public static synchronized void useFileWriter(File file, boolean append) throws IOException {
+    public static synchronized void useFileWriter(File file, boolean append) {
         FileLogWriter fp = new FileLogWriter(file, append);
         mPrinters.add(fp);
     }
 
     public static synchronized void useViewLogWriter(LogActivity logActivity) {
-        viewLogWriter = new ViewLogWriter(logActivity);
-        mPrinters.add(viewLogWriter);
+        mPrinters.add(new ViewLogWriter(logActivity));
     }
 
     public static synchronized void v(String msg, Object... args) {
@@ -96,6 +94,7 @@ public final class Log {
         log(Level.A, msg, args);
     }
 
+    @SuppressWarnings("unused")
     public static void close() {
         for (LogWriter p : mPrinters) {
             if (p instanceof FileLogWriter)

@@ -21,8 +21,6 @@ The Main Map Screen
 -------------------
 In the main map screen, the current GPS position is located at the lower centre of the screen. 
 The background has some circles and lines to make it easier to estimate distance and direction.
-There is a red "danger" circle around the phone's GPS location. Eventually, if another aircraft
-is predicted to enter that circle, a warning will be issued.
 
 In manual zoom mode, the map window is zoomable with a pinch gesture. The current zoom level is indicated by a number at the bottom right of the screen... this is the distance in [distance unit]s from the centre to the edge of the screen.
 The app may also be put into an "auto-Zoom" mode via a Setting, so that it automatically zooms in or out so that the furthest aircraft is at the edge of the screen.
@@ -56,6 +54,9 @@ Each icon can also optionally (controlled by Settings) have associated with it:
 * A "polynomial" predicted track, based on the previous 10 (settable via [polynomialHistorySeconds]) seconds, so it predicts a turning flight path.
 These use the same colour coding as the icon
 
+When other aircraft are detected within 20nm, a red "danger" circle is drawn around the phone's GPS location. The nearer an aircraft's position (not predicted
+or historical) is to the danger circle, the heavier the border is drawn. Eventually, if another aircraft is predicted to enter that circle, a warning will be issued.
+
 Pressing the "back" button (swiping left from the right edge of the screen on some phones) brings up a button bar. This includes icons for moving to other screens, and to quit the app.
 This button bar will automatically disappear after 5 seconds if no buttons are pressed.
 
@@ -77,53 +78,55 @@ The Wifi Name needs to be set to the name of your device (e.g. Ping-6C7A for my 
 
 Alternatively, you can type the name into the WiFi Name text box.
 
-| Wifi Setting Name          | Usage                                                                                  | Default value                                     |
-|----------------------------|----------------------------------------------------------------------------------------|---------------------------------------------------|
-| wifiName                   | ssId of the Wifi network established by the device (e.g. Ping-6C7A for my PingUSB).    | Ping-6C7A -- will be null in the released version |
-| port                       | UDP port for comms from the device                                                     | 4000 (PingUSB default)                            |
+| Wifi Settings                   | Usage                                                                                                               | Default value          |
+|---------------------------------|---------------------------------------------------------------------------------------------------------------------|------------------------|
+| wifiName                        | ssId of the Wifi network established by the device (e.g. Ping-6C7A for my PingUSB).                                 | null                   |
+| port                            | UDP port for comms from the device                                                                                  | 4000 (PingUSB default) |
 
-| Units Setting Name         | Usage                                                                                  | Default value |
-|----------------------------|----------------------------------------------------------------------------------------|---------------|
-| distanceUnits              | User's preferred distance units KM, NM, M                                              | NM            |
-| altUnits                   | User's preferred altitude units FT, M                                                  | FT            |
-| speedUnits                 | User's preferred speed units KTS, MPH, KPH                                             | KPH           |
-| vertSpeedUnits             | User's preferred vertical speed units FPM, MPS                                         | FPM           |
+| Units Settings                  | Usage                                                                                                                        | Default value |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
+| distanceUnits                   | User's preferred distance units KM, NM, M                                                                                    | NM            |
+| altUnits                        | User's preferred altitude units FT, M                                                                                        | FT            |
+| speedUnits                      | User's preferred speed units KTS, MPH, KPH                                                                                   | KPH           |
+| vertSpeedUnits                  | User's preferred vertical speed units FPM, MPS                                                                               | FPM           |
 
-| Screen Setting Name | Usage                                                                                                                        | Default value |
-|---------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
-| screenYPos          | Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height                         | 25%           |
-| screenWidth         | Distance that the width of the screen represents in the user's [distance unit]s                                              | 10            |
-| circleStep          | Distance apart of the circles on the screen in the user's [distance unit]s                                                   | 5             |
-| dangerRadius        | Radius of "danger" circle on the screen in the user's [distance unit]s                                                       | 1             |
-| displayOrientation  | Display orientation... Heading-up, Track-up, or North-up                                                                     | Heading-up    |
-| keepScreenOn        | Keep the display on when in the Map or Aircraft List views                                                                   | true          |
-| autoZoom		      | Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen.       | true          |
-| gradMaxDiff         | How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green        | 5000          |
-| gradMinDiff         | How many [altitude unit]s above/below the phone's GPS altitude an aircraft displays as completely red                        | 1000          |
-| countryCode         | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed. | ZK            |
+| Screen Setting Name             | Usage                                                                                                                        | Default value |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
+| screenYPos                      | Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height                         | 25%           |
+| screenWidth                     | Distance that the width of the screen represents in the user's [distance unit]s                                              | 10            |
+| circleStep                      | Distance apart of the circles on the screen in the user's [distance unit]s                                                   | 5             |
+| dangerRadius                    | Radius of "danger" circle on the screen in the user's [distance unit]s                                                       | 1             |
+| displayOrientation              | Display orientation... Heading-up, Track-up, or North-up                                                                     | Heading-up    |
+| keepScreenOn                    | Keep the display on when in the Map or Aircraft List views                                                                   | true          |
+| autoZoom	                       | Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen.       | true          |
+| gradMaxDiff                     | How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green        | 5000          |
+| gradMinDiff                     | How many [altitude unit]s above/below the phone's GPS altitude an aircraft displays as completely red                        | 1000          |
+| countryCode                     | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed. | ZK            |
 
+| Sensitivity Setting Name        | Usage                                                                                                                        | Default value |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
+| sensorSmoothingConstant         | The sensitivity of the display to phone orientation change (1 - 99). Larger values make it more responsive                   | 20            |
+| minGpsDistanceChangeMetres      | Minimum Gps distance between updates in metres                                        	                                      | 5             |
+| minGpsUpdateIntervalSeconds     | Minimum Gps update interval in seconds                                                                                       | 10            |
 
-| Sensitivity Setting Name    | Usage                                                                                                      | Default value |
-|-----------------------------|------------------------------------------------------------------------------------------------------------|---------------|
-| sensorSmoothingConstant     | The sensitivity of the display to phone orientation change (1 - 99). Larger values make it more responsive | 20            |
-| minGpsDistanceChangeMetres  | Minimum Gps distance between updates in metres                                                			   | 5             |
-| minGpsUpdateIntervalSeconds | Minimum Gps update interval in seconds                                                                     | 10            |
+| History Settings                | Usage                                                                                                                        | Default value |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
+| historySeconds                  | How many seconds of history track to display for each aircraft.                                                              | 60            |
+| purgeSeconds                    | How many seconds to wait before an aircraft is removed from the display                                                      | 60            |
 
-| History Setting Name | Usage                                                                    | Default value |
-|----------------------|--------------------------------------------------------------------------|---------------|
-| historySeconds       | How many seconds of history track to display for each aircraft.          | 60            |
-| purgeSeconds         | How many seconds to wait before an aircraft is removed from the display  | 60            |
+| Linear prediction Settings      | Usage                                                                                                                         | Default value |
+|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------|---------------|
+| showLinearPredictionTrack       | Whether to display the "linear" predicted track for each aircraft on the screen. This assumes that the aircraft               |               |
+|                                 | will continue at the same speed, rate of climb, and track for the next 60 seconds                                             | true          |
+| predictionSeconds               | How many seconds into the future to predict the track of each aircraft. Applies to both linear and polynomial                 |               |
+|                                 | prediction                                                                                                                    | 60            |
 
-| Linear prediction Setting Name | Usage                                                                                                                                                                                             | Default value |
-|--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
-| showLinearPredictionTrack      | Whether to display the "linear" predicted track for each aircraft on the screen. This assumes that the aircraft will continue at the same speed, rate of climb, and track for the next 60 seconds | true          |
-| predictionSeconds              | How many seconds into the future to predict the track of each aircraft. Applies to both linear and polynomial prediction                                                                          | 60            |
-
-| Polynomial prediction Setting Name | Usage                                                                                                                                                           | Default value |
-|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
-| showPolynomialPredictionTrack      | Whether to display the "polynomial" predicted track for each aircraft on the screen. This predicts accelerating, turning, climbing path for the next 60 seconds | true          |
-| polynomialPredictionStepSeconds    | How many seconds each step of the polynomial prediction is                                                                                                      | 6             |
-| polynomialHistorySeconds           | How many seconds history should be used by the polynomial predictor. Too large or small a value will seen poor predictions                                      | 10            |
+| Polynomial prediction Settings  | Usage                                                                                                                         | Default value |
+|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------|---------------|
+| showPolynomialPredictionTrack   | Whether to display the "polynomial" predicted track for each aircraft on the screen. This predicts                            |               |
+|                                 | accelerating, turning, climbing path for the next 60 seconds                                                                  | true          |
+| polynomialPredictionStepSeconds | How many seconds each step of the polynomial prediction is                                                                    | 6             |
+| polynomialHistorySeconds        | How many seconds history should be used by the polynomial predictor. Too large or small a value will seen poor predictions    | 10            |
 
 Debugging settings
 ------------------
@@ -137,7 +140,7 @@ Setting the [simulate] setting to "true" results in the app processing a series 
 |--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
 | version            | The version of Meerkat that saved the settings                                                                                                  | 1.0           |
 | showLog            | Whether to output logs to a window on the screen                                                                                                | false         |
-| fileLog            | Whether to output logs to /storage/sdcard0/Android/data/com.meerkat/files/meerkat.log. 														   | false         |
+| fileLog            | Whether to output logs to /storage/sdcard0/Android/data/com.meerkat/files/meerkat.log.                                                          | false         |
 | appendLogFile      | Whether to append to the existing log file, or erase it and start a new one.                                                                    | false         |
 |                    | If this is false, this file is never erased or shortened. If left alone, this will eventually chew up all the storage at the rate of ~100MB/hr! |               |
 | logLevel           | Amount of detail to write to logs... Assert, Error, Warning, Info, Debug, Verbose                                                               | I             |

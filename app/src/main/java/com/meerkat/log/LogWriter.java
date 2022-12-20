@@ -16,7 +16,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -27,6 +26,7 @@ interface LogWriter {
     void append(Log.Level level, String tag, String msg);
 }
 
+@SuppressWarnings("unused")
 class SystemOutLogWriter implements LogWriter {
     public void append(Log.Level level, String tag, String msg) {
         System.out.println(level + "/" + tag + ": " + msg);
@@ -34,7 +34,7 @@ class SystemOutLogWriter implements LogWriter {
 }
 
 class FileLogWriter implements LogWriter {
-    static final DateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault());
+    static final DateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS", Locale.ENGLISH);
 
     BufferedWriter bw;
     final File file;
@@ -53,6 +53,7 @@ class FileLogWriter implements LogWriter {
             bw.write(String.format("%s %s/%s %s\r\n", sdf.format(new Date()), tag, level, msg));
         } catch (IOException e) {
             bw = null;
+            android.util.Log.e(tag, "File Log write (" + level + ", " + msg + ") failed: " + e.getMessage());
         }
     }
 
@@ -92,9 +93,10 @@ class AndroidLogWriter implements LogWriter {
         Class<?> logClass = Class.forName("android.util.Log");
         for (Log.Level l : Log.Level.values()) {
             try {
-                mLogMethods[l.value] = logClass.getMethod(l.name().toLowerCase(), String.class, String.class);
+                // "A" level is translated to wtf because android.util.log doesn't have "A"
+                mLogMethods[l.value] = logClass.getMethod(l.value == Log.Level.A.value ? "wtf" : l.name().toLowerCase(), String.class, String.class);
             } catch (NoSuchMethodException | SecurityException e) {
-                // ignore
+                android.util.Log.wtf(this.getClass().getCanonicalName(), "Log constructor failed: " + l + " -- " + e.getMessage());
             }
         }
     }
@@ -102,8 +104,8 @@ class AndroidLogWriter implements LogWriter {
     public void append(Log.Level level, String tag, String msg) {
         try {
             mLogMethods[level.value].invoke(null, tag, msg);
-        } catch (InvocationTargetException | IllegalAccessException ex) {
-            // ignore
+        } catch (Exception ex) {
+            android.util.Log.wtf(tag, "Log failed: " + level + " -- " + msg);
         }
     }
 }

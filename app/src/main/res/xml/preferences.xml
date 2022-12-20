@@ -57,6 +57,20 @@
         androidx:icon="@drawable/ic_phone"
         androidx:title="Screen">
         <androidx.preference.SeekBarPreference
+            androidx:key="initToolbarDelaySecs"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="Time before the toolbar hides itself after startup"
+            androidx:title="Initial Toolbar Hide Delay" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:key="toolbarDelaySecs"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="Time before the toolbar hides itself after being called up by 'back' button"
+            androidx:title="Toolbar Hide Delay" />
+
+        <androidx.preference.SeekBarPreference
             androidx:key="scrYPos"
             androidx:persistent="true"
             androidx:showSeekBarValue="true"

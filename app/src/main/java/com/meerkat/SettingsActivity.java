@@ -24,11 +24,8 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SeekBarPreference;
 
 import com.meerkat.log.Log;
-import com.meerkat.measure.Distance;
-import com.meerkat.measure.Height;
-import com.meerkat.measure.Speed;
-import com.meerkat.measure.VertSpeed;
 import com.meerkat.map.MapView;
+import com.meerkat.measure.Units;
 
 public class SettingsActivity extends AppCompatActivity {
     private static SharedPreferences prefs;
@@ -53,23 +50,27 @@ public class SettingsActivity extends AppCompatActivity {
      * Time smoothing constant for low-pass filter 0 ≤ α ≤ 1 ; a smaller value basically means more smoothing
      * See: http://en.wikipedia.org/wiki/Low-pass_filter#Discrete-time_realization
      */
-    public static int predictionSeconds;
-    public static int polynomialPredictionStepSeconds, polynomialHistorySeconds;
+    public static int predictionMilliS;
+    public static int polynomialPredictionStepMilliS, polynomialHistoryMilliS;
     public static int gradientMaximumDiff;
     public static int gradientMinimumDiff;
     public static int screenYPosPercent;
     public static float sensorSmoothingConstant;
-    public static int screenWidth;
-    public static int circleRadiusStep, dangerRadius;
-    public static Distance.Units distanceUnits;
-    public static Height.Units altUnits;
-    public static Speed.Units speedUnits;
-    public static VertSpeed.Units vertSpeedUnits;
+    public static int screenWidthMetres;
+    public static int circleRadiusStepMetres, dangerRadiusMetres;
+    public static Units.Distance distanceUnits;
+    public static Units.Height altUnits;
+    public static Units.Speed speedUnits;
+    public static Units.VertSpeed vertSpeedUnits;
     public static boolean simulate;
     public static String countryCode;
     public static MapView.DisplayOrientation displayOrientation;
     public static boolean keepScreenOn;
     public static boolean autoZoom;
+    /**
+     * The number of milliseconds to wait after user interaction before hiding the system UI.
+     */
+    public static int toolbarDelayMilliS, initToolbarDelayMilliS;
 
     public static void load(Context context) {
         String currentVersionName = BuildConfig.VERSION_NAME;
@@ -101,40 +102,40 @@ public class SettingsActivity extends AppCompatActivity {
         showPolynomialPredictionTrack = prefs.getBoolean("showPolynomialPredictionTrack", true);
         historySeconds = Math.max(0, Math.min(300, prefs.getInt("historySeconds", 60)));
         purgeSeconds = Math.max(1, Math.min(300, prefs.getInt("purgeSeconds", 60)));
-        predictionSeconds = Math.max(0, Math.min(300, prefs.getInt("predictionSeconds", 60)));
-        polynomialPredictionStepSeconds = Math.max(1, Math.min(60, prefs.getInt("polynomialPredictionStepSeconds", 10)));
-        polynomialHistorySeconds = Math.max(1, Math.min(60, prefs.getInt("polynomialHistorySeconds", 10)));
+        predictionMilliS = Math.max(0, Math.min(300, prefs.getInt("predictionSeconds", 60))) * 1000;
+        polynomialPredictionStepMilliS = Math.max(1, Math.min(60, prefs.getInt("polynomialPredictionStepSeconds", 10))) * 1000;
+        polynomialHistoryMilliS = Math.max(1, Math.min(60, prefs.getInt("polynomialHistorySeconds", 10))) * 1000;
         gradientMaximumDiff = Math.max(1000, Math.min(5000, prefs.getInt("gradientMaximumDiff", 2500)));
         gradientMinimumDiff = Math.max(100, Math.min(gradientMaximumDiff, prefs.getInt("gradientMinimumDiff", 1000)));
         screenYPosPercent = Math.max(0, Math.min(100, prefs.getInt("screenYPosPercent", 25)));
         sensorSmoothingConstant = Math.max(0, Math.min(100, prefs.getInt("sensorSmoothingConstant", 20))) / 100f;
-        screenWidth = Math.max(2, Math.min(50, prefs.getInt("screenWidth", 10)));
-        circleRadiusStep = Math.max(1, Math.min(screenWidth, prefs.getInt("circleRadiusStep", 5)));
-        dangerRadius = Math.max(1, Math.min(screenWidth, prefs.getInt("dangerRadius", 1)));
         try {
-            distanceUnits = Distance.Units.valueOf(prefs.getString("distanceUnits", "NM").toUpperCase().trim());
+            distanceUnits = Units.Distance.valueOf(prefs.getString("distanceUnits", "NM").toUpperCase().trim());
         } catch (Exception e) {
-            distanceUnits = Distance.Units.NM;
+            distanceUnits = Units.Distance.NM;
             saveNeeded = true;
         }
         try {
-            altUnits = Height.Units.valueOf(prefs.getString("altUnits", "FT").toUpperCase().trim());
+            altUnits = Units.Height.valueOf(prefs.getString("altUnits", "FT").toUpperCase().trim());
         } catch (Exception e) {
-            altUnits = Height.Units.FT;
+            altUnits = Units.Height.FT;
             saveNeeded = true;
         }
         try {
-            speedUnits = Speed.Units.valueOf(prefs.getString("speedUnits", "KNOTS").toUpperCase().trim());
+            speedUnits = Units.Speed.valueOf(prefs.getString("speedUnits", "KNOTS").toUpperCase().trim());
         } catch (Exception e) {
-            speedUnits = Speed.Units.KNOTS;
+            speedUnits = Units.Speed.KNOTS;
             saveNeeded = true;
         }
         try {
-            vertSpeedUnits = VertSpeed.Units.valueOf(prefs.getString("vertSpeedUnits", "FPM").toUpperCase().trim());
+            vertSpeedUnits = Units.VertSpeed.valueOf(prefs.getString("vertSpeedUnits", "FPM").toUpperCase().trim());
         } catch (Exception e) {
-            vertSpeedUnits = VertSpeed.Units.FPM;
+            vertSpeedUnits = Units.VertSpeed.FPM;
             saveNeeded = true;
         }
+        screenWidthMetres = (int) (Math.max(Units.Distance.NM.toM(2), Math.min(Units.Distance.NM.toM(50), prefs.getInt("screenWidth", (int) (Units.Distance.NM.toM(10))))));
+        circleRadiusStepMetres = (int) (Math.max(Units.Distance.NM.toM(1), Math.min(screenWidthMetres, prefs.getInt("circleRadiusStep", (int) (Units.Distance.NM.toM(5))))));
+        dangerRadiusMetres = (int) (Math.max(Units.Distance.NM.toM(1), Math.min(screenWidthMetres, prefs.getInt("dangerRadius", (int) (Units.Distance.NM.toM(1))))));
         countryCode = prefs.getString("countryCode", "").toUpperCase();
         try {
             displayOrientation = MapView.DisplayOrientation.valueOf(prefs.getString("displayOrientation", "HeadingUp").trim());
@@ -143,9 +144,11 @@ public class SettingsActivity extends AppCompatActivity {
             saveNeeded = true;
         }
         keepScreenOn = prefs.getBoolean("keepScreenOn", true);
-        autoZoom = prefs.getBoolean("autoZoom", true);
+        autoZoom = prefs.getBoolean("autoZoom", false);
         minGpsDistanceChangeMetres = prefs.getInt("minGpsDistanceChangeMetres", 10);
         minGpsUpdateIntervalSeconds = prefs.getInt("minGpsUpdateIntervalSeconds", 10);
+        toolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("toolbarDelaySecs", 3)))*1000;
+        initToolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("initToolbarDelaySecs", 10)))*1000;
         simulate = prefs.getBoolean("simulate", false);
         if (simulate)
             displayOrientation = MapView.DisplayOrientation.NorthUp;
@@ -168,16 +171,16 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putBoolean("showPolynomialPredictionTrack", showPolynomialPredictionTrack);
         edit.putInt("historySeconds", historySeconds);
         edit.putInt("purgeSeconds", purgeSeconds);
-        edit.putInt("predictionSeconds", predictionSeconds);
-        edit.putInt("polynomialPredictionStepSeconds", polynomialPredictionStepSeconds);
-        edit.putInt("polynomialHistorySeconds", polynomialHistorySeconds);
+        edit.putInt("predictionSeconds", predictionMilliS / 1000);
+        edit.putInt("polynomialPredictionStepSeconds", polynomialPredictionStepMilliS / 1000);
+        edit.putInt("polynomialHistorySeconds", polynomialHistoryMilliS / 1000);
         edit.putInt("gradientMaximumDiff", gradientMaximumDiff);
         edit.putInt("gradientMinimumDiff", gradientMinimumDiff);
         edit.putInt("screenYPosPercent", screenYPosPercent);
         edit.putInt("sensorSmoothingConstant", (int) (sensorSmoothingConstant * 100));
-        edit.putInt("screenWidth", screenWidth);
-        edit.putInt("circleRadiusStep", circleRadiusStep);
-        edit.putInt("dangerRadius", dangerRadius);
+        edit.putInt("screenWidth", screenWidthMetres);
+        edit.putInt("circleRadiusStep", circleRadiusStepMetres);
+        edit.putInt("dangerRadius", dangerRadiusMetres);
         edit.putString("distanceUnits", String.valueOf(distanceUnits));
         edit.putString("altUnits", String.valueOf(altUnits));
         edit.putString("speedUnits", String.valueOf(speedUnits));
@@ -186,6 +189,8 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putString("displayOrientation", String.valueOf(displayOrientation));
         edit.putBoolean("keepScreenOn", keepScreenOn);
         edit.putBoolean("autoZoom", autoZoom);
+        edit.putInt("toolbarDelaySecs", toolbarDelayMilliS / 1000);
+        edit.putInt("initToolbarDelaySecs", initToolbarDelayMilliS / 1000);
         edit.putInt("minGpsDistanceChangeMetres", minGpsDistanceChangeMetres);
         edit.putInt("minGpsUpdateIntervalSeconds", minGpsUpdateIntervalSeconds);
         edit.putBoolean("simulate", simulate);
@@ -228,9 +233,9 @@ public class SettingsActivity extends AppCompatActivity {
             setPreferencesFromResource(R.xml.preferences, rootKey);
             makeNumber("port");
             setRange("scrYPos", 5, 25, 95, 5);
-            setRange("scrWidth", 1, 10, 50, 1);
-            setRange("circleStep", 1, 5, 25, 1);
-            setRange("dangerRadius", 1, 1, 5, 1);
+            setRange("scrWidth", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(50), (int) Units.Distance.NM.toM(1));
+            setRange("circleStep", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(25), (int) Units.Distance.NM.toM(1));
+            setRange("dangerRadius", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(5), (int) Units.Distance.NM.toM(1));
             setRange("gradMaxDiff", 2100, 5000, 10000, 100);
             setRange("gradMinDiff", 100, 1000, 2000, 100);
             setRange("minGpsDistMetres", 1, 10, 50, 1);

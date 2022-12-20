@@ -12,13 +12,16 @@
  */
 package com.meerkat.map;
 
-import static com.meerkat.SettingsActivity.*;
-
+import static com.meerkat.SettingsActivity.altUnits;
+import static com.meerkat.SettingsActivity.gradientMaximumDiff;
+import static com.meerkat.SettingsActivity.gradientMinimumDiff;
+import static com.meerkat.SettingsActivity.historySeconds;
+import static com.meerkat.SettingsActivity.showLinearPredictionTrack;
+import static com.meerkat.SettingsActivity.showPolynomialPredictionTrack;
 import static java.lang.Double.isNaN;
 import static java.lang.Math.abs;
 import static java.lang.Math.min;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -31,9 +34,7 @@ import android.graphics.PathEffect;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.Icon;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -42,7 +43,6 @@ import com.meerkat.Gps;
 import com.meerkat.Vehicle;
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
-import com.meerkat.measure.Height;
 import com.meerkat.measure.Position;
 
 import java.util.List;
@@ -52,7 +52,8 @@ public class AircraftLayer extends Drawable {
     private static final PathEffect predictEffect;
     private static final Paint textPaint = new Paint(Color.BLACK);
     private static final Paint trackPaint = new Paint();
-    private Vehicle v;
+    private Vehicle vehicle;
+    private final MapView mapView;
 
     static {
         trackPaint.setStrokeWidth(10);
@@ -66,16 +67,17 @@ public class AircraftLayer extends Drawable {
     }
 
     public void set(Vehicle v) {
-        this.v = v;
+        this.vehicle = v;
         setVisible(true, true);
-        MapActivity.mapView.layers.invalidateDrawable(this);
+        mapView.layers.invalidateDrawable(this);
     }
 
-    public AircraftLayer(Vehicle v) {
-        set(v);
+    public AircraftLayer(Vehicle vehicle, MapView view) {
+        mapView = view;
+        set(vehicle);
     }
 
-    public Bitmap replaceColor(Bitmap src, int targetColor) {
+    private Bitmap replaceColor(Bitmap src, int targetColor) {
         if (src == null) {
             return null;
         }
@@ -96,55 +98,32 @@ public class AircraftLayer extends Drawable {
         return result;
     }
 
-    int altColour(Height altDifference, boolean airborne) {
+    private int altColour(double altDifference, boolean airborne) {
         if (!airborne) return Color.BLACK;
-        if (isNaN(altDifference.value)) return Color.RED;
-        float magnitude = abs(altDifference.value);
+        if (isNaN(altDifference)) return Color.RED;
+        double magnitude = abs(altDifference);
         if (magnitude < gradientMinimumDiff) return Color.RED;
         int BG = (int) min(255, (magnitude - gradientMinimumDiff) / (gradientMaximumDiff - gradientMinimumDiff) * 255);
         int R = 255 - BG;
-        return 0xff000000 | R << 16 | BG << (altDifference.value > 0 ? 0 : 8);
-    }
-
-    static public Bitmap loadIcon(Context context, int iconId) {
-        Icon icon = Icon.createWithResource(context, iconId);
-        Drawable drawable = icon.loadDrawable(context);
-        if (drawable instanceof BitmapDrawable) {
-            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
-            return bitmapDrawable.getBitmap();
-        }
-        if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
-            return ((BitmapDrawable) Icon.createWithResource(context, Gdl90Message.Emitter.Unknown.iconId).loadDrawable(context)).getBitmap();
-        }
-        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        drawable.draw(canvas);
-        return bitmap;
+        return 0xff000000 | R << 16 | BG << (altDifference > 0 ? 0 : 8);
     }
 
     private Point line(Canvas canvas, Point current, Position p, PathEffect effect) {
-        Point point = MapActivity.mapView.screenPoint(p);
+        Point point = mapView.screenPoint(p);
         if (current.x == point.x && current.y == point.y)
             return current;
-        trackPaint.setColor(altColour(altDiff(p.getAlt()), p.isAirborne()));
+        trackPaint.setColor(altColour((int) (p.getAltitude() - Gps.getAltitude()), p.isAirborne()));
         trackPaint.setPathEffect(effect);
         canvas.drawLine(current.x, current.y, point.x, point.y, trackPaint);
         return point;
     }
 
-    private void polyLine(Canvas canvas, Point c1, final List<Position> list, PathEffect effect) {
-        Point current = new Point(c1);
+    private void polyLine(Canvas canvas, Point start, final List<Position> list, PathEffect effect) {
+        Point current = new Point(start);
         if (list == null || list.size() == 0) return;
-        synchronized (list) {
-            for (Position p : list) {
-                current = line(canvas, current, p, effect);
-            }
+        for (Position p : list) {
+            current = line(canvas, current, p, effect);
         }
-    }
-
-    private Height altDiff(Height h) {
-        return new Height(h.value - Gps.getAltitude() / h.units.factor, h.units);
     }
 
     @Override
@@ -155,49 +134,55 @@ public class AircraftLayer extends Drawable {
         Position currentPos;
         if (!this.isVisible()) return;
         synchronized (this) {
-            synchronized (v) {
-                currentPos = new Position(v.lastValid);
-                emitter = v.emitterType;
+            synchronized (vehicle.lastValid) {
+                currentPos = new Position(vehicle.lastValid);
+                emitter = vehicle.emitterType;
             }
             track = currentPos.getTrack();
             isAirborne = currentPos.isAirborne();
-            Log.d("draw %d %s %s %s", v.id, v.callsign, emitter, currentPos);
+            Log.d("draw %d %s %s %s", vehicle.id, vehicle.callsign, emitter, currentPos);
             // Canvas is already translated so that 0,0 is at the ownShip point
             Rect bounds = canvas.getClipBounds();
             var bmpWidth = emitter.bitmap.getWidth();
-            Point aircraftPoint = MapActivity.mapView.screenPoint(currentPos);
+            Point aircraftPoint = mapView.screenPoint(currentPos);
             // Draw the icon if part of it is visible
-            Height altDiff = new Height((float) ((currentPos.getAltitude() - Gps.getAltitude()) / currentPos.getAlt().units.factor), currentPos.getAlt().units);
+            double altDiff = currentPos.getAltitude() - Gps.getAltitude();
             var displayAngle = MapView.displayRotation();
             if (aircraftPoint.x > bounds.left - bmpWidth / 2 && aircraftPoint.x < bounds.right + bmpWidth / 2 && aircraftPoint.y > bounds.top - bmpWidth / 2 && aircraftPoint.y < bounds.bottom + bmpWidth / 2) {
                 canvas.drawBitmap(replaceColor(emitter.bitmap, altColour(altDiff, isAirborne)),
                         positionMatrix(emitter.bitmap.getWidth() / 2, emitter.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
                                 (isNaN(track) ? 0 : track) - (isNaN(displayAngle) ? 0 : displayAngle)), null);
                 int lineHeight = (int) (textPaint.getTextSize() + 1);
-                String[] text = {v.getLabel(), isNaN(altDiff.value) ? "" : altDiff.toString()};
+                String[] text = {vehicle.getLabel(), isNaN(altDiff) ? "" : altUnits.toString(altDiff)};
                 drawText(canvas, aircraftPoint, lineHeight, text, bounds, bmpWidth);
             }
 
-            if (showLinearPredictionTrack && v.predictedPosition != null) {
-                synchronized (v.predictedPosition) {
-                    if (v.predictedPosition.isValid()) {
-                        line(canvas, aircraftPoint, v.predictedPosition, predictEffect);
+            if (showLinearPredictionTrack && vehicle.predictedPosition != null) {
+                synchronized (vehicle.predictedPosition) {
+                    if (vehicle.predictedPosition.isValid()) {
+                        line(canvas, aircraftPoint, vehicle.predictedPosition, predictEffect);
                     }
                 }
             }
 
             if (showPolynomialPredictionTrack) {
-                polyLine(canvas, aircraftPoint, v.predicted, predictEffect);
+                synchronized (vehicle.predicted) {
+                    polyLine(canvas, aircraftPoint, vehicle.predicted, predictEffect);
+                }
             }
 
             if (historySeconds > 0) {
-                polyLine(canvas, aircraftPoint, v.history, historyEffect);
+                synchronized (vehicle.history) {
+                    polyLine(canvas, aircraftPoint, vehicle.history, historyEffect);
+                }
             }
         }
     }
 
-    static Matrix positionMatrix(int centreX, int centreY, float x, float y, float angle) {
-        Matrix matrix = new Matrix();
+    private final Matrix matrix = new Matrix(); // Avoid constructing
+
+    private Matrix positionMatrix(int centreX, int centreY, float x, float y, float angle) {
+        matrix.reset();
         // Rotate about centre of icon & translate to bitmap position
         if (!isNaN(angle))
             matrix.setRotate(angle, centreX, centreY);

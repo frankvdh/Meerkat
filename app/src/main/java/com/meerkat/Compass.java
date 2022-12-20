@@ -34,7 +34,7 @@ import android.os.IBinder;
 import androidx.annotation.Nullable;
 
 import com.meerkat.log.Log;
-import com.meerkat.map.MapActivity;
+import com.meerkat.map.MapView;
 
 public class Compass extends Service implements SensorEventListener {
 
@@ -47,11 +47,11 @@ public class Compass extends Service implements SensorEventListener {
     private static final float[] rotationMatrix = new float[16];
     private static final float[] orientation = new float[4];
     private static final Location GpsLocation = new Location("");
+    private final MapView mapView;
     private static float Heading;
-//    static public float Pitch;
-//    static public float Roll;
 
-    public Compass(Context context) {
+    public Compass(Context context, MapView mapView) {
+        this.mapView = mapView;
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         resume();
     }
@@ -72,6 +72,7 @@ public class Compass extends Service implements SensorEventListener {
         updateGeomagneticField();
     }
 
+    @SuppressWarnings("unused")
     public void pause() {
         sensorManager.unregisterListener(this);
     }
@@ -103,15 +104,14 @@ public class Compass extends Service implements SensorEventListener {
             // "orientation" has azimuth (Z axis angle relative to mag north), pitch, roll
             int prevHeading = (int) Heading;
             Heading = (float) (Math.toDegrees(orientation[0]));
-//            Pitch = (float) Math.toDegrees(orientation[1]);
-//            Roll = (float) Math.toDegrees(orientation[2]);
+            //          Get "Pitch" and "Roll" from elements 1 and 2 of the array
 
             Log.v("Mag %5.1f %5.1f %5.1f | Acc %5.1f %5.1f %5.1f | Mag deg %3.0f",
                     mag[0], mag[1], mag[2],
                     grav[0], grav[1], grav[2],
                     Heading);
             if ((int) Heading != prevHeading)
-                MapActivity.mapView.refresh(null);
+                mapView.refresh(null);
         }
     }
 

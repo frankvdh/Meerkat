@@ -19,10 +19,8 @@ import android.hardware.GeomagneticField;
 import androidx.annotation.NonNull;
 
 import com.meerkat.log.Log;
-import com.meerkat.measure.Height;
 import com.meerkat.measure.Position;
-import com.meerkat.measure.Speed;
-import com.meerkat.measure.VertSpeed;
+import com.meerkat.measure.Units;
 
 import java.io.ByteArrayInputStream;
 import java.util.Locale;
@@ -98,7 +96,7 @@ public class Traffic extends Gdl90Message {
         int p = b >> 4;
         priority = priorityLookup[p < Priority.values().length ? p : Priority.values().length - 1];
         checkCrc();
-        point = new Position("ADS-B", lat, lon, new Height((float) alt, Height.Units.FT), new Speed((float) hVel, Speed.Units.KNOTS), trueTrack(track, trackType, lat, lon, alt), new VertSpeed((float) vVel, VertSpeed.Units.FPM), crcValid, airborne, time);
+        point = new Position("ADS-B", lat, lon, Units.Height.FT.toM(alt), (float) Units.Speed.KNOTS.toMps(hVel), trueTrack(track, trackType, lat, lon, alt), (float) Units.VertSpeed.FPM.toMps(vVel), crcValid, airborne, time);
         Log.v(point.toString());
     }
 
@@ -120,11 +118,11 @@ public class Traffic extends Gdl90Message {
 
     @NonNull
     public String toString() {
-        VertSpeed vVel = point.getVVel();
+        double vVel = point.getVVel();
         return String.format(Locale.ENGLISH, "%c%c: %8s %s %s %s %03.0f %s %s NIC=%2d NAC=%2d %s %s %o",
                 ownShip ? 'O' : 'T', crcValidChar(),
-                callsign, point, point.getSpeedUnits().toString(),
-                vVel == null ? "----   " : String.format(Locale.ENGLISH, "%4f%s", vVel.value, vVel.units.label),
+                callsign, point, Units.Speed.KNOTS.toString(point.getSpeed()),
+                Units.VertSpeed.FPM.toString(vVel),
                 point.getTrack(),
                 priority, (alertStatus == 0 ? "No alert" : "Traffic Alert"), nic, nac, (extrapolated ? "Extrap" : "Report"),
                 addrType, participantAddr);

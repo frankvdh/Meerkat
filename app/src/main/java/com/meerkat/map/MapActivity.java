@@ -15,6 +15,7 @@ package com.meerkat.map;
 import static android.os.Environment.MEDIA_MOUNTED;
 import static com.meerkat.SettingsActivity.appendLogFile;
 import static com.meerkat.SettingsActivity.fileLog;
+import static com.meerkat.SettingsActivity.initToolbarDelayMilliS;
 import static com.meerkat.SettingsActivity.load;
 import static com.meerkat.SettingsActivity.port;
 import static com.meerkat.SettingsActivity.simulate;
@@ -26,9 +27,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.LayerDrawable;
-import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -36,11 +34,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Display;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.WindowInsets;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.WindowManager;
-import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -54,13 +50,13 @@ import com.meerkat.Gps;
 import com.meerkat.R;
 import com.meerkat.SettingsActivity;
 import com.meerkat.Simulator;
-import com.meerkat.databinding.ActivityFullscreenBinding;
+import com.meerkat.VehicleList;
+import com.meerkat.databinding.ActivityMapBinding;
 import com.meerkat.log.Log;
 import com.meerkat.log.LogActivity;
 import com.meerkat.wifi.PingComms;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -68,117 +64,34 @@ import java.util.Iterator;
  * Full-screen activity that shows and hides the status bar and navigation/system bar.
  */
 public class MapActivity extends AppCompatActivity {
-    /**
-     * Whether or not the system UI should be auto-hidden after
-     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
-     */
-    static final boolean AUTO_HIDE = true;
 
-    /**
-     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
-     * user interaction before hiding the system UI.
-     */
-    static final int AUTO_HIDE_DELAY_MILLIS = 5000;
-
-    /**
-     * Some older devices needs a small delay between UI widget updates
-     * and a change of the status and navigation bar.
-     */
-    private static final int UI_ANIMATION_DELAY = 300;
-    public static MapView mapView;
-    private View actionbarView;
-
-    final Handler hideHandler = new Handler(Looper.myLooper());
-    private boolean actionbarVisible;
-    final Runnable hideRunnable = this::hide;
     private static boolean firstRun = true;
     private Gps gps;
     private Compass compass;
     PingComms pingComms;
-
-    private void hide() {
-        // Hide UI first
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.hide();
-        }
-        actionbarView.setVisibility(View.GONE);
-        actionbarVisible = false;
-
-        // Schedule removal of the status and navigation bar after a small delay
-        hideHandler.removeCallbacks(showPart2);
-        hideHandler.postDelayed(hidePart2, UI_ANIMATION_DELAY);
-    }
-
-    private final Runnable hidePart2 = new Runnable() {
-        @SuppressLint("InlinedApi")
-        @Override
-        public void run() {
-            // Delayed removal of status and navigation bar
-            if (Build.VERSION.SDK_INT >= 30) {
-                mapView.getWindowInsetsController().hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-            } else {
-                // Note that some of these constants are new as of API 16 (Jelly Bean)
-                // and API 19 (KitKat). It is safe to use them, as they are inlined
-                // at compile-time and do nothing on earlier devices.
-                mapView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-            }
-        }
-    };
-
-    private void show() {
-        // Show the system bar
-        if (Build.VERSION.SDK_INT >= 30) {
-            mapView.getWindowInsetsController().show(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
-        } else {
-            mapView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
-        }
-        actionbarVisible = true;
-
-        // Schedule a runnable to display UI elements after a delay
-        hideHandler.removeCallbacks(hidePart2);
-        hideHandler.postDelayed(showPart2, UI_ANIMATION_DELAY);
-    }
-
-    private final Runnable showPart2 = new Runnable() {
-        @Override
-        public void run() {
-            // Delayed display of UI elements
-            ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.show();
-            }
-            actionbarView.setVisibility(View.VISIBLE);
-            if (AUTO_HIDE) {
-                delayedHide(AUTO_HIDE_DELAY_MILLIS);
-            }
-        }
-    };
+    private ActionBar actionBar;
+    public static VehicleList vehicleList;
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         load(getApplicationContext());
-        ActivityFullscreenBinding binding = ActivityFullscreenBinding.inflate(getLayoutInflater());
+        ActivityMapBinding binding = ActivityMapBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        mapView = binding.mapView;
-        actionbarVisible = true;
-        actionbarView = binding.fullscreenContentControls;
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-        binding.btnSettings.setOnTouchListener(touchListenerDelayHide);
-        binding.btnAircraftList.setOnTouchListener(touchListenerDelayHide);
-        binding.btnLog.setOnTouchListener(touchListenerDelayHide);
-        binding.btnQuit.setOnTouchListener(touchListenerDelayHide);
+        setSupportActionBar(findViewById(R.id.my_toolbar));
+        actionBar = getSupportActionBar();
+        assert actionBar != null: "Action bar not found";
+        // Disable the Up button
+        actionBar.setDisplayHomeAsUpEnabled(false);
 
-        Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+        showActionbar(initToolbarDelayMilliS);
+
+        Display display =
+                android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R ?
+                        this.getDisplay() :
+                        ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+
         int orientation = display.getRotation();
         if (orientation == 0) {
             Log.i("Portrait upright");
@@ -250,8 +163,8 @@ public class MapActivity extends AppCompatActivity {
             Log.level(Log.Level.D);
             Log.d("Permissions OK");
 
-            gps = new Gps((LocationManager) this.getSystemService(LOCATION_SERVICE));
-            compass = new Compass(getApplicationContext());
+            gps = new Gps(getApplicationContext(), binding.mapView);
+            compass = new Compass(getApplicationContext(), binding.mapView);
 
             Log.i("Connecting: %s", wifiName, port);
             if (wifiName == null) {
@@ -262,29 +175,13 @@ public class MapActivity extends AppCompatActivity {
                 Log.i("Starting Ping comms: %s %d", wifiName, port);
                 pingComms = new PingComms(getApplicationContext());
             }
+            vehicleList = new VehicleList(binding.mapView);
             firstRun = false;
         }
-
         CompassView compassView = binding.compassView;
-        TextView compassText = binding.compassText;
-        compassText.setTop(compassView.getTop());
-        compassText.setRight(compassView.getRight());
-        compassText.setLeft(compassView.getLeft());
-        compassText.setBottom(compassView.getBottom());
-        compassText.setTranslationX(135);
-        compassText.setTranslationY(135);
-        compassText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-    }
-
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-
-        // Wait briefly before hiding the UI controls are available.
-        delayedHide(10000);
-
-        Background background = new Background(findViewById(R.id.mapView), findViewById(R.id.compassView), findViewById(R.id.compassText), findViewById(R.id.scaleText));
-        mapView.layers.addLayer(background);
+        compassView.setMap(binding.mapView, binding.compassText);
+        Background background = new Background(binding.mapView, binding.compassView, binding.compassText, binding.scaleText);
+        binding.mapView.layers.addLayer(background);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -300,12 +197,7 @@ public class MapActivity extends AppCompatActivity {
 
         if (fileLog && Environment.getExternalStorageState().equals(MEDIA_MOUNTED)) {
             File logFile = new File(this.getExternalFilesDir(null), "meerkat.log");
-            try {
-                Log.useFileWriter(logFile, appendLogFile);
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
+            Log.useFileWriter(logFile, appendLogFile);
         }
     }
 
@@ -317,83 +209,87 @@ public class MapActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        Log.i("Destroy");
+        if (!isFinishing())
+            finish();
         pingComms.stop();
         gps.pause();
         super.onDestroy();
     }
 
-    private void toggle() {
-        if (actionbarVisible) {
-            hide();
-        } else {
-            show();
+    // If the back button is pressed (or swipe right->left), display the toolbar
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        //       Log.i("key code %d, vis %d", keyCode, actionbarView.getVisibility());
+        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+            if (actionBar.isShowing()) {
+                actionBar.hide();
+            } else {
+                showActionbar(SettingsActivity.toolbarDelayMilliS);
+            }
+            return false;
         }
+        return super.onKeyDown(keyCode, event);
     }
 
     /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
+     * Schedules a call to hide() in milliseconds, canceling any previously scheduled calls.
      */
-    View.OnTouchListener touchListenerDelayHide = (view, motionEvent) -> {
-        switch (motionEvent.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                if (AUTO_HIDE) {
-                    delayedHide(AUTO_HIDE_DELAY_MILLIS);
-                }
-                break;
-            case MotionEvent.ACTION_UP:
-                if (view.getId() == R.id.btnSettings) {
-                    Log.i("Click Settings");
-                    Intent taskIntent = new Intent(this, SettingsActivity.class);
-                    this.startActivity(taskIntent);
-                    return true;
-                }
-                if (view.getId() == R.id.btnAircraftList) {
-                    Log.i("Click Aircraft List");
-                    Intent taskIntent = new Intent(this, AircraftListActivity.class);
-                    this.startActivity(taskIntent);
-                    return true;
-                }
-                if (view.getId() == R.id.btnLog) {
-                    Log.i("Click Log");
-                    Intent taskIntent = new Intent(this, LogActivity.class);
-                    this.startActivity(taskIntent);
-                    return true;
-                }
-                if (view.getId() == R.id.btnQuit) {
-                    Log.i("Click Quit");
-                    finish();
-                    return true;
-                }
-                view.performClick();
-                break;
-            default:
-                break;
-        }
-        return false;
-    };
-
-    /**
-     * Schedules a call to hide() in delay milliseconds, canceling any
-     * previously scheduled calls.
-     */
-    private void delayedHide(int delayMillis) {
+    @SuppressWarnings("SameParameterValue")
+    void delayedHide(@SuppressWarnings("SameParameterValue") int delayMillis) {
         hideHandler.removeCallbacks(hideRunnable);
         hideHandler.postDelayed(hideRunnable, delayMillis);
     }
 
-    // If the back button is pressed (or swipe right->left), display the toolbar
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            Log.i("back button pressed");
-            if (AUTO_HIDE)
-                show();
-            else
-                toggle();
-            return true;
+    Handler hideHandler = new Handler(Looper.myLooper());
+    Runnable hideRunnable = new Runnable() {
+        @SuppressLint("InlinedApi")
+        @Override
+        public void run() {
+            actionBar.hide();
         }
-        return super.onKeyDown(keyCode, event);
+    };
+
+    void showActionbar(int visibleTime) {
+        actionBar.show();
+        delayedHide(visibleTime);
+    }
+
+    // Inflate the options menu when the user opens the menu for the first time
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.actionbar_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @SuppressLint("NonConstantResourceId")
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                Log.i("Click Settings");
+                startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+
+            case R.id.action_aircraft_list:
+                Log.i("Click Aircraft List");
+                startActivity(new Intent(this, AircraftListActivity.class));
+                return true;
+
+            case R.id.action_log:
+                Log.i("Click Log");
+                 startActivity(new Intent(this, LogActivity.class));
+                return true;
+
+            case R.id.action_quit:
+                Log.i("Click Quit");
+                this.finish();
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Let the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+        }
     }
 }

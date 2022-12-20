@@ -12,7 +12,6 @@
  */
 package com.meerkat.wifi;
 
-import static com.meerkat.SettingsActivity.port;
 import static com.meerkat.SettingsActivity.wifiName;
 
 import android.annotation.SuppressLint;
@@ -20,7 +19,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.ConnectivityManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.net.wifi.rtt.RangingRequest;
@@ -45,8 +43,7 @@ import java.util.List;
 
 public class WifiScanActivity extends AppCompatActivity implements ApListAdapter.ScanResultClickListener {
     private ApListAdapter myAdapter;
-    ArrayList<String> accessPoints;
-    RecyclerView apListView;
+    private ArrayList<String> accessPoints;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +58,7 @@ public class WifiScanActivity extends AppCompatActivity implements ApListAdapter
         Log.i("Scanning WiFi");
         wifiName = null;
         getApplicationContext().registerReceiver(wifiScanReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-        apListView = binding.apListView;
+        RecyclerView apListView = binding.apListView;
         // Improve performance if you know that changes in content do not change the layout size of the RecyclerView
         apListView.setHasFixedSize(true);
 
@@ -73,7 +70,7 @@ public class WifiScanActivity extends AppCompatActivity implements ApListAdapter
         scan();
     }
 
-    protected void scan() {
+    private void scan() {
         Log.i("Scanning WiFi");
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         boolean success = wifiManager.startScan();
@@ -87,13 +84,18 @@ public class WifiScanActivity extends AppCompatActivity implements ApListAdapter
         @SuppressLint("NotifyDataSetChanged")
         public void onReceive(Context context, Intent intent) {
             if (intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)) {
+                // success
                 WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
                 @SuppressLint("MissingPermission") List<ScanResult> scanResults = wifiManager.getScanResults();
                 Log.i("%d APs discovered.", scanResults.size());
                 // User to select from available Wifi networks
                 for (ScanResult scanResult : scanResults) {
-                    if (scanResult.SSID.isEmpty()) continue;
-                    accessPoints.add(scanResult.SSID);
+                    @SuppressWarnings("RegExpRedundantEscape")
+                    String ssid = (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU ?
+                            String.valueOf(scanResult.getWifiSsid()) :
+                            scanResult.SSID).replaceAll("\\\"", "");
+                    if (ssid.isEmpty()) continue;
+                    accessPoints.add(ssid);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                         if (accessPoints.size() >= RangingRequest.getMaxPeers()) break;
                     }
@@ -123,7 +125,7 @@ public class WifiScanActivity extends AppCompatActivity implements ApListAdapter
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    View.OnTouchListener clickRescan = (view, motionEvent) -> {
+ private final View.OnTouchListener clickRescan = (view, motionEvent) -> {
         if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
             Log.i("Click Rescan");
             myAdapter.clear();

@@ -12,28 +12,31 @@
  */
 package com.meerkat.map;
 
+import static com.meerkat.SettingsActivity.dangerRadiusMetres;
 import static com.meerkat.SettingsActivity.displayOrientation;
 import static com.meerkat.SettingsActivity.keepScreenOn;
-import static com.meerkat.SettingsActivity.screenWidth;
+import static com.meerkat.SettingsActivity.screenWidthMetres;
+import static com.meerkat.SettingsActivity.screenYPosPercent;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.Icon;
 import android.graphics.drawable.LayerDrawable;
 import android.util.AttributeSet;
 import android.view.ScaleGestureDetector;
-import android.view.View;
 
 import androidx.annotation.Nullable;
 
 import com.meerkat.Compass;
 import com.meerkat.Gps;
-import com.meerkat.R;
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
-import com.meerkat.measure.Polar;
 import com.meerkat.measure.Position;
 
 public class MapView extends androidx.appcompat.widget.AppCompatImageView {
@@ -41,31 +44,41 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     public enum DisplayOrientation {NorthUp, TrackUp, HeadingUp}
 
     public final LayerDrawable layers;
-    final float defaultScaleFactor;
-    float scaleFactor;
+    final float defaultPixelsPerMetre, minPixelsPerMetre;
+    float pixelsPerMetre;
     // Used to detect pinch zoom gesture.
-    private ScaleGestureDetector scaleGestureDetector;
+    private final ScaleGestureDetector scaleGestureDetector = new ScaleGestureDetector(getContext(), new PinchListener(this));
 
     public MapView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         Log.d("createView");
         setKeepScreenOn(keepScreenOn);
-        defaultScaleFactor = (float) getWidth(getContext()) / screenWidth;
+        // Dispatch activity on touch event to the scale gesture detector.
+        OnTouchListener handleTouch = (view, event) -> {
+            this.performClick();
+            return scaleGestureDetector.onTouchEvent(event);
+        };
+        setOnTouchListener(handleTouch);
+        // Attach a pinch zoom listener to the map view
+        defaultPixelsPerMetre = (float) getWidth(getContext()) / screenWidthMetres;
+        minPixelsPerMetre = (float) Math.min(getHeight(getContext())*screenYPosPercent/100, getWidth(getContext()) /2) / dangerRadiusMetres;
+        pixelsPerMetre = defaultPixelsPerMetre;
         for (var emitterType : Gdl90Message.Emitter.values()) {
-            emitterType.bitmap = AircraftLayer.loadIcon(getContext(), emitterType.iconId);
+            emitterType.bitmap = loadIcon(getContext(), emitterType.iconId);
         }
         layers = new LayerDrawable(new Drawable[]{});
         setImageDrawable(layers);
-
-        // Attach a pinch zoom listener to the map view
-        scaleGestureDetector = new ScaleGestureDetector(getContext(), new PinchListener(this));
         Log.d("finished creating");
-        setOnTouchListener(touchListener);
     }
 
     //get width screen
     public static int getWidth(Context context) {
         return context.getResources().getDisplayMetrics().widthPixels;
+    }
+
+    //get width screen
+    public static int getHeight(Context context) {
+        return context.getResources().getDisplayMetrics().heightPixels;
     }
 
     static float displayRotation() {
@@ -74,20 +87,31 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         return 0;
     }
 
-
-    public Point screenPoint(Position p) {
-        final Polar spPolar = new Polar();
-        Gps.getPolar(p, spPolar);
-        double b = Position.bearingToRad(spPolar.bearing - displayRotation());
-        // new point is relative to (0, 0) of the canvas, which is at the ownShip position
-        return new Point((int) (cos(b) * spPolar.distance.value * scaleFactor), (int) (-sin(b) * spPolar.distance.value * scaleFactor));
+    static private Bitmap loadIcon(Context context, int iconId) {
+        Icon icon = Icon.createWithResource(context, iconId);
+        Drawable drawable = icon.loadDrawable(context);
+        if (drawable instanceof BitmapDrawable) {
+            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+            return bitmapDrawable.getBitmap();
+        }
+        if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
+            return ((BitmapDrawable) Icon.createWithResource(context, Gdl90Message.Emitter.Unknown.iconId).loadDrawable(context)).getBitmap();
+        }
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        return bitmap;
     }
 
-    private final View.OnTouchListener handleTouch = (view, event) -> {
-        this.performClick();
-        // Dispatch activity on touch event to the scale gesture detector.
-        return scaleGestureDetector.onTouchEvent(event);
-    };
+    // Avoid constructing
+    public Point screenPoint(Position p) {
+        var distance = Gps.distanceTo(p);
+        var bearing = Gps.bearingTo(p);
+        double b = Position.bearingToRad(bearing - displayRotation());
+        // new point is relative to (0, 0) of the canvas, which is at the ownShip position
+        return new Point((int) (cos(b) * distance * pixelsPerMetre), (int) (-sin(b) * distance * pixelsPerMetre));
+    }
 
     public void refresh(AircraftLayer layer) {
         if (layer == null)
@@ -110,27 +134,9 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
             // Scale the image with pinch zoom value.
-            scaleFactor *= detector.getScaleFactor() * mapView.getScaleX();
+            pixelsPerMetre *= detector.getScaleFactor() * mapView.getScaleX();
             refresh(null);
             return true;
         }
-    }
-
-    /**
-     * Touch listener to use for in-layout UI controls to delay hiding the
-     * system UI. This is to prevent the jarring behavior of controls going away
-     * while interacting with activity UI.
-     */
-    final View.OnTouchListener touchListener = (view, motionEvent) -> performClick();
-
-    public boolean performClick() {
-        super.performClick();
-        if (displayOrientation == DisplayOrientation.HeadingUp)
-            displayOrientation = DisplayOrientation.TrackUp;
-        else if (displayOrientation == DisplayOrientation.TrackUp)
-            displayOrientation = DisplayOrientation.NorthUp;
-        else displayOrientation = DisplayOrientation.HeadingUp;
-        refresh(null);
-        return true;
     }
 }

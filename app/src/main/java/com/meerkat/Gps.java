@@ -14,11 +14,11 @@ package com.meerkat;
 
 import static com.meerkat.SettingsActivity.minGpsDistanceChangeMetres;
 import static com.meerkat.SettingsActivity.minGpsUpdateIntervalSeconds;
-
 import static java.lang.Float.NaN;
 
 import android.annotation.SuppressLint;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
@@ -27,12 +27,10 @@ import android.os.IBinder;
 import android.widget.Toast;
 
 import com.meerkat.log.Log;
-import com.meerkat.map.MapActivity;
-import com.meerkat.measure.Polar;
-import com.meerkat.measure.Position;
+import com.meerkat.map.MapView;
 
 public class Gps extends Service implements LocationListener {
-
+private final MapView mapView;
     public static volatile boolean isEnabled;
 
     private static final Location location = new Location("gps");
@@ -40,8 +38,9 @@ public class Gps extends Service implements LocationListener {
     // Declaring a Location Manager
     private final LocationManager locationManager;
 
-    public Gps(LocationManager locationManager) {
-        this.locationManager = locationManager;
+    public Gps(Context context, MapView mapView) {
+        this.mapView = mapView;
+        this.locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
         if (SettingsActivity.simulate)
             return;
         resume();
@@ -53,10 +52,10 @@ public class Gps extends Service implements LocationListener {
         }
     }
 
-    public static float getAltitude() {
+    public static double getAltitude() {
         synchronized (location) {
             if (location.hasAltitude())
-                return (float) location.getAltitude();
+                return location.getAltitude();
         }
         return NaN;
     }
@@ -85,12 +84,6 @@ public class Gps extends Service implements LocationListener {
     public static void setLocation(Location copy) {
         synchronized (location) {
             location.set(copy);
-        }
-    }
-
-    public static void getPolar(Position other, Polar p) {
-        synchronized (location) {
-            p.set(location, other);
         }
     }
 
@@ -131,7 +124,7 @@ public class Gps extends Service implements LocationListener {
             Gps.location.set(location);
         }
         Compass.updateGeomagneticField();
-        MapActivity.mapView.refresh(null);
+        mapView.refresh(null);
     }
 
     @Override

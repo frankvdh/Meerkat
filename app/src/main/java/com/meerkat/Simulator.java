@@ -16,12 +16,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
-import com.meerkat.measure.Distance;
-import com.meerkat.measure.Height;
-import com.meerkat.measure.Polar;
+import com.meerkat.map.MapActivity;
 import com.meerkat.measure.Position;
-import com.meerkat.measure.Speed;
-import com.meerkat.measure.VertSpeed;
+import com.meerkat.measure.Units;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
@@ -29,7 +26,7 @@ import java.util.concurrent.ScheduledFuture;
 public class Simulator {
 
     private static final Position initialPos = new Position("gps", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0,
-            new Height(5000f, Height.Units.FT), new Speed(100f, Speed.Units.KNOTS), 350f, new VertSpeed(0f, VertSpeed.Units.FPM), true, true, System.currentTimeMillis());
+            Units.Height.FT.toM(5000f), Units.Speed.KNOTS.toMps(100d), 350f, Units.VertSpeed.FPM.toMps(0f), true, true, System.currentTimeMillis());
 
     private int nextActionTime;
     private int actionIndex;
@@ -41,8 +38,8 @@ public class Simulator {
     ScheduledFuture<?> thread;
 
     private static final Flight ownShip =
-            new Flight("ownship", Gdl90Message.Emitter.Light, new Polar(new Distance(0f, Distance.Units.NM), 0, new Height(0f, Height.Units.FT)),
-                    new Speed(100f, Speed.Units.KNOTS), 20, true,
+            new Flight("ownship", Gdl90Message.Emitter.Light, 0, 0, 0,
+                    100f, 20, true,
                     new Action[]{
                             new Action(0, 0, 0, 6, false),
                             new Action(0, 0, 1000, 12, true),
@@ -52,8 +49,8 @@ public class Simulator {
                     });
 
     private static final Simulator[] traffic = {
-            new Simulator(new Flight("test", Gdl90Message.Emitter.Light, new Polar(new Distance(5f, Distance.Units.NM), 0, new Height(0f, Height.Units.FT)),
-                    new Speed(100f, Speed.Units.KNOTS), 0, false,
+            new Simulator(new Flight("test", Gdl90Message.Emitter.Light, (float) Units.Distance.NM.toM(5), 0, 0f,
+                    100f, 0, false,
                     new Action[]{
                             new Action(0, 0, 0, 6, false),
                             new Action(0, 0, 1000, 12, true),
@@ -62,50 +59,50 @@ public class Simulator {
                             new Action(0, -360, -10000, 120, true),
                     }), 5, false),
 
-            new Simulator(new Flight("ZK-HVY", Gdl90Message.Emitter.Heavy, new Polar(new Distance(20f, Distance.Units.NM), 225, new Height(40000f, Height.Units.FT)),
-                    new Speed(500f, Speed.Units.KNOTS), 20, true,
+            new Simulator(new Flight("ZK-HVY", Gdl90Message.Emitter.Heavy, (float) Units.Distance.NM.toM(20), 225, (float) Units.Height.FT.toM(40000d),
+                    500f, 20, true,
                     new Action[]{
                             new Action(0, 0, 0, 300, true),
                     }), 10, false),
 
-            new Simulator(new Flight("ANZ123", Gdl90Message.Emitter.Small, new Polar(new Distance(10f, Distance.Units.NM), 215, new Height(20000f, Height.Units.FT)),
-                    new Speed(250f, Speed.Units.KNOTS), 20, true,
+            new Simulator(new Flight("ANZ123", Gdl90Message.Emitter.Small, (float) Units.Distance.NM.toM(10), 215, (float) Units.Height.FT.toM(20000f),
+                    250, 20, true,
                     new Action[]{
                             new Action(0, 0, 0, 300, true),
                     }), 10, false),
 
-            new Simulator(new Flight("ZK-GLI", Gdl90Message.Emitter.Glider, new Polar(new Distance(15f, Distance.Units.NM), 15, new Height(5000f, Height.Units.FT)),
-                    new Speed(100f, Speed.Units.KNOTS), 180, true,
+            new Simulator(new Flight("ZK-GLI", Gdl90Message.Emitter.Glider, (float) Units.Distance.NM.toM(15), 15, (float) Units.Height.FT.toM(5000f),
+                    100f, 180, true,
                     new Action[]{
                             new Action(0, -1080, -9000, 300, true),
                             new Action(-100, 0, 0, 120, true),
                             new Action(0, 0, 0, 60, false),
                     }), 5, false),
 
-            new Simulator(new Flight("ZK-HEL", Gdl90Message.Emitter.Rotor, new Polar(new Distance(15f, Distance.Units.NM), -15, new Height(0f, Height.Units.FT)),
-                    new Speed(0f, Speed.Units.KNOTS), 180, true,
+            new Simulator(new Flight("ZK-HEL", Gdl90Message.Emitter.Rotor, (float) Units.Distance.NM.toM(15), -15, 0,
+                    0, 180, true,
                     new Action[]{
                             new Action(0, 0, 1500, 100, true),
                             new Action(150, 90, 0, 20, true),
                             new Action(0, 0, 0, 60, true),
                     }), 15, false),
 
-            new Simulator(new Flight("UAV", Gdl90Message.Emitter.UAV, new Polar(new Distance(15f, Distance.Units.NM), -30, new Height(0f, Height.Units.FT)),
-                    new Speed(0f, Speed.Units.KNOTS), 0, true,
+            new Simulator(new Flight("UAV", Gdl90Message.Emitter.UAV, (float) Units.Distance.NM.toM(15), -30, 0,
+                    0, 0, true,
                     new Action[]{
                             new Action(10, 0, 500, 10, true),
                             new Action(0, 0, -500, 10, true),
                     }), 5, false),
 
-            new Simulator(new Flight("UAV", Gdl90Message.Emitter.UAV, new Polar(new Distance(15f, Distance.Units.NM), -30, new Height(0f, Height.Units.FT)),
-                    new Speed(0f, Speed.Units.KNOTS), 0, true,
+            new Simulator(new Flight("UAV", Gdl90Message.Emitter.UAV, (float) Units.Distance.NM.toM(15), -30, 0,
+                    0, 0, true,
                     new Action[]{
                             new Action(10, 0, 500, 10, true),
                             new Action(0, 0, -500, 10, true),
                     }), 120, false),
 
-            new Simulator(new Flight("UAW", Gdl90Message.Emitter.UAV, new Polar(new Distance(16f, Distance.Units.NM), -30, new Height(0f, Height.Units.FT)),
-                    new Speed(0f, Speed.Units.KNOTS), 0, true,
+            new Simulator(new Flight("UAW", Gdl90Message.Emitter.UAV, (float) Units.Distance.NM.toM(16), -30, 0,
+                    0, 0, true,
                     new Action[]{
                             new Action(10, 0, 500, 100, true),
                             new Action(0, 0, -500, 60, true),
@@ -146,15 +143,14 @@ public class Simulator {
             flight.position.setVVel(action.climb);
         }
         flight.position.setCrcValid(true);
-        flight.position.setSpeed(new Speed(flight.position.getSpeedUnits().value + action.accel, Speed.Units.KNOTS));
+        flight.position.setSpeed((float) (flight.position.getSpeed() + action.accel));
         flight.position.setTrack((flight.position.getTrack() + action.turn) % 360);
         flight.position.setTime(System.currentTimeMillis());
         if (isGps)
             Gps.setLocation(flight.position);
         else {
-            Polar p = new Polar(new Distance(flight.position.getSpeedMps(), Distance.Units.M), flight.position.getTrack(), new Height(flight.position.getVVel().value * flight.position.getVVel().units.factor, Height.Units.M));
-            flight.position.moveBy(p);
-            VehicleList.vehicleList.upsert(flight.callsign, flight.id, flight.position.linearPredict(1000), flight.emitterType);
+            flight.position.moveBy(1000);
+            MapActivity.vehicleList.upsert(flight.callsign, flight.id, flight.position, flight.emitterType);
         }
     }
 
@@ -166,31 +162,31 @@ public class Simulator {
         final Action[] actions;
         static int idNum = 0;
 
-        Flight(String callsign, Gdl90Message.Emitter emitterType, Polar p, Speed speed, float track, boolean airborne, Action[] actions) {
+        Flight(String callsign, Gdl90Message.Emitter emitterType, float distance, float bearing, float altDifference, float speedKnots, float track, boolean airborne, Action[] actions) {
             this.id = idNum++;
             this.callsign = callsign;
             this.emitterType = emitterType;
             this.actions = actions;
-            position = new Position(initialPos, p);
-            position.setSpeed(speed);
+            position = new Position(initialPos.getProvider());
+            position.setRelative(initialPos, distance, bearing, altDifference, 0);
+            position.setSpeed((float) Units.Speed.KNOTS.toMps(speedKnots));
             position.setTrack(track);
-            position.setVVel(new VertSpeed(0f, VertSpeed.Units.FPM));
+            position.setVVel(0f);
             position.setAirborne(airborne);
         }
-
     }
 
     static class Action {
-        final float accel;
+        final double accel;
         final float turn;
-        final VertSpeed climb;
+        final double climb;
         final int duration;
         final boolean airborne;
 
-        Action(float accel, float turn, float climb, int dur, boolean airborne) {
-            this.accel = accel / dur;
+        Action(float accelKnots, float turn, float climb, int dur, boolean airborne) {
+            this.accel = Units.Speed.KNOTS.toMps(accelKnots) / dur;
             this.turn = turn / dur;
-            this.climb = new VertSpeed(climb * 60 / dur, VertSpeed.Units.FPM);
+            this.climb = Units.VertSpeed.FPM.toMps(climb * 60 / dur);
             duration = dur;
             this.airborne = airborne;
         }

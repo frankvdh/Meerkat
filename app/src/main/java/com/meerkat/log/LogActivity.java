@@ -15,7 +15,6 @@ package com.meerkat.log;
 import static com.meerkat.SettingsActivity.keepScreenOn;
 import static com.meerkat.SettingsActivity.showLog;
 
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -24,9 +23,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.meerkat.databinding.ActivityLogBinding;
-import com.meerkat.log.Log;
-
-import java.util.concurrent.ScheduledFuture;
 
 public class LogActivity extends AppCompatActivity {
 
@@ -50,27 +46,24 @@ public class LogActivity extends AppCompatActivity {
 
     public void append(String str) {
         if (textView == null) return;
-        synchronized (textView) {
-            if (textView.getLineCount() > 100) {
+        // Because this always runs on the UI thread, there's no need to synchronize
+        runOnUiThread(() -> {
+            if (textView.getLineCount() >= textView.getHeight() / textView.getLineHeight()) {
                 String text = textView.getText().toString();
-                String finalText = text.substring(text.indexOf('\n') + 1);
-                runOnUiThread(() -> {
-                    if (textView != null) textView.setText(finalText);
-                });
+                textView.setText(text.substring(text.indexOf('\n') + 1));
             }
-            runOnUiThread(() -> {
-                if (textView != null) textView.append(str + "\r\n");
-            });
-        }
+            textView.append(str + "\r\n");
+        });
     }
 
+    @SuppressWarnings("unused")
     public void clear() {
         runOnUiThread(() -> {
             if (textView != null) textView.setText("");
         });
     }
 
-    // The "Home" button is clicked
+    // The "back" button is clicked
     @Override
     public boolean onSupportNavigateUp() {
         finish();

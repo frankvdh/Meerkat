@@ -17,7 +17,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
-import com.meerkat.map.MapActivity;
+import com.meerkat.map.MapView;
 import com.meerkat.measure.Position;
 
 import java.util.Collection;
@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.concurrent.Executors;
 
 public class VehicleList extends HashMap<Integer, Vehicle> {
-    static public VehicleList vehicleList = new VehicleList();
+    private final MapView mapView;
 
     private void purge() {
         long now = System.currentTimeMillis();
@@ -38,15 +38,16 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
                 if (age > purgeSeconds * 1000L) {
                     Log.i("Purge: %s, %d",entry.getValue().callsign, age);
                     entry.getValue().layer.setVisible(false, false);
-                    MapActivity.mapView.layers.invalidateDrawable(entry.getValue().layer);
+                    mapView.layers.invalidateDrawable(entry.getValue().layer);
                     iterator.remove();
                 }
             }
         }
      }
 
-    public VehicleList() {
+    public VehicleList(MapView mapView) {
         super();
+        this.mapView = mapView;
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::purge, 1, 1, MINUTES);
     }
 
@@ -55,10 +56,10 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         if (v != null) {
             v.update(point, callsign, emitterType);
         } else {
-            v = new Vehicle(participantAddr, callsign, point, emitterType);
+            v = new Vehicle(participantAddr, callsign, point, emitterType, mapView);
             put(participantAddr, v);
         }
-        MapActivity.mapView.refresh(v.layer);
+        mapView.refresh(v.layer);
     }
 
     public Collection<Vehicle> getVehicles() {
@@ -67,13 +68,25 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         }
     }
 
-    static public Position getMaxDistance() {
-        if (vehicleList == null) return null;
-        synchronized (vehicleList) {
-            if (vehicleList.isEmpty()) return null;
+    public float getNearest() {
+        synchronized (this) {
+            if (this.isEmpty()) return Float.NaN;
+            float minDistance = 1e9f;
+            for (Vehicle v: this.values()) {
+                if (v.distance < minDistance) {
+                    minDistance = v.distance;
+                }
+            }
+            return minDistance;
+        }
+    }
+
+    public Position getMaxDistance() {
+        synchronized (this) {
+            if (this.isEmpty()) return null;
             float maxDistance = 0;
             Position furthest = null;
-            for (Vehicle v: vehicleList.values()) {
+            for (Vehicle v: this.values()) {
                 if (v.distance > maxDistance) {
                     maxDistance = v.distance;
                     furthest = v.lastValid;

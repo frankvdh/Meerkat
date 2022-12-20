@@ -12,7 +12,12 @@
  */
 package com.meerkat.map;
 
-import static com.meerkat.SettingsActivity.*;
+import static com.meerkat.SettingsActivity.autoZoom;
+import static com.meerkat.SettingsActivity.circleRadiusStepMetres;
+import static com.meerkat.SettingsActivity.dangerRadiusMetres;
+import static com.meerkat.SettingsActivity.displayOrientation;
+import static com.meerkat.SettingsActivity.distanceUnits;
+import static com.meerkat.SettingsActivity.screenYPosPercent;
 import static java.lang.Float.isNaN;
 
 import android.graphics.Canvas;
@@ -31,12 +36,13 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.meerkat.VehicleList;
+import com.meerkat.Gps;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
+import com.meerkat.measure.Units;
 
 public class Background extends Drawable {
-    private final Paint redPaint;
+    private final Paint dangerPaint;
     private final Paint circlePaint;
     private final MapView mapView;
     private final CompassView compassView;
@@ -50,16 +56,16 @@ public class Background extends Drawable {
         Paint whitePaint = new Paint();
         whitePaint.setColor(Color.WHITE);
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        redPaint = new Paint();
-        redPaint.setColor(Color.RED);
-        redPaint.setStrokeWidth(3);
-        redPaint.setStyle(Paint.Style.STROKE);
         circlePaint = new Paint();
         circlePaint.setStyle(Paint.Style.STROKE);
         circlePaint.setColor((Color.argb(64, 128, 128, 128)));
         Path path = new Path();
         path.addCircle(0, 0, 4, Path.Direction.CW);
         circlePaint.setPathEffect(new PathDashPathEffect(path, 16, 0, PathDashPathEffect.Style.TRANSLATE));
+        dangerPaint = new Paint();
+        dangerPaint.setColor(Color.RED);
+        dangerPaint.setStrokeWidth(3);
+        dangerPaint.setStyle(Paint.Style.STROKE);
     }
 
     @Override
@@ -74,15 +80,25 @@ public class Background extends Drawable {
         // All screen locations are relative to this point
         canvas.translate(xCentre, yCentre);
         canvas.drawLine(-xCentre, 0, xCentre, 0, circlePaint);
-        canvas.drawCircle(0, 0, dangerRadius * mapView.scaleFactor, redPaint);
 
         if (autoZoom) {
-            mapView.scaleFactor = getScaleFactor(canvas.getClipBounds(), VehicleList.getMaxDistance());
-            Log.v("Scale factor %.0f", mapView.scaleFactor);
+            mapView.pixelsPerMetre = getScaleFactor(canvas.getClipBounds(), MapActivity.vehicleList.getMaxDistance());
+            Log.d("Scale factor %.5f", mapView.pixelsPerMetre);
         }
-        float radiusStep = circleRadiusStep * mapView.scaleFactor;
-        for (float rad = radiusStep; rad < bounds.height(); rad += radiusStep) {
-            canvas.drawCircle(0, 0, rad, circlePaint);
+        float radiusStep = circleRadiusStepMetres * mapView.pixelsPerMetre;
+        Log.d("Radius step = %f", radiusStep);
+        if (radiusStep > 5)
+            for (float rad = radiusStep; rad < bounds.height(); rad += radiusStep) {
+                canvas.drawCircle(0, 0, rad, circlePaint);
+            }
+
+        float nearest = MapActivity.vehicleList.getNearest();
+        int thickness = isNaN(nearest) ? 0 : nearest <= dangerRadiusMetres ? 20 : (int) (dangerRadiusMetres * 20/nearest);
+        Log.d("Nearest = %s, %d, thickness = %d", Units.Distance.NM.toString(nearest), (int) (nearest * 20 / dangerRadiusMetres), thickness);
+        if (thickness > 0) {
+            dangerPaint.setStrokeWidth(thickness);
+            dangerPaint.setStyle(Paint.Style.STROKE);
+            canvas.drawCircle(0, 0, dangerRadiusMetres * mapView.pixelsPerMetre, dangerPaint);
         }
         float rot = -MapView.displayRotation();
         String compassLetter;
@@ -90,31 +106,45 @@ public class Background extends Drawable {
             rot = 0;
             compassLetter = "!";
         } else {
-            compassView.setRotation(rot);
             compassLetter = displayOrientation.toString().substring(0, 1);
         }
+        compassView.setRotation(rot);
         compassText.setText(compassLetter);
-        float screenDistance = bounds.width() / (mapView.scaleFactor * 2);
-        scaleText.setText(String.format(screenDistance < 10 ? "%.1f%s" : "%.0f%s", screenDistance, distanceUnits.label));
-        Log.v("finished draw background... rot = %.0f", rot);
+
+        //noinspection IntegerDivisionInFloatingPointContext
+        scaleText.setText(distanceUnits.toString((bounds.width() / 2) / mapView.pixelsPerMetre));
+        Log.v("finished draw background");
     }
 
+    /**
+     * Calculate scale factor in pixels per metre to place the furthest aircraft at the edge of the screen.
+     * No aircraft -> default scale factor set by user
+     * Furthest aircraft inside danger radius -> show entire danger radius.
+     *
+     * @param bounds   Bounds of visible window
+     * @param furthest Furthest aircraft position
+     * @return pixels per metre
+     */
     private float getScaleFactor(Rect bounds, Position furthest) {
-        if (furthest == null) return mapView.defaultScaleFactor;
+        if (furthest == null) return mapView.defaultPixelsPerMetre;
+        if (Gps.distanceTo(furthest) < dangerRadiusMetres)
+            return mapView.minPixelsPerMetre;
         Point aircraftPoint = mapView.screenPoint(furthest);
+        Log.d("Furthest %d %d %s", aircraftPoint.x, aircraftPoint.y, furthest);
 
         if (aircraftPoint.x == 0) {
-            if (aircraftPoint.y == 0) return mapView.defaultScaleFactor;
+            if (aircraftPoint.y == 0) return mapView.defaultPixelsPerMetre;
             // X coordinate is 0 -- Scale the Y coordinate to the edge of the screen
             if (aircraftPoint.y < 0)
-                return mapView.scaleFactor * (float) (bounds.top + 32) / aircraftPoint.y;
-            return mapView.scaleFactor * (float) (bounds.bottom - 32) / aircraftPoint.y;
+                return mapView.pixelsPerMetre * (float) (bounds.top + 32) / aircraftPoint.y;
+            return mapView.pixelsPerMetre * (float) (bounds.bottom - 32) / aircraftPoint.y;
         }
-        float xScale = (float) (aircraftPoint.x < 0 ? (bounds.left + 64) : (bounds.right - 64)) / aircraftPoint.x;
-        if (aircraftPoint.y == 0) return mapView.scaleFactor * xScale;
-        float yScale = (float) (aircraftPoint.y < 0 ? (bounds.top + 64) : (bounds.bottom - 64)) / aircraftPoint.y;
-        Log.v("xScale %f yScale %f", xScale, yScale);
-        return mapView.scaleFactor * (Math.min(xScale, yScale));
+        float xScale = (float) (aircraftPoint.x < 0 ? (bounds.left + 32) : (bounds.right - 32)) / aircraftPoint.x;
+        Log.d("xScale: %f", xScale);
+        if (aircraftPoint.y == 0) return mapView.pixelsPerMetre * xScale;
+        float yScale = (float) (aircraftPoint.y < 0 ? (bounds.top + 32) : (bounds.bottom - 32)) / aircraftPoint.y;
+        Log.d("xScale %f yScale %f", xScale, yScale);
+        return mapView.pixelsPerMetre * (Math.max(xScale, yScale));
     }
 
     @Override

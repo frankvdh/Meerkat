@@ -36,10 +36,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.meerkat.VehicleList;
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.gdl90.Traffic;
 import com.meerkat.log.Log;
+import com.meerkat.map.MapActivity;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -169,7 +169,7 @@ public class PingComms {
         private final RetryOnException retryHandler;
 
         private SocketThread() {
-            retryHandler = new RetryOnException(120, 1000);
+            retryHandler = new RetryOnException(10, 1000);
             byte[] recvBuffer = new byte[132];
             recvDatagram = new DatagramPacket(recvBuffer, recvBuffer.length);
             while (true) {
@@ -196,9 +196,11 @@ public class PingComms {
             }
         }
 
+        private boolean interrupted = false;
         @Override
         public void interrupt() {
             try {
+                interrupted = true;
                 retryHandler.disable();
                 recvSocket.close();
             } finally {
@@ -216,6 +218,9 @@ public class PingComms {
                     // Blocks until a message returns on this socket from a remote host.
                     recvSocket.receive(recvDatagram);
                 } catch (IOException e) {
+                    if (interrupted) {
+                        break;
+                    }
                     try {
                         retryHandler.exceptionOccurred();
                     } catch (Exception fatal) {
@@ -248,7 +253,7 @@ public class PingComms {
                         Traffic traffic1 = (Traffic) message;
                         if (traffic1.callsign.equals("********") || traffic1.point.getLatitude() == 0 && traffic1.point.getLongitude() == 0)
                             continue;
-                        VehicleList.vehicleList.upsert(traffic1.callsign, traffic1.participantAddr, traffic1.point, traffic1.emitterType);
+                        MapActivity.vehicleList.upsert(traffic1.callsign, traffic1.participantAddr, traffic1.point, traffic1.emitterType);
                     }
                 }
             }
@@ -267,6 +272,7 @@ public class PingComms {
         private int numRetries;
         private final int maxRetries, timeToWaitMS;
 
+        @SuppressWarnings("SameParameterValue")
         RetryOnException(int maxRetries, int timeToWaitMS) {
             this.numRetries = this.maxRetries = maxRetries;
             this.timeToWaitMS = timeToWaitMS;

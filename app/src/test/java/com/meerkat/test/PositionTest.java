@@ -12,14 +12,13 @@
  */
 package com.meerkat.test;
 
-import static com.meerkat.measure.Height.Units.FT;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static java.lang.Math.PI;
 
-import com.meerkat.measure.Height;
 import com.meerkat.measure.Position;
-import com.meerkat.measure.Speed;
-import com.meerkat.measure.VertSpeed;
+import com.meerkat.measure.Units;
 
 import junit.framework.TestCase;
 
@@ -59,7 +58,12 @@ public class PositionTest extends TestCase {
     }
 
     @Mock
-    Position marton;
+   static Position marton;
+    static {
+        marton  = new Position("TEST", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0, Units.Height.FT.toM(5000), 0L);
+        when(marton.getTime()).thenReturn(0L);
+        doNothing().when(marton).setTime(isA(Long.class));
+    }
     @Mock
     Position p1;
 
@@ -67,26 +71,28 @@ public class PositionTest extends TestCase {
     public void testLinearPredict() {
         long now = System.currentTimeMillis();
         when(marton.getTime()).thenReturn(now);
+        doNothing().when(marton).setTime(isA(Long.class));
         when(marton.getLatitude()).thenReturn(-(40 + 4 / 60.0 + 9 / 3600.0));
         when(marton.getLongitude()).thenReturn(175 + 22 / 60.0 + 42 / 3600.0);
-        when(marton.getAltitude()).thenReturn(5000d/3.28084);
-        when(marton.getSpeedMps()).thenReturn(0f);
-        when(marton.getSpeedUnits()).thenReturn(new Speed(100f, Speed.Units.KPH));
+        when(marton.getAltitude()).thenReturn(Units.Height.FT.toM(5000));
+        when(marton.getSpeed()).thenReturn(123f);
         when(marton.hasSpeed()).thenReturn(true);
         when(marton.getBearing()).thenReturn(0f);
         when(marton.hasBearing()).thenReturn(true);
-        when(marton.getVVel()).thenReturn(new VertSpeed(0f, VertSpeed.Units.FPM));
-        Position p = marton.linearPredict(3600000);
+        when(marton.getVVel()).thenReturn(0d);
+        Position p = new Position("test");
+        marton.linearPredict(3600000, p);
         Assert.assertEquals(40.96848700215959, p.getLatitude(), .0001);
         Assert.assertEquals( 175.37833333333333, p.getLongitude(), .0001);
         Assert.assertEquals(5000d/3.28084, p.getAltitude(), 0.1);
-        Assert.assertEquals(123d, p.getSpeedUnits().value, 0.1);
+        Assert.assertEquals(123d, p.getSpeed(), 0.1);
     }
 
     @Test
     public void testMovePoint() {
-        Position p = new Position("test", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0, new Height(5000f, FT),
-                new Speed(123f, Speed.Units.KNOTS), 0, new VertSpeed(0f, VertSpeed.Units.FPM), true, true, 0).linearPredict(3600000);
+        var p = new Position("test", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0, Units.Height.FT.toM(5000f),
+                Units.Speed.KNOTS.toMps(123f), 0, 0, true, true, 0);
+        p.moveBy(3600000);
         Assert.assertNotNull(p);
         Assert.assertEquals(-39.1698463311738, p.getLatitude(), .00001);
         Assert.assertEquals(175.37833333333333, p.getLongitude(), .00001);
@@ -94,11 +100,10 @@ public class PositionTest extends TestCase {
 
     @Test
     public void testHeightAbove() {
-        when(p1.getAlt()).thenReturn(new Height(4000f, FT));
-        when(marton.getAlt()).thenReturn(new Height(5000f, FT));
-        Height diff = Position.heightAbove(p1, marton);
-        Assert.assertEquals(-1000.0, diff.value , 0.1);
-        Assert.assertEquals("ft", diff.units.label);
+        when(p1.getAltitude()).thenReturn(Units.Height.FT.toM(4000d));
+        when(marton.getAltitude()).thenReturn(Units.Height.FT.toM(5000f));
+        var diff = Position.heightAbove(p1, marton);
+        Assert.assertEquals(Units.Height.FT.toM(-1000d), diff , 0.1);
     }
 
     @Test
