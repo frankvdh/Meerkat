@@ -36,7 +36,6 @@ import android.view.Display;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.WindowManager;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -169,15 +168,15 @@ public class MapActivity extends AppCompatActivity {
 
             gps = new Gps(getApplicationContext(), binding.mapView);
             compass = new Compass(getApplicationContext(), binding.mapView);
+            pingComms = new PingComms(getApplicationContext());
 
             Log.i("Connecting: %s", wifiName, port);
             if (wifiName == null) {
-                Intent taskIntent = new Intent(this, SettingsActivity.class);
-                this.startActivity(taskIntent);
+                this.startActivity(new Intent(this, SettingsActivity.class));
             } else {
                 // Already configured
                 Log.i("Starting Ping comms: %s %d", wifiName, port);
-                pingComms = new PingComms(getApplicationContext());
+                pingComms.start();
             }
             vehicleList = new VehicleList(binding.mapView);
             firstRun = false;
@@ -191,6 +190,7 @@ public class MapActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
     protected void onResume() {
+        Log.i("Resume");
         super.onResume();
         compass.resume();
         if (simulate) {
@@ -207,6 +207,7 @@ public class MapActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
+        Log.i("Pause");
         super.onPause();
         compass.pause();
     }

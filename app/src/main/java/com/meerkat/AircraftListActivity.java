@@ -79,7 +79,7 @@ public class AircraftListActivity extends AppCompatActivity {
                 String bearing;
                 String track;
                 float speed;
-               double vVel;
+                double vVel;
                 double alt;
                 synchronized (v.lastValid) {
                     distance = v.distance;
@@ -121,9 +121,7 @@ public class AircraftListActivity extends AppCompatActivity {
                 int finalJ = j;
                 runOnUiThread(() -> tableAircraft.removeViewAt(finalJ));
             }
-            synchronized (tableAircraft) {
-                tableAircraft.notifyAll();
-            }
+            tableAircraft.notifyAll();
         } catch (Exception ex) {
             Log.e("Exception: %s", ex.getMessage());
         }

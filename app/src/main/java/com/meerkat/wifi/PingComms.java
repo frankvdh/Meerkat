@@ -50,33 +50,25 @@ import java.net.DatagramSocket;
 import java.util.Arrays;
 
 public class PingComms extends Service {
-    private final SocketThread thread;
-    private Context context;
-public static PingComms instance;
+    private SocketThread thread;
+    private final Context context;
+    private String currentWifiName;
+    private int currentPort;
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     public PingComms(Context context) {
         this.context = context;
-        Log.i("constructor");
-        thread = new SocketThread();
+        Log.i("PingComms constructor");
         if (!connectToExistingWifi(wifiName))
             startWifi(wifiName, null);
-        instance = this;
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.Q)
-    // Used to restart the service if network is changed
-    public PingComms() {
-        Log.i("constructor");
-        thread = new SocketThread();
-        if (!connectToExistingWifi(wifiName))
-            startWifi(wifiName, null);
-        instance = this;
+        currentWifiName = wifiName;
+        currentPort = port;
     }
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+
         return null;
     }
 
@@ -165,17 +157,38 @@ public static PingComms instance;
 
     public void stop() {
         Log.i("Stopping Ping comms");
-        if (thread.isAlive())
+        if (thread.isAlive()) {
             thread.interrupt();
-        instance = null;
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                // Do nothing
+            }
+            thread = null;
+        }
     }
 
-    private void start() {
-        if (!thread.isAlive()) {
+    public void start() {
+        if (currentWifiName != null && (currentPort != port || !currentWifiName.equals(wifiName))) {
+            stop();
+            currentWifiName = wifiName;
+            currentPort = port;
+        }
+
+        if (thread == null) {
+            thread = new SocketThread();
             try {
                 thread.start();
             } catch (IllegalThreadStateException e) {
-                throw new RuntimeException("Thread illegal state");
+                throw new RuntimeException("Thread illegal state: " + e.getMessage());
+            }
+        }
+        if (!thread.isAlive()) {
+            Log.i("Starting Ping comms");
+            try {
+                thread.start();
+            } catch (IllegalThreadStateException e) {
+                throw new RuntimeException("Thread illegal state: " + e.getMessage());
             }
         }
     }
@@ -223,6 +236,7 @@ public static PingComms instance;
                 interrupted = true;
                 retryHandler.disable();
                 recvSocket.close();
+                recvSocket = null;
             } finally {
                 super.interrupt();
             }

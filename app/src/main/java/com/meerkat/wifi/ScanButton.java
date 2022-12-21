@@ -31,14 +31,12 @@ public class ScanButton extends androidx.appcompat.widget.AppCompatButton {
     final View.OnTouchListener touchListener = (view, motionEvent) -> {
         if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
             Log.i("Click %s", ((ScanButton)view).getText());
-            Intent taskIntent = new Intent(getContext(), WifiScanActivity.class);
-            getContext().startActivity(taskIntent);
-            view.performClick();
-            return true;
+            return view.performClick();
         }
-        view.performClick();
         return super.onTouchEvent(motionEvent);
     };
 
-    public boolean performClick() { return super.performClick();}
+    public boolean performClick() {
+        getContext().startActivity(new Intent(getContext(), WifiScanActivity.class));
+        return super.performClick();}
 }

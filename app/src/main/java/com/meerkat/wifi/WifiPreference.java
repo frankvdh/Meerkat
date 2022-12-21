@@ -4,7 +4,6 @@ import static com.meerkat.SettingsActivity.wifiName;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.View;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;

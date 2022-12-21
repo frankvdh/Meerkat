@@ -29,48 +29,48 @@ import com.meerkat.measure.Units;
 
 public class SettingsActivity extends AppCompatActivity {
     private static SharedPreferences prefs;
-    public static String wifiName;
-    public static int port;
-    public static boolean showLog;
-    public static boolean fileLog;
-    public static boolean appendLogFile;
-    public static com.meerkat.log.Log.Level logLevel;
-    public static boolean logRawMessages;
-    public static boolean logDecodedMessages;
-    public static boolean showLinearPredictionTrack;
-    public static boolean showPolynomialPredictionTrack;
-    public static int historySeconds;
-    public static int purgeSeconds;
+    public static volatile String wifiName;
+    public static volatile int port;
+    public static volatile boolean showLog;
+    public static volatile boolean fileLog;
+    public static volatile boolean appendLogFile;
+    public static volatile com.meerkat.log.Log.Level logLevel;
+    public static volatile boolean logRawMessages;
+    public static volatile boolean logDecodedMessages;
+    public static volatile boolean showLinearPredictionTrack;
+    public static volatile boolean showPolynomialPredictionTrack;
+    public static volatile int historySeconds;
+    public static volatile int purgeSeconds;
     // The minimum distance to change Updates in meters
-    public static int minGpsDistanceChangeMetres; // 10 meters
+    public static volatile int minGpsDistanceChangeMetres; // 10 meters
 
     // The minimum time between updates in milliseconds
-    public static int minGpsUpdateIntervalSeconds; // 10 seconds
+    public static volatile int minGpsUpdateIntervalSeconds; // 10 seconds
     /*
      * Time smoothing constant for low-pass filter 0 ≤ α ≤ 1 ; a smaller value basically means more smoothing
      * See: http://en.wikipedia.org/wiki/Low-pass_filter#Discrete-time_realization
      */
-    public static int predictionMilliS;
-    public static int polynomialPredictionStepMilliS, polynomialHistoryMilliS;
-    public static int gradientMaximumDiff;
-    public static int gradientMinimumDiff;
-    public static int screenYPosPercent;
-    public static float sensorSmoothingConstant;
-    public static int screenWidthMetres;
-    public static int circleRadiusStepMetres, dangerRadiusMetres;
-    public static Units.Distance distanceUnits;
-    public static Units.Height altUnits;
-    public static Units.Speed speedUnits;
-    public static Units.VertSpeed vertSpeedUnits;
-    public static boolean simulate;
-    public static String countryCode;
-    public static MapView.DisplayOrientation displayOrientation;
-    public static boolean keepScreenOn;
-    public static boolean autoZoom;
+    public static volatile int predictionMilliS;
+    public static volatile int polynomialPredictionStepMilliS, polynomialHistoryMilliS;
+    public static volatile int gradientMaximumDiff;
+    public static volatile int gradientMinimumDiff;
+    public static volatile int screenYPosPercent;
+    public static volatile float sensorSmoothingConstant;
+    public static volatile int screenWidthMetres;
+    public static volatile int circleRadiusStepMetres, dangerRadiusMetres;
+    public static volatile Units.Distance distanceUnits;
+    public static volatile Units.Height altUnits;
+    public static volatile Units.Speed speedUnits;
+    public static volatile Units.VertSpeed vertSpeedUnits;
+    public static volatile boolean simulate;
+    public static volatile String countryCode;
+    public static volatile MapView.DisplayOrientation displayOrientation;
+    public static volatile boolean keepScreenOn;
+    public static volatile boolean autoZoom;
     /**
      * The number of milliseconds to wait after user interaction before hiding the system UI.
      */
-    public static int toolbarDelayMilliS, initToolbarDelayMilliS;
+    public static volatile int toolbarDelayMilliS, initToolbarDelayMilliS;
 
     public static void load(Context context) {
         String currentVersionName = BuildConfig.VERSION_NAME;
@@ -218,13 +218,11 @@ public class SettingsActivity extends AppCompatActivity {
 
     // The "Home" button is clicked
     @Override
-    public boolean onSupportNavigateUp() {
+    public void onDestroy() {
 
         load(getApplicationContext());
-        // Close Settings activity which returns to the Map activity
-        finish();
-        return super.onSupportNavigateUp();
-    }
+        super.onDestroy();
+     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
 

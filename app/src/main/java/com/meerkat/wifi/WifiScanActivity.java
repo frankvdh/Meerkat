@@ -114,16 +114,12 @@ public class WifiScanActivity extends AppCompatActivity implements ApListAdapter
         wifiName = scanResult;
         Log.d("onScanResultItemClick(): ssid: %s", wifiName);
 
-        // User has selected a Wifi SSID -- save it for future use, and connect to it
+        // User has selected a Wifi SSID -- save it for future use
         SettingsActivity.save();
-        Log.i("Connecting to " + wifiName);
-        Context context = getApplicationContext();
-        if (PingComms.instance != null) {
-            PingComms.instance.stop();
-            Log.i("Starting Ping comms");
-        }
-        context.startService(new Intent(context, PingComms.class));
+        Log.i("Wifi changed to %s", wifiName);
+        // Force comms to stop so that port is released
         finish();
+        // When MapActivity reloads, it will start PingComms up again with the new network
     }
 
     @SuppressLint("ClickableViewAccessibility")

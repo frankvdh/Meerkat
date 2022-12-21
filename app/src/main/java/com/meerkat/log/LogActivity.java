@@ -27,7 +27,7 @@ import com.meerkat.databinding.ActivityLogBinding;
 public class LogActivity extends AppCompatActivity {
 
     private TextView textView;
-
+    private int numLines;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,13 +42,14 @@ public class LogActivity extends AppCompatActivity {
         textView.setGravity(Gravity.START);
         if (showLog) Log.useViewLogWriter(this);
         textView.setKeepScreenOn(keepScreenOn);
+        numLines = getApplicationContext().getResources().getDisplayMetrics().heightPixels / textView.getLineHeight();
     }
 
     public void append(String str) {
         if (textView == null) return;
         // Because this always runs on the UI thread, there's no need to synchronize
         runOnUiThread(() -> {
-            if (textView.getLineCount() >= textView.getHeight() / textView.getLineHeight()) {
+            if (textView.getLineCount() >= numLines) {
                 String text = textView.getText().toString();
                 textView.setText(text.substring(text.indexOf('\n') + 1));
             }
