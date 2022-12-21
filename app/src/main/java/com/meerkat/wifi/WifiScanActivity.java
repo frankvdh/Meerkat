@@ -25,7 +25,7 @@ import android.net.wifi.rtt.RangingRequest;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.MotionEvent;
-import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
@@ -118,20 +118,25 @@ public class WifiScanActivity extends AppCompatActivity implements ApListAdapter
         SettingsActivity.save();
         Log.i("Connecting to " + wifiName);
         Context context = getApplicationContext();
-        context.stopService(new Intent(context, PingComms.class));
-        Log.i("Starting Ping comms");
+        if (PingComms.instance != null) {
+            PingComms.instance.stop();
+            Log.i("Starting Ping comms");
+        }
         context.startService(new Intent(context, PingComms.class));
         finish();
     }
 
     @SuppressLint("ClickableViewAccessibility")
- private final View.OnTouchListener clickRescan = (view, motionEvent) -> {
+ private final Button.OnTouchListener clickRescan = (view, motionEvent) -> {
         if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
             Log.i("Click Rescan");
             myAdapter.clear();
             scan();
+            view.performClick();
             return true;
         }
-        return false;
+        view.performClick();
+        return super.onTouchEvent(motionEvent);
     };
+
 }

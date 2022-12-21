@@ -30,12 +30,15 @@ public class ScanButton extends androidx.appcompat.widget.AppCompatButton {
     @SuppressLint("ClickableViewAccessibility")
     final View.OnTouchListener touchListener = (view, motionEvent) -> {
         if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
-            Log.i("Click Scan");
+            Log.i("Click %s", ((ScanButton)view).getText());
             Intent taskIntent = new Intent(getContext(), WifiScanActivity.class);
             getContext().startActivity(taskIntent);
+            view.performClick();
             return true;
         }
-        return false;
+        view.performClick();
+        return super.onTouchEvent(motionEvent);
     };
 
+    public boolean performClick() { return super.performClick();}
 }

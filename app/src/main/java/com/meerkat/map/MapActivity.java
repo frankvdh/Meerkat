@@ -36,6 +36,7 @@ import android.view.Display;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -79,12 +80,15 @@ public class MapActivity extends AppCompatActivity {
         load(getApplicationContext());
         ActivityMapBinding binding = ActivityMapBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        setSupportActionBar(findViewById(R.id.my_toolbar));
+        // get generic toolbar
+        setSupportActionBar(findViewById(R.id.toolbar));
         actionBar = getSupportActionBar();
         assert actionBar != null: "Action bar not found";
-        // Disable the Up button
-        actionBar.setDisplayHomeAsUpEnabled(false);
 
+        // Set up custom layout
+//        actionBar.setCustomView(R.layout.actionbar_layout);
+  //      actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+    //    actionBar.setDisplayShowCustomEnabled(true);
         showActionbar(initToolbarDelayMilliS);
 
         Display display =

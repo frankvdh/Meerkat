@@ -14,15 +14,16 @@
     android:title="@string/log"
     app:showAsAction="ifRoom"/>
 
+
+    <!-- Settings, should always be in the overflow -->
+    <item android:id="@+id/action_settings"
+        android:title="@string/settings"
+        app:showAsAction="ifRoom"/>
+
     <item
         android:id="@+id/action_quit"
         android:icon="@drawable/ic_quit"
         android:title="@string/quit"
         app:showAsAction="always"/>
-
-    <!-- Settings, should always be in the overflow -->
-    <item android:id="@+id/action_settings"
-        android:title="@string/settings"
-        app:showAsAction="never"/>
 
 </menu>

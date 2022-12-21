@@ -10,7 +10,8 @@
             androidx:defaultValue="4000"
             androidx:key="port"
             androidx:persistent="true"
-            androidx:title="Port" />
+            androidx:title="Port"
+            androidx:useSimpleSummaryProvider="true" />
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory

@@ -17,6 +17,7 @@ import static com.meerkat.SettingsActivity.logRawMessages;
 import static com.meerkat.SettingsActivity.port;
 import static com.meerkat.SettingsActivity.wifiName;
 
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -31,6 +32,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Build;
+import android.os.IBinder;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,9 +49,10 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.Arrays;
 
-public class PingComms {
-    private final Context context;
+public class PingComms extends Service {
     private final SocketThread thread;
+    private Context context;
+public static PingComms instance;
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     public PingComms(Context context) {
@@ -58,27 +61,41 @@ public class PingComms {
         thread = new SocketThread();
         if (!connectToExistingWifi(wifiName))
             startWifi(wifiName, null);
+        instance = this;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
+    // Used to restart the service if network is changed
+    public PingComms() {
+        Log.i("constructor");
+        thread = new SocketThread();
+        if (!connectToExistingWifi(wifiName))
+            startWifi(wifiName, null);
+        instance = this;
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     @RequiresApi(api = Build.VERSION_CODES.Q)
     public boolean connectToExistingWifi(String ssId) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = cm.getActiveNetworkInfo();
-        if (activeNetworkInfo != null && activeNetworkInfo.isConnected()) {
-            final WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-            final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
-            if (connectionInfo != null && !connectionInfo.getSSID().isBlank()) {
-                String activeSsid = connectionInfo.getSSID().replaceAll("\"", "");
-                if (activeSsid.equals(ssId)) {
-                    Log.i("Already connected to Wifi %s", ssId);
-                    // bind so all api calls are performed over this network
-                    cm.bindProcessToNetwork(cm.getActiveNetwork());
-                    start();
-                    return true;
-                }
-            }
-        }
-        return false;
+        if (activeNetworkInfo == null || !activeNetworkInfo.isConnected()) return false;
+        final WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
+        if (connectionInfo == null || connectionInfo.getSSID().isBlank()) return false;
+        String activeSsid = connectionInfo.getSSID().replaceAll("\"", "");
+        if (!activeSsid.equals(ssId)) return false;
+        Log.i("Already connected to Wifi %s", ssId);
+        // bind so all api calls are performed over this network
+        cm.bindProcessToNetwork(cm.getActiveNetwork());
+        start();
+        return true;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -150,6 +167,7 @@ public class PingComms {
         Log.i("Stopping Ping comms");
         if (thread.isAlive())
             thread.interrupt();
+        instance = null;
     }
 
     private void start() {
@@ -181,6 +199,7 @@ public class PingComms {
                     retryHandler.reset();
                     break;
                 } catch (IOException ex) {
+                    Log.w("Socket create IO Exception: %s", ex);
                     // Catch exception and retry.
                     try {
                         // If beyond retry limit, this will throw an exception.
@@ -189,7 +208,7 @@ public class PingComms {
                             recvSocket.close();
                         recvSocket = null;
                     } catch (Exception fatal) {
-                        Log.a("Socket create IO Exception: %s", fatal.getMessage());
+                        Log.a("Socket create failed: %s", fatal.getMessage());
                         throw new RuntimeException(fatal);
                     }
                 }
@@ -197,6 +216,7 @@ public class PingComms {
         }
 
         private boolean interrupted = false;
+
         @Override
         public void interrupt() {
             try {

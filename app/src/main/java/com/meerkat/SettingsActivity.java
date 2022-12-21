@@ -231,7 +231,7 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.preferences, rootKey);
-            makeNumber("port");
+            makeNumber("port", port);
             setRange("scrYPos", 5, 25, 95, 5);
             setRange("scrWidth", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(50), (int) Units.Distance.NM.toM(1));
             setRange("circleStep", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(25), (int) Units.Distance.NM.toM(1));
@@ -261,13 +261,14 @@ public class SettingsActivity extends AppCompatActivity {
             seekBarPreference.setValue(defaultValue);
         }
 
-        private void makeNumber(@SuppressWarnings("SameParameterValue") String key) {
+        private void makeNumber(@SuppressWarnings("SameParameterValue") String key, int value) {
             EditTextPreference numberPreference = findPreference(key);
 
             if (numberPreference == null) {
                 android.util.Log.e("Unknown number preference: %s", key);
                 return;
             }
+            numberPreference.setText(Integer.toString(value));
             numberPreference.setOnBindEditTextListener(eT -> eT.setInputType(InputType.TYPE_CLASS_NUMBER));
         }
     }
