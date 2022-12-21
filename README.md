@@ -4,7 +4,7 @@ This is an Android app to display traffic information received from an ADS-B In 
 The objective is to use this app in an aircraft to detect nearby traffic equipped with ADS-B Out.
 
 Project Status & Functionality
-------------------------------
+==============================
 This is very much in the pre-release state. Currently it does
 * Connect to a PingUSB device via WiFi (I believe that it *should* also work with other devices e.g. ForeFlight Sentry https://www.foreflight.com/support/sentry/ or Stratux but I haven't tested with anything other than my Ping-USB)
 * Receive GDL90 messages from the device, including Traffic and Ownship messages
@@ -18,28 +18,19 @@ This is very much in the pre-release state. Currently it does
 * A simulator to generate "traffic" for testing (currently turned on by default!)
 
 The Main Map Screen
--------------------
+===================
 In the main map screen, the current GPS position is located at the lower centre of the screen. 
 The background has some circles and lines to make it easier to estimate distance and direction.
 
-In manual zoom mode, the map window is zoomable with a pinch gesture. The current zoom level is indicated by a number at the bottom right of the screen... this is the distance in [distance unit]s from the centre to the edge of the screen.
-The app may also be put into an "auto-Zoom" mode via a Setting, so that it automatically zooms in or out so that the furthest aircraft is at the edge of the screen.
+When other aircraft are detected within 20nm, a red "danger" circle is drawn around the phone's GPS location. The nearer an aircraft's position (not predicted
+or historical) is to the danger circle, the heavier the border is drawn. Eventually, if another aircraft is predicted to enter that circle, a warning will be issued.
 
-In Heading-Up mode, the phone's orientation is used to orientate the map display, so that (assuming the phone is orientated in the same direction as the aircraft), the view
-on the screen should match with the view out the window... i.e. the screen display is oriented with the real world. The downside is that this will be inaccurate in accelerated flight 
-(turns, acceleration/deceleration, changes in climb/descent rate). Rotating the screen while in Heading mode will continue automatically zooming in/out.
-NB: In auto-zoom mode (and in manual zoom mode), *nearer* aircraft may be off the side or bottom of the screen. 
 
-In Track-Up mode, only the aircraft GPS track is used to orientate the map display. In nil-wind and non-sideslip conditions, this will be the same as Heading-Up,
-and it will not be affected by accelerated flight. However, when not moving, this is not available.
-
-In North-Up mode, the map display is aligned with Grid North.
-
-Each aircraft (or ADS-B-equipped ground vehicle or obstacle) is displayed as an icon depending on its GDL90 emitter type. 
+Each aircraft (or ADS-B-equipped ground vehicle or obstacle) is displayed as an icon depending on its GDL90 emitter type. Unknown types (typically when only some information has been received from the sender) are shown with a UFO icon.
 
 Each aircraft's icon is coloured to indicate the altitude relative to the phone's GPS position:
-* green if 5000ft or more below, transitioning to red if less than 1000ft below 
-* blue if 5000ft or more above, transitioning to red if less than 1000ft above
+* green if 5000ft or more below, transitioning through brown/yellow/orange to red if less than 1000ft below 
+* blue if 5000ft or more above, transitioning through shades of purple to red if less than 1000ft above
 * black if not airborne.
 * The 5000ft and 1000ft limits (and altitude units) are settable via the Settings screen.
 
@@ -54,34 +45,70 @@ Each icon can also optionally (controlled by Settings) have associated with it:
 * A "polynomial" predicted track, based on the previous 10 (settable via [polynomialHistorySeconds]) seconds, so it predicts a turning flight path.
 These use the same colour coding as the icon
 
-When other aircraft are detected within 20nm, a red "danger" circle is drawn around the phone's GPS location. The nearer an aircraft's position (not predicted
-or historical) is to the danger circle, the heavier the border is drawn. Eventually, if another aircraft is predicted to enter that circle, a warning will be issued.
+Screen Orientation
+------------------
+At top-right of the screen is the North arrow and screen mode indicator. Tapping on this will cycle through the Heading-Up, North-Up, Track-Up modes.
 
-Pressing the "back" button (swiping left from the right edge of the screen on some phones) brings up a button bar. This includes icons for moving to other screens, and to quit the app.
-This button bar will automatically disappear after 5 seconds if no buttons are pressed.
+In Heading-Up mode, the phone's orientation is used to orientate the map display, so that (assuming the phone is orientated in the same direction as the aircraft), the view
+on the screen should match with the view out the window... i.e. the screen display is oriented with the real world. The downside is that this will be inaccurate in accelerated flight 
+(turns, acceleration/deceleration, changes in climb/descent rate). Rotating the screen while in Heading mode will continue automatically zooming in/out.
+NB: In auto-zoom mode (and in manual zoom mode), *nearer* aircraft may be off the side or bottom of the screen. 
+
+In Track-Up mode, only the phone's GPS track is used to orientate the map display. In nil-wind and non-sideslip conditions, this will be the same as Heading-Up,
+and it will not be affected by accelerated flight. However, when not moving, this is not available.
+
+In North-Up mode, the map display is aligned with Grid North.
+
+Screen Zoom
+-----------
+The map screen may be in either Manual or Automatic Zoom mode (Currently only settable via the Settings screen).
+
+In manual zoom mode, the map window is zoomable with a pinch gesture. The current zoom level is indicated by a number at the bottom right of the screen... this is the distance in [distance unit]s from the centre to the edge of the screen.
+The app may also be put into an "auto-Zoom" mode via a Setting, so that it automatically zooms in or out so that the furthest aircraft is at the edge of the screen.
+
+Switching to other screens
+--------------------------
+Pressing the "back" button (swiping left from the right edge of the screen on some phones) brings up the app's action bar. 
+This has icons for moving to the aircraft list screen and to quit the app. It also has a menu which allows moving to the Log or Settings screen.
+
+This action bar will automatically disappear after 5 seconds if no buttons are pressed, or can be removed by pressing the "back" button again.
+
+
+Aircraft List Screen
+====================
+Lists the detected aircraft in a tabular fashion, in increasing distance order, updated once per second. 
+
+Use the "back" button to return to the main Map screen.
+
+
+Log Screen
+==========
+This is intended for debugging. It displays log entries written by the app, including raw and decoded GDL90 messages (if those have been enabled in the Settings). 
+
+Use the "back" button to return to the main Map screen.
 
 
 Settings Screen
----------------
+===============
 
 The following settings are saved to the Preferences file at /data/data/com.meerkat/shared_prefs/com.meerkat_preferences.xml, and may be altered 
-via the Settings screen, or by editing the above file. Use the "back" button or the arrow at the top of the screen to return to the main Map screen.
+via the Settings screen, or by editing the above file. Use the "back" button to return to the main Map screen.
 
 Wifi settings
 -------------
 The Wifi Name needs to be set to the name of your device (e.g. Ping-6C7A for my PingUSB). The easiest way to do that is
 1. Plug your device into a USB power supply.
 2. Start the Meerkat app
-3. If this is your first use, it will automatically open the Settings screen. If you see the Map screen, click the back button and tap on the Settngs button (wrench icon)
+3. If this is your first use, it will automatically open the Settings screen. If you see the Map screen, click the back button and choose Settngs from the action bar menu
 4. Tap on the "Scan" button. Meerkat will scan for nearby Wifi networks, and list them.
 5. Tap on the correct WiFi network (e.g. Ping-6C7A). If your device isn't listed, click on the "Scan Again" button
 
-Alternatively, you can type the name into the WiFi Name text box.
+Alternatively, you can type your device's Wifi name into the WiFi Name text box.
 
-| Wifi Settings                   | Usage                                                                                                               | Default value          |
-|---------------------------------|---------------------------------------------------------------------------------------------------------------------|------------------------|
-| wifiName                        | ssId of the Wifi network established by the device (e.g. Ping-6C7A for my PingUSB).                                 | null                   |
-| port                            | UDP port for comms from the device                                                                                  | 4000 (PingUSB default) |
+| Wifi Settings                   | Usage                                                                                                                        | Default value |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
+| wifiName                        | ssId of the Wifi network established by the device (e.g. Ping-6C7A for my PingUSB).                                          | null          |
+| port                            | UDP port for comms from the device. If in doubt, use the PingUSB value of 4000                                               | 4000          |
 
 | Units Settings                  | Usage                                                                                                                        | Default value |
 |---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
@@ -98,7 +125,7 @@ Alternatively, you can type the name into the WiFi Name text box.
 | dangerRadius                    | Radius of "danger" circle on the screen in the user's [distance unit]s                                                       | 1             |
 | displayOrientation              | Display orientation... Heading-up, Track-up, or North-up                                                                     | Heading-up    |
 | keepScreenOn                    | Keep the display on when in the Map or Aircraft List views                                                                   | true          |
-| autoZoom	                       | Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen.       | true          |
+| autoZoom	                       | Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen.      | true          |
 | gradMaxDiff                     | How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green        | 5000          |
 | gradMinDiff                     | How many [altitude unit]s above/below the phone's GPS altitude an aircraft displays as completely red                        | 1000          |
 | countryCode                     | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed. | ZK            |
@@ -106,7 +133,7 @@ Alternatively, you can type the name into the WiFi Name text box.
 | Sensitivity Setting Name        | Usage                                                                                                                        | Default value |
 |---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
 | sensorSmoothingConstant         | The sensitivity of the display to phone orientation change (1 - 99). Larger values make it more responsive                   | 20            |
-| minGpsDistanceChangeMetres      | Minimum Gps distance between updates in metres                                        	                                      | 5             |
+| minGpsDistanceChangeMetres      | Minimum Gps distance between updates in metres                                        	                                     | 5             |
 | minGpsUpdateIntervalSeconds     | Minimum Gps update interval in seconds                                                                                       | 10            |
 
 | History Settings                | Usage                                                                                                                        | Default value |
@@ -114,19 +141,19 @@ Alternatively, you can type the name into the WiFi Name text box.
 | historySeconds                  | How many seconds of history track to display for each aircraft.                                                              | 60            |
 | purgeSeconds                    | How many seconds to wait before an aircraft is removed from the display                                                      | 60            |
 
-| Linear prediction Settings      | Usage                                                                                                                         | Default value |
-|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------|---------------|
-| showLinearPredictionTrack       | Whether to display the "linear" predicted track for each aircraft on the screen. This assumes that the aircraft               |               |
-|                                 | will continue at the same speed, rate of climb, and track for the next 60 seconds                                             | true          |
-| predictionSeconds               | How many seconds into the future to predict the track of each aircraft. Applies to both linear and polynomial                 |               |
-|                                 | prediction                                                                                                                    | 60            |
+| Linear prediction Settings      | Usage                                                                                                                        | Default value |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
+| showLinearPredictionTrack       | Whether to display the "linear" predicted track for each aircraft on the screen. This assumes that the aircraft              |               |
+|                                 | will continue at the same speed, rate of climb, and track for the next 60 seconds                                            | true          |
+| predictionSeconds               | How many seconds into the future to predict the track of each aircraft. Applies to both linear and polynomial                |               |
+|                                 | prediction                                                                                                                   | 60            |
 
-| Polynomial prediction Settings  | Usage                                                                                                                         | Default value |
-|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------|---------------|
-| showPolynomialPredictionTrack   | Whether to display the "polynomial" predicted track for each aircraft on the screen. This predicts                            |               |
-|                                 | accelerating, turning, climbing path for the next 60 seconds                                                                  | true          |
-| polynomialPredictionStepSeconds | How many seconds each step of the polynomial prediction is                                                                    | 6             |
-| polynomialHistorySeconds        | How many seconds history should be used by the polynomial predictor. Too large or small a value will seen poor predictions    | 10            |
+| Polynomial prediction Settings  | Usage                                                                                                                        | Default value |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
+| showPolynomialPredictionTrack   | Whether to display the "polynomial" predicted track for each aircraft on the screen. This predicts                           |               |
+|                                 | accelerating, turning, climbing path for the next 60 seconds                                                                 | true          |
+| polynomialPredictionStepSeconds | How many seconds each step of the polynomial prediction is                                                                   | 6             |
+| polynomialHistorySeconds        | How many seconds history should be used by the polynomial predictor. Too large or small a value will seen poor predictions   | 10            |
 
 Debugging settings
 ------------------
@@ -134,7 +161,7 @@ Logging of received messages and the app's processing of those messages is inten
 Android's system log (aka logcat). They can optionally also be sent to a tab on the screen and/or to a file. Raw messages (in hex)
 can be sent to the logs, and/or decoded messages.
 
-Setting the [simulate] setting to "true" results in the app processing a series of simulated events from several simulated aircraft.
+Setting the [simulate] setting to "true" results in the app processing a series of simulated events from several simulated aircraft, and simulating the Gps position of the phone.
 
 | Debug Setting Name | Usage                                                                                                                                           | Default value |
 |--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
@@ -147,20 +174,6 @@ Setting the [simulate] setting to "true" results in the app processing a series 
 | logRawMessages     | Whether to write the raw messages, as received from the device, to the logs                                                                     | false         |
 | logDecodedMessages | Whether to write the decoded messages, as interpreted by the GDL90 parser, to the logs                                                          | false         |
 | simulate           | Play built-in simulated traffic instead of real traffic. No Wifi connection is made.                                                            | false         |
-
-
-The Aircraft List Screen
-------------------------
-Lists the detected aircraft in a tabular fashion, in increasing distance order, updated once per second. 
-
-Use the "back" button to return to the main Map screen.
-
-
-The Log Screen
---------------
-Displays log entries written by the app, including raw and decoded GDL90 messages (if those have been selected in the Settings). 
-
-Use the "back" button to return to the main Map screen.
 
 
 Contributing & Licensing
