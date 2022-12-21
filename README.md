@@ -182,8 +182,6 @@ have devices other than the PingUSB.
 TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :)
-* There's still some oddities in switching from one activity to another
-* Swipe for back button recentres screen on traffic / sets scale to 0?
 * Ownship track... history and prediction
 * Auto-zoom -- all aircraft
 * Indicate Mode-C traffic presence
