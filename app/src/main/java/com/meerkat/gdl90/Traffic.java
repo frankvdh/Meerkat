@@ -12,6 +12,7 @@
  */
 package com.meerkat.gdl90;
 
+import static com.meerkat.SettingsActivity.ownCallsign;
 import static java.lang.Float.NaN;
 
 import android.hardware.GeomagneticField;
@@ -33,10 +34,10 @@ public class Traffic extends Gdl90Message {
     public final int participantAddr;
     public final Position point;
     private final boolean extrapolated;
-    private final int nic;
-    private final int nac;
+    final int nic;
+    final int nac;
     public final String callsign;
-    private final Priority priority;
+    final Priority priority;
     public final boolean airborne;
 
     public enum TrackType {Invalid, TRK, Mag, True}
@@ -48,15 +49,16 @@ public class Traffic extends Gdl90Message {
 
     // uAvionix - uAvionix-UCP-Transponder-ICD-Rev-Q.pdf 6.21 (Ownship) & 6.2.
 
-    public Traffic(byte messageId, long time, ByteArrayInputStream is) {
+    public Traffic(byte messageId, long time, Position point, ByteArrayInputStream is) {
         super(is, 28, messageId);
+        this.point = point;
         ownShip = messageId == 10;
         short b = getByte();
-        alertStatus = b >> 4;
+        alertStatus = b >>> 4;
         b &= 0x0f;
         int addrTypeNum = b < AddrType.values().length ? b : AddrType.values().length - 1;
         addrType = AddrTypeLookup[addrTypeNum];
-        participantAddr = (addrTypeNum << 12) + (getByte() << 16) + (getByte() << 8) + getByte();
+        participantAddr = (addrTypeNum << 24) + (getByte() << 16) + (getByte() << 8) + getByte();
         double lat = get3BytesDegrees();
         double lon = get3BytesDegrees();
 
@@ -80,12 +82,12 @@ public class Traffic extends Gdl90Message {
             lat = Double.NaN;
             lon = Double.NaN;
         }
-        int hVel = getByte() << 4;
+        int hSpeed = getByte() << 4; // MSB first
         b = getByte();
-        hVel += ((b & 0xf0) >> 4);  // MSB first
+        hSpeed += ((b & 0xf0) >> 4);
         int vVel = ((b & 0x0f) << 8) + getByte(); // MSB first, signed
         if ((vVel & 0x800) != 0) {
-            vVel = 0x1000 - vVel;
+            vVel -= 0x1000;
         }
         vVel *= 64;
 
@@ -96,8 +98,36 @@ public class Traffic extends Gdl90Message {
         int p = b >> 4;
         priority = priorityLookup[p < Priority.values().length ? p : Priority.values().length - 1];
         checkCrc();
-        point = new Position("ADS-B", lat, lon, Units.Height.FT.toM(alt), (float) Units.Speed.KNOTS.toMps(hVel), trueTrack(track, trackType, lat, lon, alt), (float) Units.VertSpeed.FPM.toMps(vVel), crcValid, airborne, time);
+        point.setProvider("ADS-B");
+        point.setLatitude(lat);
+        point.setLongitude(lon);
+        if (alt < -1000) point.removeAltitude();
+        else point.setAltitude(Units.Height.FT.toM(alt));
+        point.setSpeed((float) Units.Speed.KNOTS.toMps(hSpeed));
+        point.setTrack(trueTrack(track, trackType, lat, lon, alt));
+        point.setVVel(Units.VertSpeed.FPM.toMps(vVel));
+        point.setCrcValid(crcValid);
+        point.setAirborne(airborne);
+        point.setTime(time);
         Log.v(point.toString());
+    }
+
+    public Traffic(long time, int id, String callsign, String type, double lat, double lng, double alt, double speed, float track, float vVel) {
+        this.participantAddr = id;
+        this.callsign = callsign;
+        emitterType = Emitter.valueOf(type);
+
+        point = new Position("ADS-B", lat, lng, alt < -1000 ? Float.NaN : Units.Height.FT.toM(alt),
+                (float) Units.Speed.KNOTS.toMps(speed), track,
+                (float) Units.VertSpeed.FPM.toMps(vVel), true, true, time);
+        ownShip = callsign.equals(ownCallsign);
+        nac = 100;
+        nic = 100;
+        priority = Priority.Normal;
+        alertStatus = 0;
+        extrapolated = false;
+        addrType = AddrType.ICAO_ADSB;
+        airborne = true;
     }
 
     private float trueTrack(float track, TrackType trackType, double lat, double lon, int alt) {
@@ -118,12 +148,9 @@ public class Traffic extends Gdl90Message {
 
     @NonNull
     public String toString() {
-        double vVel = point.getVVel();
-        return String.format(Locale.ENGLISH, "%c%c: %8s %s %s %s %03.0f %s %s NIC=%2d NAC=%2d %s %s %o",
+        return String.format(Locale.ENGLISH, "%c%c: %8s %s %s %s NIC=%2d NAC=%2d %s %s %o",
                 ownShip ? 'O' : 'T', crcValidChar(),
-                callsign, point, Units.Speed.KNOTS.toString(point.getSpeed()),
-                Units.VertSpeed.FPM.toString(vVel),
-                point.getTrack(),
+                callsign, point,
                 priority, (alertStatus == 0 ? "No alert" : "Traffic Alert"), nic, nac, (extrapolated ? "Extrap" : "Report"),
                 addrType, participantAddr);
     }

@@ -46,6 +46,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.meerkat.AircraftListActivity;
 import com.meerkat.Compass;
+import com.meerkat.CsvPlayer;
 import com.meerkat.Gps;
 import com.meerkat.R;
 import com.meerkat.SettingsActivity;
@@ -57,6 +58,7 @@ import com.meerkat.log.LogActivity;
 import com.meerkat.wifi.PingComms;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -82,12 +84,12 @@ public class MapActivity extends AppCompatActivity {
         // get generic toolbar
         setSupportActionBar(findViewById(R.id.toolbar));
         actionBar = getSupportActionBar();
-        assert actionBar != null: "Action bar not found";
+        assert actionBar != null : "Action bar not found";
 
         // Set up custom layout
 //        actionBar.setCustomView(R.layout.actionbar_layout);
-  //      actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-    //    actionBar.setDisplayShowCustomEnabled(true);
+        //      actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+        //    actionBar.setDisplayShowCustomEnabled(true);
         showActionbar(initToolbarDelayMilliS);
 
         Display display =
@@ -168,8 +170,26 @@ public class MapActivity extends AppCompatActivity {
 
             gps = new Gps(getApplicationContext(), binding.mapView);
             compass = new Compass(getApplicationContext(), binding.mapView);
-            pingComms = new PingComms(getApplicationContext());
+            CompassView compassView = binding.compassView;
+            compassView.setMap(binding.mapView, binding.compassText);
+            Background background = new Background(binding.mapView, binding.compassView, binding.compassText, binding.scaleText);
+            binding.mapView.layers.addLayer(background);
+            vehicleList = new VehicleList(binding.mapView);
 
+            if (simulate == SettingsActivity.SimType.Simulate) {
+                Simulator.startAll();
+                firstRun = false;
+                return;
+            }
+            if (simulate == SettingsActivity.SimType.CsvFast || simulate == SettingsActivity.SimType.CsvRealTime) {
+                try {
+                    var player = new CsvPlayer(binding.mapView, new File(this.getExternalFilesDir(null), "gps.csv"), new File(this.getExternalFilesDir(null), "aircraft.csv"), simulate == SettingsActivity.SimType.CsvRealTime);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return;
+            }
+            pingComms = new PingComms(getApplicationContext());
             Log.i("Connecting: %s", wifiName, port);
             if (wifiName == null) {
                 this.startActivity(new Intent(this, SettingsActivity.class));
@@ -178,13 +198,8 @@ public class MapActivity extends AppCompatActivity {
                 Log.i("Starting Ping comms: %s %d", wifiName, port);
                 pingComms.start();
             }
-            vehicleList = new VehicleList(binding.mapView);
             firstRun = false;
         }
-        CompassView compassView = binding.compassView;
-        compassView.setMap(binding.mapView, binding.compassText);
-        Background background = new Background(binding.mapView, binding.compassView, binding.compassText, binding.scaleText);
-        binding.mapView.layers.addLayer(background);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
@@ -193,11 +208,6 @@ public class MapActivity extends AppCompatActivity {
         Log.i("Resume");
         super.onResume();
         compass.resume();
-        if (simulate) {
-            Simulator.startAll();
-            firstRun = false;
-            return;
-        }
 
         if (fileLog && Environment.getExternalStorageState().equals(MEDIA_MOUNTED)) {
             File logFile = new File(this.getExternalFilesDir(null), "meerkat.log");
@@ -283,7 +293,7 @@ public class MapActivity extends AppCompatActivity {
 
             case R.id.action_log:
                 Log.i("Click Log");
-                 startActivity(new Intent(this, LogActivity.class));
+                startActivity(new Intent(this, LogActivity.class));
                 return true;
 
             case R.id.action_quit:

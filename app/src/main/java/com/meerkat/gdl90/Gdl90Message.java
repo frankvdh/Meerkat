@@ -39,6 +39,7 @@ import android.graphics.Bitmap;
 
 import com.meerkat.R;
 import com.meerkat.log.Log;
+import com.meerkat.measure.Position;
 
 import java.io.ByteArrayInputStream;
 
@@ -114,6 +115,10 @@ public class Gdl90Message {
         crc = Crc16Table[0] ^ messageId;
     }
 
+    protected Gdl90Message() {
+        is = null;
+    }
+
     protected void checkCrc() {
         if (is.available() < 3)
             Log.w("Message to short");
@@ -157,7 +162,7 @@ public class Gdl90Message {
             Log.w("Flag found unexpectedly");
             return 0x7e;
         }
-        if (b == 0x7d) b = (byte) (is.read() ^ 0x20);
+        if (b == 0x7d) b = (short) ((((byte) is.read()) & 0xff) ^ 0x20);
         crc = (Crc16Table[crc >> 8] ^ (crc << 8) ^ b) & 0xffff;
         return (short) (b & 0xff);
     }
@@ -181,8 +186,7 @@ public class Gdl90Message {
     }
 
     protected double get3BytesDegrees() {
-        short b = getByte();
-        int val = (b << 16) | (getByte() << 8) | getByte(); // MSB first, signed
+        int val = (getByte() << 16) | (getByte() << 8) | getByte(); // MSB first, signed
         if ((val & 0x800000) != 0) {
             val = val - 0x1000000;
         }
@@ -216,7 +220,7 @@ public class Gdl90Message {
                     return new OwnShipGeometricAltitude(is);
                 case 10:
                 case 20:
-                    return new Traffic(messageId, time, is);
+                    return new Traffic(messageId, time, new Position("ADSB"), is);
                 case 37:
                     return new Identification(is);
                 case 40:

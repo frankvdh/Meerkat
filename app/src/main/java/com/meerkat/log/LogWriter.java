@@ -50,7 +50,9 @@ class FileLogWriter implements LogWriter {
         try {
             if (bw == null)
                 bw = new BufferedWriter(new FileWriter(file, append));
-            bw.write(String.format("%s %s/%s %s\r\n", sdf.format(new Date()), tag, level, msg));
+            synchronized (this) {
+                bw.write(String.format("%s %s/%s %s\r\n", sdf.format(System.currentTimeMillis()), tag, level, msg));
+            }
         } catch (IOException e) {
             bw = null;
             android.util.Log.e(tag, "File Log write (" + level + ", " + msg + ") failed: " + e.getMessage());

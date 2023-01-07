@@ -37,6 +37,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.meerkat.Gps;
+import com.meerkat.Vehicle;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
@@ -70,7 +71,7 @@ public class Background extends Drawable {
 
     @Override
     public void draw(@NonNull Canvas canvas) {
-        Log.d("draw background");
+        Log.v("draw background");
         canvas.drawColor(Color.WHITE, PorterDuff.Mode.SRC);
         Rect bounds = getBounds();
         float xCentre = bounds.width() / 2f;
@@ -86,19 +87,21 @@ public class Background extends Drawable {
             Log.d("Scale factor %.5f", mapView.pixelsPerMetre);
         }
         float radiusStep = circleRadiusStepMetres * mapView.pixelsPerMetre;
-        Log.d("Radius step = %f", radiusStep);
+        Log.v("Radius step = %f", radiusStep);
         if (radiusStep > 5)
             for (float rad = radiusStep; rad < bounds.height(); rad += radiusStep) {
                 canvas.drawCircle(0, 0, rad, circlePaint);
             }
 
-        float nearest = MapActivity.vehicleList.getNearest();
-        int thickness = isNaN(nearest) ? 0 : nearest <= dangerRadiusMetres ? 20 : (int) (dangerRadiusMetres * 20/nearest);
-        Log.d("Nearest = %s, %d, thickness = %d", Units.Distance.NM.toString(nearest), (int) (nearest * 20 / dangerRadiusMetres), thickness);
-        if (thickness > 0) {
-            dangerPaint.setStrokeWidth(thickness);
-            dangerPaint.setStyle(Paint.Style.STROKE);
-            canvas.drawCircle(0, 0, dangerRadiusMetres * mapView.pixelsPerMetre, dangerPaint);
+        Vehicle nearest = MapActivity.vehicleList.getNearest();
+        if (nearest != null) {
+            int thickness = nearest.distance <= dangerRadiusMetres ? 20 : (int) (dangerRadiusMetres * 20 / nearest.distance);
+            Log.d("Nearest = %s %s, %d, thickness = %d", nearest.callsign, Units.Distance.NM.toString(nearest.distance), (int) (nearest.distance * 20 / dangerRadiusMetres), thickness);
+            if (thickness > 0) {
+                dangerPaint.setStrokeWidth(thickness);
+                dangerPaint.setStyle(Paint.Style.STROKE);
+                canvas.drawCircle(0, 0, dangerRadiusMetres * mapView.pixelsPerMetre, dangerPaint);
+            }
         }
         float rot = -MapView.displayRotation();
         String compassLetter;
@@ -127,7 +130,9 @@ public class Background extends Drawable {
      */
     private float getScaleFactor(Rect bounds, Position furthest) {
         if (furthest == null) return mapView.defaultPixelsPerMetre;
-        if (Gps.distanceTo(furthest) < dangerRadiusMetres)
+        if (Gps.distanceTo(furthest) < mapView.minPixelsPerMetre)
+            return mapView.minPixelsPerMetre;
+        if (Gps.distanceTo(furthest) > mapView.maxPixelsPerMetre)
             return mapView.minPixelsPerMetre;
         Point aircraftPoint = mapView.screenPoint(furthest);
         Log.d("Furthest %d %d %s", aircraftPoint.x, aircraftPoint.y, furthest);

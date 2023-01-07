@@ -15,8 +15,9 @@ package com.meerkat.map;
 import static com.meerkat.SettingsActivity.dangerRadiusMetres;
 import static com.meerkat.SettingsActivity.displayOrientation;
 import static com.meerkat.SettingsActivity.keepScreenOn;
+import static com.meerkat.SettingsActivity.maxZoom;
+import static com.meerkat.SettingsActivity.minZoom;
 import static com.meerkat.SettingsActivity.screenWidthMetres;
-import static com.meerkat.SettingsActivity.screenYPosPercent;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
@@ -44,7 +45,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     public enum DisplayOrientation {NorthUp, TrackUp, HeadingUp}
 
     public final LayerDrawable layers;
-    final float defaultPixelsPerMetre, minPixelsPerMetre;
+    final float defaultPixelsPerMetre, minPixelsPerMetre, maxPixelsPerMetre;
     float pixelsPerMetre;
     // Used to detect pinch zoom gesture.
     private final ScaleGestureDetector scaleGestureDetector = new ScaleGestureDetector(getContext(), new PinchListener(this));
@@ -61,7 +62,8 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         setOnTouchListener(handleTouch);
         // Attach a pinch zoom listener to the map view
         defaultPixelsPerMetre = (float) getWidth(getContext()) / screenWidthMetres;
-        minPixelsPerMetre = (float) Math.min(getHeight(getContext())*screenYPosPercent/100, getWidth(getContext()) /2) / dangerRadiusMetres;
+        minPixelsPerMetre = (float) getWidth(getContext()) / (float) Math.min(minZoom, dangerRadiusMetres);
+        maxPixelsPerMetre = (float) getWidth(getContext()) / (float) Math.min(screenWidthMetres, maxZoom);
         pixelsPerMetre = defaultPixelsPerMetre;
         for (var emitterType : Gdl90Message.Emitter.values()) {
             emitterType.bitmap = loadIcon(getContext(), emitterType.iconId);
@@ -77,6 +79,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     }
 
     //get width screen
+    @SuppressWarnings("unused")
     public static int getHeight(Context context) {
         return context.getResources().getDisplayMetrics().heightPixels;
     }
@@ -135,6 +138,8 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         public boolean onScale(ScaleGestureDetector detector) {
             // Scale the image with pinch zoom value.
             pixelsPerMetre *= detector.getScaleFactor() * mapView.getScaleX();
+            if (pixelsPerMetre < mapView.minPixelsPerMetre) pixelsPerMetre = mapView.minPixelsPerMetre;
+            if (pixelsPerMetre > mapView.maxPixelsPerMetre) pixelsPerMetre = mapView.maxPixelsPerMetre;
             refresh(null);
             return true;
         }

@@ -208,3 +208,7 @@ This list is more-or-less in priority order. At the moment it is shrinking :)
 * Internationalisation
 * Find someone to test usage with other Wifi-enabled ADS-B In devices (Stratux, Foreflight, etc)
 * Find someone to port it to Apple IOS.
+* Corrupted logs
+* Logs not shown on screen
+* Negative speeds
+* Replay log files

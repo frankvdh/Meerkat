@@ -12,8 +12,10 @@
  */
 package com.meerkat;
 
+import static com.meerkat.SettingsActivity.altUnits;
 import static com.meerkat.SettingsActivity.minGpsDistanceChangeMetres;
 import static com.meerkat.SettingsActivity.minGpsUpdateIntervalSeconds;
+import static com.meerkat.SettingsActivity.speedUnits;
 import static java.lang.Float.NaN;
 
 import android.annotation.SuppressLint;
@@ -41,7 +43,7 @@ private final MapView mapView;
     public Gps(Context context, MapView mapView) {
         this.mapView = mapView;
         this.locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
-        if (SettingsActivity.simulate)
+        if (SettingsActivity.simulate != SettingsActivity.SimType.Live)
             return;
         resume();
     }
@@ -117,9 +119,11 @@ private final MapView mapView;
 
     @Override
     public void onLocationChanged(Location location) {
-        if (SettingsActivity.simulate)
+        if (SettingsActivity.simulate != SettingsActivity.SimType.Live)
             return;
-        Log.d("GPS: (%.5f, %.5f) @%.0fm, %.0f %3.0f%c", location.getLatitude(), location.getLongitude(), location.getAltitude(), location.getSpeed(), location.getBearing(), location.hasBearing() ? ' ' : '!');
+        Log.d("GPS: (%.5f, %.5f) @%.0fm, %.0f %3.0f%c", location.getLatitude(), location.getLongitude(),
+                altUnits.toString(location.getAltitude()), speedUnits.toString(location.getSpeed()),
+                location.getBearing(), location.hasBearing() ? ' ' : '!');
         synchronized (Gps.location) {
             Gps.location.set(location);
         }

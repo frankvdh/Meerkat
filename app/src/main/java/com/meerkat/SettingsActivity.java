@@ -28,6 +28,10 @@ import com.meerkat.map.MapView;
 import com.meerkat.measure.Units;
 
 public class SettingsActivity extends AppCompatActivity {
+    public enum SimType {
+       Live, Simulate, CsvRealTime, CsvFast, CsvSlow
+    }
+
     private static SharedPreferences prefs;
     public static volatile String wifiName;
     public static volatile int port;
@@ -62,11 +66,13 @@ public class SettingsActivity extends AppCompatActivity {
     public static volatile Units.Height altUnits;
     public static volatile Units.Speed speedUnits;
     public static volatile Units.VertSpeed vertSpeedUnits;
-    public static volatile boolean simulate;
+    public static volatile SimType simulate;
     public static volatile String countryCode;
+    public static volatile String ownCallsign;
     public static volatile MapView.DisplayOrientation displayOrientation;
     public static volatile boolean keepScreenOn;
     public static volatile boolean autoZoom;
+    public static volatile int minZoom, maxZoom;
     /**
      * The number of milliseconds to wait after user interaction before hiding the system UI.
      */
@@ -134,9 +140,12 @@ public class SettingsActivity extends AppCompatActivity {
             saveNeeded = true;
         }
         screenWidthMetres = (int) (Math.max(Units.Distance.NM.toM(2), Math.min(Units.Distance.NM.toM(50), prefs.getInt("screenWidth", (int) (Units.Distance.NM.toM(10))))));
+        minZoom = (int) (Math.max(Units.Distance.NM.toM(2), Math.min(Units.Distance.NM.toM(screenWidthMetres), prefs.getInt("minZoom", (int) (Units.Distance.NM.toM(10))))));
+        maxZoom = (int) (Math.max(Units.Distance.NM.toM(screenWidthMetres), Math.min(Units.Distance.NM.toM(50), prefs.getInt("maxZoom", (int) (Units.Distance.NM.toM(10))))));
         circleRadiusStepMetres = (int) (Math.max(Units.Distance.NM.toM(1), Math.min(screenWidthMetres, prefs.getInt("circleRadiusStep", (int) (Units.Distance.NM.toM(5))))));
         dangerRadiusMetres = (int) (Math.max(Units.Distance.NM.toM(1), Math.min(screenWidthMetres, prefs.getInt("dangerRadius", (int) (Units.Distance.NM.toM(1))))));
-        countryCode = prefs.getString("countryCode", "").toUpperCase();
+        countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
+        ownCallsign = prefs.getString("ownCallsign", "ZKLLY").toUpperCase();
         try {
             displayOrientation = MapView.DisplayOrientation.valueOf(prefs.getString("displayOrientation", "HeadingUp").trim());
         } catch (Exception e) {
@@ -149,8 +158,15 @@ public class SettingsActivity extends AppCompatActivity {
         minGpsUpdateIntervalSeconds = prefs.getInt("minGpsUpdateIntervalSeconds", 10);
         toolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("toolbarDelaySecs", 3)))*1000;
         initToolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("initToolbarDelaySecs", 10)))*1000;
-        simulate = prefs.getBoolean("simulate", false);
-        if (simulate)
+        try {
+            simulate = SimType.valueOf(prefs.getString("simulate", "CsvFast").trim());
+        } catch (Exception e) {
+            Log.e("Invalid simulator type %s", prefs.getString("simulate", null));
+            simulate = SimType.CsvFast;
+            saveNeeded = true;
+        }
+simulate = SimType.Live;
+        if (simulate != SimType.Live)
             displayOrientation = MapView.DisplayOrientation.NorthUp;
         if (saveNeeded) save();
         Log.log(logLevel, "Settings loaded");
@@ -179,6 +195,8 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putInt("screenYPosPercent", screenYPosPercent);
         edit.putInt("sensorSmoothingConstant", (int) (sensorSmoothingConstant * 100));
         edit.putInt("screenWidth", screenWidthMetres);
+        edit.putInt("minZoom", minZoom);
+        edit.putInt("maxZoom", maxZoom);
         edit.putInt("circleRadiusStep", circleRadiusStepMetres);
         edit.putInt("dangerRadius", dangerRadiusMetres);
         edit.putString("distanceUnits", String.valueOf(distanceUnits));
@@ -186,6 +204,7 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putString("speedUnits", String.valueOf(speedUnits));
         edit.putString("vertSpeedUnits", String.valueOf(vertSpeedUnits));
         edit.putString("countryCode", countryCode);
+        edit.putString("ownCallsign", ownCallsign);
         edit.putString("displayOrientation", String.valueOf(displayOrientation));
         edit.putBoolean("keepScreenOn", keepScreenOn);
         edit.putBoolean("autoZoom", autoZoom);
@@ -193,7 +212,7 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putInt("initToolbarDelaySecs", initToolbarDelayMilliS / 1000);
         edit.putInt("minGpsDistanceChangeMetres", minGpsDistanceChangeMetres);
         edit.putInt("minGpsUpdateIntervalSeconds", minGpsUpdateIntervalSeconds);
-        edit.putBoolean("simulate", simulate);
+        edit.putString("simulate", String.valueOf(simulate));
         edit.apply();
         Log.log(logLevel, "Settings saved");
     }
@@ -232,6 +251,8 @@ public class SettingsActivity extends AppCompatActivity {
             makeNumber("port", port);
             setRange("scrYPos", 5, 25, 95, 5);
             setRange("scrWidth", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(50), (int) Units.Distance.NM.toM(1));
+            setRange("minZoom", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), screenWidthMetres, (int) Units.Distance.NM.toM(1));
+            setRange("maxZoom", screenWidthMetres, (int) Units.Distance.NM.toM(50), (int) Units.Distance.NM.toM(50), (int) Units.Distance.NM.toM(1));
             setRange("circleStep", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(25), (int) Units.Distance.NM.toM(1));
             setRange("dangerRadius", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(5), (int) Units.Distance.NM.toM(1));
             setRange("gradMaxDiff", 2100, 5000, 10000, 100);

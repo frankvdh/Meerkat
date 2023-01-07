@@ -32,7 +32,7 @@ public class Units {
     private String toString(double value) {
         if (isNaN(value)) return "----";
         value /= factor;
-        return String.format(value < 10 ? "%.1f%s" : "%.0f%s", value, label);
+        return String.format(Math.abs(value) < 10 ? "%.1f%s" : "%.0f%s", value, label);
     }
 
     @SuppressWarnings("SameParameterValue")

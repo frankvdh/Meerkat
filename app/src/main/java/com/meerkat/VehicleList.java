@@ -68,16 +68,18 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         }
     }
 
-    public float getNearest() {
+    public Vehicle getNearest() {
         synchronized (this) {
-            if (this.isEmpty()) return Float.NaN;
+            if (this.isEmpty()) return null;
+            Vehicle nearest = null;
             float minDistance = 1e9f;
             for (Vehicle v: this.values()) {
                 if (v.distance < minDistance) {
                     minDistance = v.distance;
+                    nearest = v;
                 }
             }
-            return minDistance;
+            return nearest;
         }
     }
 

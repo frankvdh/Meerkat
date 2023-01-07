@@ -36,7 +36,7 @@ public class Position extends Location {
 
     public Position(String provider, double lat, double lon, double alt, double speed, double track, double vVel, boolean crcValid, boolean airborne, long time) {
         super(provider);
-        setTime(time);
+        super.setTime(time);
         if (!isNaN(lat)) setLatitude(lat);
         if (!isNaN(lon)) setLongitude(lon);
         if (!isNaN(alt)) setAltitude(alt);
@@ -67,11 +67,11 @@ public class Position extends Location {
         this.crcValid = valid;
     }
 
-    static double latLonDegToRad(double angle) {
+    public static double latLonDegToRad(double angle) {
         return angle * PI / 180d;
     }
 
-    static double rad2latLonDeg(double rad) {
+    public static double rad2latLonDeg(double rad) {
         return rad * 180d / PI;
     }
 
@@ -84,9 +84,9 @@ public class Position extends Location {
     }
 
     // Move this Position by the given lateral and vertical distance
-    public void setRelative(Location l, float distance, float bearing, float altDifference, int elapsedMilliS) {
-        double lat = l.getLatitude();
-        double lon = l.getLongitude();
+    public void setRelative(Position p, float distance, float bearing, float altDifference, int elapsedMilliS) {
+        double lat = p.getLatitude();
+        double lon = p.getLongitude();
         if (isNaN(lat) || isNaN(lon)) return;
 
         var bearingRad = latLonDegToRad(bearing);
@@ -101,11 +101,12 @@ public class Position extends Location {
         var latitudeResult = asin(sinLat * cosDist + cosLat * sinDist * cos(bearingRad));
         var a = atan2(sin(bearingRad) * sinDist * cosLat, cosDist - sinLat * sin(latitudeResult));
         var longitudeResult = (lonRad + a + 3 * PI) % (2 * PI) - PI;
-        setProvider("predicted from " + l.getProvider());
+        setProvider("from " + p.getProvider());
         setLatitude(rad2latLonDeg(latitudeResult));
         setLongitude(rad2latLonDeg(longitudeResult));
         setAltitude(getAltitude() + altDifference);
-        setTime(l.getTime() + elapsedMilliS);
+//        setTime(p.getTime() + elapsedMilliS);
+        setCrcValid(p.crcValid);
     }
 
     // Move this Position assuming unchanged speed, track, and VS
@@ -170,7 +171,7 @@ public class Position extends Location {
     public String toString() {
         double lat = getLatitude();
         double lon = getLongitude();
-        return (isNaN(lat) ? "(-----, -----) " : String.format("(%.5f, %.5f) ", lat, lon)) + " " + altUnits.toString(getAltitude()) + ", " + speedUnits.toString(getSpeed()) + ", " + getTrack() + ", VS=" + vVel;
+        return (isNaN(lat) ? "(-----, -----) " : String.format("(%.5f, %.5f) ", lat, lon)) + " " + altUnits.toString(getAltitude()) + ", " + speedUnits.toString(getSpeed()) + ", " + getTrack() + ", VS=" + Units.VertSpeed.FPM.toString(vVel);
     }
 
     public boolean isAirborne() {

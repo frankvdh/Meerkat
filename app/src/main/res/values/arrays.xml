@@ -54,4 +54,12 @@
         <item>Verbose</item>
     </string-array>
 
+    <string-array name="sim_values">
+        <item>Live</item>
+        <item>Simulate</item>
+        <item>CsvRealTime</item>
+        <item>CsvFast</item>
+        <item>CsvSlow</item>
+    </string-array>
+
 </resources>

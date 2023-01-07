@@ -88,6 +88,22 @@
 
         <androidx.preference.SeekBarPreference
             androidx:dependency="distanceUnits"
+            androidx:key="minZoom"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="Minimum screen zoom in [your Distance units]"
+            androidx:title="Minimum Screen Width in [Distance Units]" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:dependency="distanceUnits"
+            androidx:key="maxZoom"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="Maximum screen zoom in [your Distance units]"
+            androidx:title="Maximum Screen Width in [Distance Units]" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:dependency="distanceUnits"
             androidx:key="circleStep"
             androidx:persistent="true"
             androidx:showSeekBarValue="true"
@@ -149,6 +165,14 @@
             androidx:key="countryCode"
             androidx:persistent="true"
             androidx:title="Country code to strip"
+            androidx:useSimpleSummaryProvider="true" />
+
+        <androidx.preference.EditTextPreference
+            androidx:defaultValue="ZK"
+            androidx:dialogMessage="Your own ADS-B callsign."
+            androidx:key="ownCallsign"
+            androidx:persistent="true"
+            androidx:title="Your callsign"
             androidx:useSimpleSummaryProvider="true" />
     </androidx.preference.PreferenceCategory>
     <androidx.preference.PreferenceCategory
@@ -296,13 +320,15 @@
             androidx:summaryOn="Log decoded messages, as interpreted by the GDL90 parser"
             androidx:title="Log Decoded Messages" />
 
-        <androidx.preference.SwitchPreferenceCompat
-            androidx:defaultValue="false"
+
+        <androidx.preference.DropDownPreference
+            androidx:defaultValue="Live"
+            androidx:entries="@array/sim_values"
+            androidx:entryValues="@array/sim_values"
             androidx:key="simulate"
-            androidx:persistent="false"
-            androidx:summaryOff="Live data"
-            androidx:summaryOn="Simulate without live data"
-            androidx:title="Simulate" />
+            androidx:persistent="true"
+            androidx:title="Type of run"
+            androidx:useSimpleSummaryProvider="true" />
     </androidx.preference.PreferenceCategory>
 
 </androidx.preference.PreferenceScreen>

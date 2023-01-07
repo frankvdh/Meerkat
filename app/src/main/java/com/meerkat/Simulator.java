@@ -20,6 +20,7 @@ import com.meerkat.map.MapActivity;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
 
+import java.io.File;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 

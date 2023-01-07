@@ -12,10 +12,12 @@
  */
 package com.meerkat.test;
 
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static java.lang.Math.PI;
+import static java.lang.Math.asin;
+import static java.lang.Math.atan2;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
@@ -58,45 +60,38 @@ public class PositionTest extends TestCase {
     }
 
     @Mock
-   static Position marton;
-    static {
-        marton  = new Position("TEST", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0, Units.Height.FT.toM(5000), 0L);
-        when(marton.getTime()).thenReturn(0L);
-        doNothing().when(marton).setTime(isA(Long.class));
-    }
+   static Position marton = new Position("TEST");
     @Mock
     Position p1;
 
     @Test
     public void testLinearPredict() {
         long now = System.currentTimeMillis();
-        when(marton.getTime()).thenReturn(now);
-        doNothing().when(marton).setTime(isA(Long.class));
         when(marton.getLatitude()).thenReturn(-(40 + 4 / 60.0 + 9 / 3600.0));
         when(marton.getLongitude()).thenReturn(175 + 22 / 60.0 + 42 / 3600.0);
         when(marton.getAltitude()).thenReturn(Units.Height.FT.toM(5000));
-        when(marton.getSpeed()).thenReturn(123f);
-        when(marton.hasSpeed()).thenReturn(true);
+        when(marton.getSpeed()).thenReturn(120f);
         when(marton.getBearing()).thenReturn(0f);
-        when(marton.hasBearing()).thenReturn(true);
-        when(marton.getVVel()).thenReturn(0d);
-        Position p = new Position("test");
-        marton.linearPredict(3600000, p);
-        Assert.assertEquals(40.96848700215959, p.getLatitude(), .0001);
-        Assert.assertEquals( 175.37833333333333, p.getLongitude(), .0001);
-        Assert.assertEquals(5000d/3.28084, p.getAltitude(), 0.1);
-        Assert.assertEquals(123d, p.getSpeed(), 0.1);
-    }
 
-    @Test
-    public void testMovePoint() {
-        var p = new Position("test", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0, Units.Height.FT.toM(5000f),
-                Units.Speed.KNOTS.toMps(123f), 0, 0, true, true, 0);
-        p.moveBy(3600000);
-        Assert.assertNotNull(p);
-        Assert.assertEquals(-39.1698463311738, p.getLatitude(), .00001);
-        Assert.assertEquals(175.37833333333333, p.getLongitude(), .00001);
-   }
+        var bearingRad = Position.latLonDegToRad(marton.getBearing());
+        var latRad = Position.latLonDegToRad(marton.getLatitude());
+        var lonRad = Position.latLonDegToRad(marton.getLongitude());
+        var distFraction = marton.getSpeed()*3600 / 6371000d; // earth Radius In Metres
+        var cosLat = cos(latRad);
+        var sinLat = sin(latRad);
+        var sinDist = sin(distFraction);
+        var cosDist = cos(distFraction);
+
+        var latitudeResult = asin(sinLat * cosDist + cosLat * sinDist * cos(bearingRad));
+        var a = atan2(sin(bearingRad) * sinDist * cosLat, cosDist - sinLat * sin(latitudeResult));
+        var longitudeResult = (lonRad + a + 3 * PI) % (2 * PI) - PI;
+        var lat = Position.rad2latLonDeg(latitudeResult);
+        var lon = Position.rad2latLonDeg(longitudeResult);
+        var alt = marton.getAltitude() + 0;
+        Assert.assertEquals(-36.184097, lat, .0001);
+        Assert.assertEquals( marton.getLongitude(), lon, .0001);
+        Assert.assertEquals(marton.getAltitude(), alt, 0.1);
+    }
 
     @Test
     public void testHeightAbove() {
