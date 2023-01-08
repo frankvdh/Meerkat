@@ -34,7 +34,7 @@ public final class Log {
     private Log() {
     }
 
-    private static final Set<LogWriter> mPrinters = new HashSet<>();
+    private static final Set<LogWriter> logWriters = new HashSet<>();
     private static final AndroidLogWriter ANDROID_LOG_WRITER;
 
     private static Level mMinLevel = Level.V;
@@ -55,19 +55,19 @@ public final class Log {
 
     public static synchronized void useLogWriter(LogWriter p, boolean on) {
         if (on) {
-            mPrinters.add(p);
+            logWriters.add(p);
         } else {
-            mPrinters.remove(p);
+            logWriters.remove(p);
         }
     }
 
     public static synchronized void useFileWriter(File file, boolean append) {
         FileLogWriter fp = new FileLogWriter(file, append);
-        mPrinters.add(fp);
+        logWriters.add(fp);
     }
 
     public static synchronized void useViewLogWriter(LogActivity logActivity) {
-        mPrinters.add(new ViewLogWriter(logActivity));
+        logWriters.add(new ViewLogWriter(logActivity));
     }
 
     public static synchronized void v(String msg, Object... args) {
@@ -96,7 +96,7 @@ public final class Log {
 
     @SuppressWarnings("unused")
     public static void close() {
-        for (LogWriter p : mPrinters) {
+        for (LogWriter p : logWriters) {
             if (p instanceof FileLogWriter)
                 ((FileLogWriter) p).close();
         }
@@ -154,7 +154,7 @@ public final class Log {
                 String part = line.substring(0, splitPos);
                 line = line.substring(splitPos);
 
-                for (LogWriter p : mPrinters) {
+                for (LogWriter p : logWriters) {
                     p.append(level, tag, part);
                 }
             } while (line.length() > 0);

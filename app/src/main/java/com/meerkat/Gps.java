@@ -129,7 +129,7 @@ private final MapView mapView;
     public void onLocationChanged(Location location) {
         if (SettingsActivity.simulate != SettingsActivity.SimType.Live)
             return;
-        Log.d("GPS: (%.5f, %.5f) @%.0fm, %.0f %3.0f%c", location.getLatitude(), location.getLongitude(),
+        Log.d("GPS: (%.5f, %.5f) %s, %s %3.0f%c", location.getLatitude(), location.getLongitude(),
                 altUnits.toString(location.getAltitude()), speedUnits.toString(location.getSpeed()),
                 location.getBearing(), location.hasBearing() ? ' ' : '!');
         synchronized (Gps.location) {

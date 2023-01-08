@@ -79,6 +79,13 @@ public class MapActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         load(getApplicationContext());
+
+        if (fileLog && Environment.getExternalStorageState().equals(MEDIA_MOUNTED)) {
+            File logFile = new File(this.getExternalFilesDir(null), "meerkat.log");
+            Log.useFileWriter(logFile, appendLogFile);
+        }
+Log.i("Starting in %s mode", simulate);
+
         ActivityMapBinding binding = ActivityMapBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         // get generic toolbar
@@ -208,11 +215,6 @@ public class MapActivity extends AppCompatActivity {
         Log.i("Resume");
         super.onResume();
         compass.resume();
-
-        if (fileLog && Environment.getExternalStorageState().equals(MEDIA_MOUNTED)) {
-            File logFile = new File(this.getExternalFilesDir(null), "meerkat.log");
-            Log.useFileWriter(logFile, appendLogFile);
-        }
     }
 
     @Override
@@ -227,8 +229,11 @@ public class MapActivity extends AppCompatActivity {
         Log.i("Destroy");
         if (!isFinishing())
             finish();
-        pingComms.stop();
-        gps.pause();
+        if (pingComms != null)
+            pingComms.stop();
+        if (gps != null)
+            gps.pause();
+        Log.close();
         super.onDestroy();
     }
 
@@ -308,5 +313,7 @@ public class MapActivity extends AppCompatActivity {
         }
     }
 
-    public static VehicleList getVehicleList() { return vehicleList;}
+    public static VehicleList getVehicleList() {
+        return vehicleList;
+    }
 }

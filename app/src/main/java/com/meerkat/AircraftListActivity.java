@@ -124,7 +124,10 @@ public class AircraftListActivity extends AppCompatActivity {
                 int finalJ = j;
                 runOnUiThread(() -> tableAircraft.removeViewAt(finalJ));
             }
-            tableAircraft.notifyAll();
+            //noinspection SynchronizeOnNonFinalField
+            synchronized(tableAircraft) {
+                tableAircraft.notifyAll();
+            }
         } catch (Exception ex) {
             Log.e("Exception: %s", ex.getMessage());
         }

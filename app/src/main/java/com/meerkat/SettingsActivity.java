@@ -94,7 +94,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
         showLog = prefs.getBoolean("showLog", true);
         fileLog = prefs.getBoolean("fileLog", true);
-        appendLogFile = prefs.getBoolean("appendLogFile", false);
+        appendLogFile = prefs.getBoolean("appendLogFile", true);
         try {
             logLevel = com.meerkat.log.Log.Level.valueOf(prefs.getString("logLevel", "I").toUpperCase().trim().substring(0, 1));
         } catch (Exception e) {
@@ -102,7 +102,7 @@ public class SettingsActivity extends AppCompatActivity {
             logLevel = com.meerkat.log.Log.Level.I;
             saveNeeded = true;
         }
-        logRawMessages = prefs.getBoolean("logRawMessages", false);
+        logRawMessages = prefs.getBoolean("logRawMessages", true);
         logDecodedMessages = prefs.getBoolean("logDecodedMessages", false);
         showLinearPredictionTrack = prefs.getBoolean("showLinearPredictionTrack", true);
         showPolynomialPredictionTrack = prefs.getBoolean("showPolynomialPredictionTrack", true);
@@ -165,6 +165,7 @@ public class SettingsActivity extends AppCompatActivity {
             simulate = SimType.LogRealTime;
             saveNeeded = true;
         }
+        simulate = SimType.Live;
 //simulate = SimType.LogRealTime;
 //        autoZoom = true;
 //        minZoom = 5;
