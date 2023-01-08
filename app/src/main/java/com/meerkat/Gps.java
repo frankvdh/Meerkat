@@ -30,6 +30,8 @@ import android.widget.Toast;
 
 import com.meerkat.log.Log;
 import com.meerkat.map.MapView;
+import com.meerkat.measure.Position;
+import com.meerkat.measure.Units;
 
 public class Gps extends Service implements LocationListener {
 private final MapView mapView;
@@ -43,8 +45,14 @@ private final MapView mapView;
     public Gps(Context context, MapView mapView) {
         this.mapView = mapView;
         this.locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
-        if (SettingsActivity.simulate != SettingsActivity.SimType.Live)
+        if (SettingsActivity.simulate != SettingsActivity.SimType.Live) {
+            location.setLatitude(-(40 + 4 / 60.0 + 9 / 3600.0));
+            location.setLongitude(175 + 22 / 60.0 + 42 / 3600.0);
+            location.setAltitude(Units.Height.FT.toM(5000));
+            location.setSpeed(0);
+            location.setBearing(0f);
             return;
+        }
         resume();
     }
 

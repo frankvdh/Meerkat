@@ -29,7 +29,7 @@ import com.meerkat.measure.Units;
 
 public class SettingsActivity extends AppCompatActivity {
     public enum SimType {
-       Live, Simulate, CsvRealTime, CsvFast, CsvSlow
+       Live, Simulate, LogRealTime, LogFast, LogSlow
     }
 
     private static SharedPreferences prefs;
@@ -162,10 +162,12 @@ public class SettingsActivity extends AppCompatActivity {
             simulate = SimType.valueOf(prefs.getString("simulate", "CsvFast").trim());
         } catch (Exception e) {
             Log.e("Invalid simulator type %s", prefs.getString("simulate", null));
-            simulate = SimType.CsvFast;
+            simulate = SimType.LogRealTime;
             saveNeeded = true;
         }
-simulate = SimType.Live;
+//simulate = SimType.LogRealTime;
+//        autoZoom = true;
+//        minZoom = 5;
         if (simulate != SimType.Live)
             displayOrientation = MapView.DisplayOrientation.NorthUp;
         if (saveNeeded) save();

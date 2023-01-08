@@ -31,19 +31,19 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
     private void purge() {
         long now = System.currentTimeMillis();
         synchronized (this) {
-            Iterator<HashMap.Entry<Integer, Vehicle> > iterator = this.entrySet().iterator();
+            Iterator<HashMap.Entry<Integer, Vehicle>> iterator = this.entrySet().iterator();
             while (iterator.hasNext()) {
                 HashMap.Entry<Integer, Vehicle> entry = iterator.next();
-                long age = now - entry.getValue().history.get(entry.getValue().history.size()-1).getTime();
+                long age = now - entry.getValue().history.get(entry.getValue().history.size() - 1).getTime();
                 if (age > purgeSeconds * 1000L) {
-                    Log.i("Purge: %s, %d",entry.getValue().callsign, age);
+                    Log.i("Purge: %s, %d", entry.getValue().callsign, age);
                     entry.getValue().layer.setVisible(false, false);
                     mapView.layers.invalidateDrawable(entry.getValue().layer);
                     iterator.remove();
                 }
             }
         }
-     }
+    }
 
     public VehicleList(MapView mapView) {
         super();
@@ -51,12 +51,13 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::purge, 1, 1, MINUTES);
     }
 
-    public void upsert(String callsign, int participantAddr, Position point, Gdl90Message.Emitter emitterType) {
+    public void upsert(int crc, String callsign, int participantAddr, Position point, Gdl90Message.Emitter emitterType) {
         Vehicle v = get(participantAddr);
         if (v != null) {
-            v.update(point, callsign, emitterType);
+            if (v.lastCrc != crc)
+                v.update(crc, point, callsign, emitterType);
         } else {
-            v = new Vehicle(participantAddr, callsign, point, emitterType, mapView);
+            v = new Vehicle(crc, participantAddr, callsign, point, emitterType, mapView);
             put(participantAddr, v);
         }
         mapView.refresh(v.layer);
@@ -73,7 +74,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
             if (this.isEmpty()) return null;
             Vehicle nearest = null;
             float minDistance = 1e9f;
-            for (Vehicle v: this.values()) {
+            for (Vehicle v : this.values()) {
                 if (v.distance < minDistance) {
                     minDistance = v.distance;
                     nearest = v;
@@ -88,7 +89,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
             if (this.isEmpty()) return null;
             float maxDistance = 0;
             Position furthest = null;
-            for (Vehicle v: this.values()) {
+            for (Vehicle v : this.values()) {
                 if (v.distance > maxDistance) {
                     maxDistance = v.distance;
                     furthest = v.lastValid;

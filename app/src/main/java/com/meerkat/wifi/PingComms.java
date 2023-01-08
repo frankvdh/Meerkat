@@ -38,10 +38,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.meerkat.VehicleList;
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.gdl90.Traffic;
 import com.meerkat.log.Log;
-import com.meerkat.map.MapActivity;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -52,11 +52,13 @@ import java.util.Arrays;
 public class PingComms extends Service {
     private SocketThread thread;
     private final Context context;
+    private final VehicleList vehicleList;
     private String currentWifiName;
     private int currentPort;
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
-    public PingComms(Context context) {
+    public PingComms(Context context, VehicleList v) {
+        vehicleList = v;
         this.context = context;
         Log.i("PingComms constructor");
         if (!connectToExistingWifi(wifiName))
@@ -176,7 +178,7 @@ public class PingComms extends Service {
         }
 
         if (thread == null) {
-            thread = new SocketThread();
+            thread = new SocketThread(vehicleList);
             try {
                 thread.start();
             } catch (IllegalThreadStateException e) {
@@ -194,12 +196,14 @@ public class PingComms extends Service {
     }
 
     private static class SocketThread extends Thread {
+        private final VehicleList vehicleList;
         private DatagramSocket recvSocket;
         private final DatagramPacket recvDatagram;
         // For handling retries
         private final RetryOnException retryHandler;
 
-        private SocketThread() {
+        private SocketThread(VehicleList v) {
+            this.vehicleList = v;
             retryHandler = new RetryOnException(10, 1000);
             byte[] recvBuffer = new byte[132];
             recvDatagram = new DatagramPacket(recvBuffer, recvBuffer.length);
@@ -287,7 +291,7 @@ public class PingComms extends Service {
                         Traffic traffic1 = (Traffic) message;
                         if (traffic1.callsign.equals("********") || traffic1.point.getLatitude() == 0 && traffic1.point.getLongitude() == 0)
                             continue;
-                        MapActivity.vehicleList.upsert(traffic1.callsign, traffic1.participantAddr, traffic1.point, traffic1.emitterType);
+                        traffic1.upsert(vehicleList);
                     }
                 }
             }

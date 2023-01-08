@@ -45,7 +45,7 @@ import java.io.ByteArrayInputStream;
 
 public class Gdl90Message {
     protected byte messageId;
-    private int crc;
+    int crc;
     private final ByteArrayInputStream is;
     protected boolean crcValid;
 

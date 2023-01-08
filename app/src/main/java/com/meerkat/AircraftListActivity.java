@@ -33,6 +33,7 @@ import com.meerkat.log.Log;
 import com.meerkat.map.MapActivity;
 
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.stream.Stream;
@@ -41,6 +42,7 @@ public class AircraftListActivity extends AppCompatActivity {
 
     private TableLayout tableAircraft;
     private ScheduledFuture<?> task;
+    private VehicleList vehicleList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +58,7 @@ public class AircraftListActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         Log.i("%s resumed", this.getLocalClassName());
+        vehicleList = MapActivity.getVehicleList();
         task = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::refreshAircraftDisplay, 1, 1, SECONDS);
     }
 
@@ -69,8 +72,8 @@ public class AircraftListActivity extends AppCompatActivity {
     @SuppressWarnings("unused")
     private void refreshAircraftDisplay() {
         try {
-            Log.d("refreshAircraftDisplay: ", MapActivity.vehicleList.keySet().size());
-            Stream<Vehicle> s = MapActivity.vehicleList.getVehicles().stream().sorted();
+            Log.d("refreshAircraftDisplay: ", vehicleList.keySet().size());
+            Stream<Vehicle> s = vehicleList.getVehicles().stream().sorted();
             int i = 1; // row 0 is header
             for (Iterator<Vehicle> it = s.iterator(); it.hasNext(); i++) {
                 Vehicle v = it.next();
@@ -83,8 +86,8 @@ public class AircraftListActivity extends AppCompatActivity {
                 double alt;
                 synchronized (v.lastValid) {
                     distance = v.distance;
-                    bearing = String.format("%03d", (int) (Gps.bearingTo(v.lastValid) + 360) % 360);
-                    track = Float.isNaN(v.lastValid.getTrack()) ? "---" : String.format("%03.0f", v.lastValid.getTrack());
+                    bearing = String.format(Locale.getDefault(), "%03d", (int) (Gps.bearingTo(v.lastValid) + 360) % 360);
+                    track = Float.isNaN(v.lastValid.getTrack()) ? "---" : String.format(Locale.getDefault(), "%03.0f", v.lastValid.getTrack());
                     speed = v.lastValid.getSpeed();
                     vVel = v.lastValid.getVVel();
                     alt = v.lastValid.getAltitude();

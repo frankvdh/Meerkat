@@ -38,14 +38,15 @@ public class Vehicle implements Comparable<Vehicle> {
     public String callsign;
     public final LinkedList<Position> history;
     public final LinkedList<Position> predicted;
-    public @NonNull
-    Gdl90Message.Emitter emitterType;
+    public @NonNull Gdl90Message.Emitter emitterType;
     public final Position lastValid;
     public final Position predictedPosition;
     public float distance;
     final AircraftLayer layer;
+    int lastCrc;
 
-    public Vehicle(int id, String callsign, Position point, @NonNull Gdl90Message.Emitter emitterType, @NonNull MapView mapView) {
+    public Vehicle(int crc, int id, String callsign, Position point, @NonNull Gdl90Message.Emitter emitterType, @NonNull MapView mapView) {
+        this.lastCrc = crc;
         this.id = id;
         this.mapView = mapView;
         this.callsign = callsign;
@@ -100,14 +101,15 @@ public class Vehicle implements Comparable<Vehicle> {
         return callsign + valChar;
     }
 
-    public void update(Position point, String callsign, @NonNull Gdl90Message.Emitter emitterType) {
+    public void update(int crc, Position point, String callsign, @NonNull Gdl90Message.Emitter emitterType) {
         var now = System.currentTimeMillis();
+        this.lastCrc = crc;
         Log.d(String.format("%06x, %s, %s, %s", id, callsign, emitterType, point.toString()));
         if (point.isValid())
             synchronized (lastValid) {
                 lastValid.set(point);
                 distance = Gps.distanceTo(point); // metres
-                Log.v("Current: %s", lastValid.toString());
+                Log.d("Current: %s", lastValid.toString());
 
                 if (emitterType != Gdl90Message.Emitter.Unknown) {
                     this.emitterType = emitterType;
@@ -131,7 +133,8 @@ public class Vehicle implements Comparable<Vehicle> {
                 if (p.getTime() >= maxAge) break;
                 it.remove();
             }
-            history.addFirst(point);
+            if (point.isValid())
+                history.addFirst(point);
         }
 
         if (showPolynomialPredictionTrack) {

@@ -46,8 +46,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.meerkat.AircraftListActivity;
 import com.meerkat.Compass;
-import com.meerkat.CsvPlayer;
 import com.meerkat.Gps;
+import com.meerkat.LogReplay;
 import com.meerkat.R;
 import com.meerkat.SettingsActivity;
 import com.meerkat.Simulator;
@@ -72,7 +72,7 @@ public class MapActivity extends AppCompatActivity {
     private Compass compass;
     PingComms pingComms;
     private ActionBar actionBar;
-    public static VehicleList vehicleList;
+    private static VehicleList vehicleList;
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     @Override
@@ -168,28 +168,28 @@ public class MapActivity extends AppCompatActivity {
             Log.level(Log.Level.D);
             Log.d("Permissions OK");
 
+            vehicleList = new VehicleList(binding.mapView);
             gps = new Gps(getApplicationContext(), binding.mapView);
             compass = new Compass(getApplicationContext(), binding.mapView);
             CompassView compassView = binding.compassView;
             compassView.setMap(binding.mapView, binding.compassText);
-            Background background = new Background(binding.mapView, binding.compassView, binding.compassText, binding.scaleText);
+            Background background = new Background(binding.mapView, vehicleList, binding.compassView, binding.compassText, binding.scaleText);
             binding.mapView.layers.addLayer(background);
-            vehicleList = new VehicleList(binding.mapView);
 
             if (simulate == SettingsActivity.SimType.Simulate) {
-                Simulator.startAll();
+                Simulator.startAll(vehicleList);
                 firstRun = false;
                 return;
             }
-            if (simulate == SettingsActivity.SimType.CsvFast || simulate == SettingsActivity.SimType.CsvRealTime) {
+            if (simulate == SettingsActivity.SimType.LogFast || simulate == SettingsActivity.SimType.LogSlow || simulate == SettingsActivity.SimType.LogRealTime) {
                 try {
-                    var player = new CsvPlayer(binding.mapView, new File(this.getExternalFilesDir(null), "gps.csv"), new File(this.getExternalFilesDir(null), "aircraft.csv"), simulate == SettingsActivity.SimType.CsvRealTime);
+                    new LogReplay(vehicleList, new File(this.getExternalFilesDir(null), "meerkat.save.log")).start();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Log.e("Log replay file error: %s", "meerkat.save.log");
                 }
                 return;
             }
-            pingComms = new PingComms(getApplicationContext());
+            pingComms = new PingComms(getApplicationContext(), vehicleList);
             Log.i("Connecting: %s", wifiName, port);
             if (wifiName == null) {
                 this.startActivity(new Intent(this, SettingsActivity.class));
@@ -307,4 +307,6 @@ public class MapActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    public static VehicleList getVehicleList() { return vehicleList;}
 }

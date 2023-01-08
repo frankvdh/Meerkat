@@ -38,6 +38,7 @@ import androidx.annotation.Nullable;
 
 import com.meerkat.Gps;
 import com.meerkat.Vehicle;
+import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
@@ -46,11 +47,13 @@ public class Background extends Drawable {
     private final Paint dangerPaint;
     private final Paint circlePaint;
     private final MapView mapView;
+    private final VehicleList vehicleList;
     private final CompassView compassView;
     private final TextView compassText, scaleText;
 
-    public Background(MapView mapView, CompassView compassView, TextView compassText, TextView scaleText) {
+    public Background(MapView mapView, VehicleList vehicleList, CompassView compassView, TextView compassText, TextView scaleText) {
         this.mapView = mapView;
+        this.vehicleList = vehicleList;
         this.compassView = compassView;
         this.compassText = compassText;
         this.scaleText = scaleText;
@@ -83,7 +86,7 @@ public class Background extends Drawable {
         canvas.drawLine(-xCentre, 0, xCentre, 0, circlePaint);
 
         if (autoZoom) {
-            mapView.pixelsPerMetre = getScaleFactor(canvas.getClipBounds(), MapActivity.vehicleList.getMaxDistance());
+            mapView.pixelsPerMetre = getScaleFactor(canvas.getClipBounds(), vehicleList.getMaxDistance());
             Log.d("Scale factor %.5f", mapView.pixelsPerMetre);
         }
         float radiusStep = circleRadiusStepMetres * mapView.pixelsPerMetre;
@@ -93,7 +96,7 @@ public class Background extends Drawable {
                 canvas.drawCircle(0, 0, rad, circlePaint);
             }
 
-        Vehicle nearest = MapActivity.vehicleList.getNearest();
+        Vehicle nearest = vehicleList.getNearest();
         if (nearest != null) {
             int thickness = nearest.distance <= dangerRadiusMetres ? 20 : (int) (dangerRadiusMetres * 20 / nearest.distance);
             Log.d("Nearest = %s %s, %d, thickness = %d", nearest.callsign, Units.Distance.NM.toString(nearest.distance), (int) (nearest.distance * 20 / dangerRadiusMetres), thickness);

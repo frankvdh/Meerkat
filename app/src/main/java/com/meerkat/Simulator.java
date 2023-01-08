@@ -28,6 +28,7 @@ public class Simulator {
 
     private static final Position initialPos = new Position("gps", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0,
             Units.Height.FT.toM(5000f), Units.Speed.KNOTS.toMps(100d), 350f, Units.VertSpeed.FPM.toMps(0f), true, true, System.currentTimeMillis());
+    private static VehicleList vehicleList;
 
     private int nextActionTime;
     private int actionIndex;
@@ -119,7 +120,8 @@ public class Simulator {
         Log.i("new Sim: %s %s", flight.callsign, flight.position.toString());
     }
 
-    public static void startAll() {
+    public static void startAll(VehicleList vehicleList) {
+        Simulator.vehicleList = vehicleList;
         new Simulator(ownShip, 0, true).start();
         for (Simulator s : traffic)
             s.start();
@@ -151,7 +153,7 @@ public class Simulator {
             Gps.setLocation(flight.position);
         else {
             flight.position.moveBy(1000);
-            MapActivity.vehicleList.upsert(flight.callsign, flight.id, flight.position, flight.emitterType);
+            vehicleList.upsert(nextActionTime, flight.callsign, flight.id, flight.position, flight.emitterType);
         }
     }
 

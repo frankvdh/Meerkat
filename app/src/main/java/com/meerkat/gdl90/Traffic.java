@@ -19,6 +19,7 @@ import android.hardware.GeomagneticField;
 
 import androidx.annotation.NonNull;
 
+import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
@@ -144,6 +145,10 @@ public class Traffic extends Gdl90Message {
                 return NaN;
         }
         return NaN;
+    }
+
+    public void upsert(VehicleList vehicleList) {
+        vehicleList.upsert(crc, callsign, participantAddr, point, emitterType);
     }
 
     @NonNull

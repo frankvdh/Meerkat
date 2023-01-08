@@ -138,42 +138,43 @@ public class AircraftLayer extends Drawable {
                 currentPos = new Position(vehicle.lastValid);
                 emitter = vehicle.emitterType;
             }
-            track = currentPos.getTrack();
-            isAirborne = currentPos.isAirborne();
-            Log.d("draw %d %s %s %s", vehicle.id, vehicle.callsign, emitter, currentPos);
-            // Canvas is already translated so that 0,0 is at the ownShip point
-            Rect bounds = canvas.getClipBounds();
-            var bmpWidth = emitter.bitmap.getWidth();
-            Point aircraftPoint = mapView.screenPoint(currentPos);
-            // Draw the icon if part of it is visible
-            double altDiff = currentPos.getAltitude() - Gps.getAltitude();
-            var displayAngle = MapView.displayRotation();
-            if (aircraftPoint.x > bounds.left - bmpWidth / 2 && aircraftPoint.x < bounds.right + bmpWidth / 2 && aircraftPoint.y > bounds.top - bmpWidth / 2 && aircraftPoint.y < bounds.bottom + bmpWidth / 2) {
-                canvas.drawBitmap(replaceColor(emitter.bitmap, altColour(altDiff, isAirborne)),
-                        positionMatrix(emitter.bitmap.getWidth() / 2, emitter.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
-                                (isNaN(track) ? 0 : track) - (isNaN(displayAngle) ? 0 : displayAngle)), null);
-                int lineHeight = (int) (textPaint.getTextSize() + 1);
-                String[] text = {vehicle.getLabel(), isNaN(altDiff) ? "" : altUnits.toString(altDiff)};
-                drawText(canvas, aircraftPoint, lineHeight, text, bounds, bmpWidth);
-            }
-
-            if (showLinearPredictionTrack && vehicle.predictedPosition != null) {
-                synchronized (vehicle.predictedPosition) {
-                    if (vehicle.predictedPosition.isValid()) {
-                        line(canvas, aircraftPoint, vehicle.predictedPosition, predictEffect);
+            if (currentPos.isValid()) {
+                Log.d("draw %d %s %s %s", vehicle.id, vehicle.callsign, emitter, currentPos);
+                track = currentPos.getTrack();
+                isAirborne = currentPos.isAirborne();
+                // Canvas is already translated so that 0,0 is at the ownShip point
+                Rect bounds = canvas.getClipBounds();
+                Point aircraftPoint = mapView.screenPoint(currentPos);
+                // Draw the icon if part of it is visible
+                var bmpWidth = emitter.bitmap.getWidth();
+                double altDiff = currentPos.getAltitude() - Gps.getAltitude();
+                var displayAngle = MapView.displayRotation();
+                if (aircraftPoint.x > bounds.left - bmpWidth / 2 && aircraftPoint.x < bounds.right + bmpWidth / 2 && aircraftPoint.y > bounds.top - bmpWidth / 2 && aircraftPoint.y < bounds.bottom + bmpWidth / 2) {
+                    canvas.drawBitmap(replaceColor(emitter.bitmap, altColour(altDiff, isAirborne)),
+                            positionMatrix(emitter.bitmap.getWidth() / 2, emitter.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
+                                    (isNaN(track) ? 0 : track) - (isNaN(displayAngle) ? 0 : displayAngle)), null);
+                    int lineHeight = (int) (textPaint.getTextSize() + 1);
+                    String[] text = {vehicle.getLabel(), isNaN(altDiff) ? "" : altUnits.toString(altDiff)};
+                    drawText(canvas, aircraftPoint, lineHeight, text, bounds, bmpWidth);
+                }
+                if (showLinearPredictionTrack && vehicle.predictedPosition != null) {
+                    synchronized (vehicle.predictedPosition) {
+                        if (vehicle.predictedPosition.isValid()) {
+                            line(canvas, aircraftPoint, vehicle.predictedPosition, predictEffect);
+                        }
                     }
                 }
-            }
 
-            if (showPolynomialPredictionTrack) {
-                synchronized (vehicle.predicted) {
-                    polyLine(canvas, aircraftPoint, vehicle.predicted, predictEffect);
+                if (showPolynomialPredictionTrack) {
+                    synchronized (vehicle.predicted) {
+                        polyLine(canvas, aircraftPoint, vehicle.predicted, predictEffect);
+                    }
                 }
-            }
 
-            if (historySeconds > 0) {
-                synchronized (vehicle.history) {
-                    polyLine(canvas, aircraftPoint, vehicle.history, historyEffect);
+                if (historySeconds > 0) {
+                    synchronized (vehicle.history) {
+                        polyLine(canvas, aircraftPoint, vehicle.history, historyEffect);
+                    }
                 }
             }
         }
