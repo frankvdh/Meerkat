@@ -17,16 +17,20 @@ import com.meerkat.PolynomialRegression;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 public class PolynomialRegressionTest {
     @Test
     public void test() {
         var y = new int[]{1, 6, 17, 34, 57, 86, 121, 162, 209, 262, 321};
-        PolynomialRegression pr = new PolynomialRegression(1000, 1);
+        Instant now = Instant.now();
+        PolynomialRegression pr = new PolynomialRegression(now, 1);
         for (int i = 0; i < y.length; i++)
-            pr.add(i+1000, y[i]);
+            pr.add(now.plus(i, ChronoUnit.MILLIS), y[i]);
 
         double[] coeff = pr.getCoefficients()[0];
-        Assert.assertArrayEquals(new double[]{1, 2, 3, 1000}, coeff, 0.000001);
+        Assert.assertArrayEquals(new double[]{1, 2, 3, now.toEpochMilli()}, coeff, 0.000001);
     }
 
     @Test
@@ -36,12 +40,13 @@ public class PolynomialRegressionTest {
                 new Data(-27304, 147.1311f), new Data(-26307, 147.1311f), new Data(-25153, 147.1311f), new Data(-24249, 147.1311f),
                 new Data(-23308, 147.1311f), new Data(-22291, 147.1311f), new Data(-21161, 147.1311f)};
 
-        var pr = new PolynomialRegression(-31065, 1);
+        Instant now = Instant.now();
+        PolynomialRegression pr = new PolynomialRegression(now.plus(data[0].l, ChronoUnit.MILLIS), 1);
         for (Data d : data)
-            pr.add(d.l, d.f);
+            pr.add(now.plus(d.l, ChronoUnit.MILLIS), d.f);
 
         double[] coeff = pr.getCoefficients()[0];
-        Assert.assertArrayEquals(new double[]{147.1, 0, 0, -31065}, coeff, 0.1);
+        Assert.assertArrayEquals(new double[]{147.1, 0, 0, now.plus(data[0].l, ChronoUnit.MILLIS).toEpochMilli()}, coeff, 0.1);
     }
     @Test
     public void test2() {
@@ -51,12 +56,13 @@ public class PolynomialRegressionTest {
                 new Data(-40059, 18.28125f), new Data(-39042, 18.28125f), new Data(-37912, 18.28125f),
         };
 
-        var pr = new PolynomialRegression(-47816, 1);
+        Instant now = Instant.now();
+        PolynomialRegression pr = new PolynomialRegression(now.plus(data[0].l, ChronoUnit.MILLIS), 1);
         for (Data d : data)
-            pr.add(d.l, d.f);
+            pr.add(now.plus(d.l, ChronoUnit.MILLIS), d.f);
 
         double[] coeff = pr.getCoefficients()[0];
-        Assert.assertArrayEquals(new double[]{18.2, 0, 0, -47816}, coeff, 0.1);
+        Assert.assertArrayEquals(new double[]{18.2, 0, 0, now.plus(data[0].l, ChronoUnit.MILLIS).toEpochMilli()}, coeff, 0.1);
     }
 
     @Test
@@ -65,12 +71,13 @@ public class PolynomialRegressionTest {
                 new Data(1000, 100), new Data(1010, 100), new Data(1020, 100)
         };
 
-        var pr = new PolynomialRegression(data[0].l, 1);
+        Instant now = Instant.now();
+        PolynomialRegression pr = new PolynomialRegression(now.plus(data[0].l, ChronoUnit.MILLIS), 1);
         for (Data d : data)
-            pr.add(d.l, d.f);
+            pr.add(now.plus(d.l, ChronoUnit.MILLIS), d.f);
 
         double[] coeff = pr.getCoefficients()[0];
-        Assert.assertArrayEquals(new double[]{100, 0, 0, data[0].l}, coeff, 0.1);
+        Assert.assertArrayEquals(new double[]{100, 0, 0, now.plus(data[0].l, ChronoUnit.MILLIS).toEpochMilli()}, coeff, 0.1);
     }
 
     @Test
@@ -79,12 +86,13 @@ public class PolynomialRegressionTest {
                 new Data(1000000, 0), new Data(1005000, 10), new Data(1010000, 20), new Data(1015000, 30)
         };
 
-        PolynomialRegression pr = new PolynomialRegression(data[0].l, 1);
+        Instant now = Instant.now();
+        PolynomialRegression pr = new PolynomialRegression(now.plus(data[0].l, ChronoUnit.MILLIS), 1);
         for (Data d : data)
-            pr.add(d.l, d.f);
+            pr.add(now.plus(d.l, ChronoUnit.MILLIS), d.f);
 
         double[] coeff = pr.getCoefficients()[0];
-        Assert.assertArrayEquals(new double[]{0, .002, 0, data[0].l}, coeff, 0.1);
+        Assert.assertArrayEquals(new double[]{0, .002, 0, now.plus(data[0].l, ChronoUnit.MILLIS).toEpochMilli()}, coeff, 0.1);
     }
 
     @Test
@@ -93,12 +101,13 @@ public class PolynomialRegressionTest {
                 new Data(1000000, 10), new Data(1010000, 20), new Data(1015000, 10)
         };
 
-        var pr = new PolynomialRegression(data[0].l, 1);
+        Instant now = Instant.now();
+        PolynomialRegression pr = new PolynomialRegression(now.plus(data[0].l, ChronoUnit.MILLIS), 1);
         for (Data d : data)
-            pr.add(d.l, d.f);
+            pr.add(now.plus(d.l, ChronoUnit.MILLIS), d.f);
 
         var coeff = pr.getCoefficients()[0];
-        Assert.assertArrayEquals(new double[]{10, 0, 0, data[0].l}, coeff, 0.1);
+        Assert.assertArrayEquals(new double[]{10, 0, 0, now.plus(data[0].l, ChronoUnit.MILLIS).toEpochMilli()}, coeff, 0.1);
     }
 
     @Test
@@ -109,12 +118,13 @@ public class PolynomialRegressionTest {
                 new Data(80, 10), new Data(90, 9), new Data(100, 8),
         };
 
-        var pr = new PolynomialRegression(0, 1);
+        Instant now = Instant.now();
+        PolynomialRegression pr = new PolynomialRegression(now.plus(data[0].l, ChronoUnit.MILLIS), 1);
         for (Data d : data)
-            pr.add(d.l, d.f);
+            pr.add(now.plus(d.l, ChronoUnit.MILLIS), d.f);
 
         double[] coeff = pr.getCoefficients()[0];
-        Assert.assertArrayEquals(new double[]{18, -0.1, 0, 0}, coeff, 0.01);
+        Assert.assertArrayEquals(new double[]{18, -0.1, 0, now.toEpochMilli()}, coeff, 0.01);
     }
 
     @Test
@@ -125,12 +135,13 @@ public class PolynomialRegressionTest {
                 new Data(400080, 10), new Data(400090,  9), new Data(400100, 8),
         };
 
-        var pr = new PolynomialRegression(400000, 1);
+        Instant now = Instant.now();
+        PolynomialRegression pr = new PolynomialRegression(now.plus(data[0].l, ChronoUnit.MILLIS), 1);
         for (Data d : data)
-            pr.add(d.l, d.f);
+            pr.add(now.plus(d.l, ChronoUnit.MILLIS), d.f);
 
         var coeff = pr.getCoefficients()[0];
-        Assert.assertArrayEquals(new double[]{18, -0.1, 0, 400000}, coeff, 0.01);
+        Assert.assertArrayEquals(new double[]{18, -0.1, 0, now.plus(data[0].l, ChronoUnit.MILLIS).toEpochMilli()}, coeff, 0.01);
     }
     public static class Data {
        public final long l;

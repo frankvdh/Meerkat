@@ -204,7 +204,7 @@ public class Gdl90Message {
         return crcValid ? ' ' : '!';
     }
 
-    public static Gdl90Message getMessage(ByteArrayInputStream is, long time) {
+    public static Gdl90Message getMessage(ByteArrayInputStream is) {
         while (is.available() > 0) {
             byte messageId = (byte) is.read();
             if ((messageId & 0x80) != 0 && (messageId & 0x7f) == 0x7e) {
@@ -220,7 +220,7 @@ public class Gdl90Message {
                     return new OwnShipGeometricAltitude(is);
                 case 10:
                 case 20:
-                    return new Traffic(messageId, time, new Position("ADSB"), is);
+                    return new Traffic(messageId, new Position("ADSB"), is);
                 case 37:
                     return new Identification(is);
                 case 40:

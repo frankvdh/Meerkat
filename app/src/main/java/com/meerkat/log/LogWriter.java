@@ -17,10 +17,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 interface LogWriter {
     void append(Log.Level level, String tag, String msg);
@@ -34,8 +33,6 @@ class SystemOutLogWriter implements LogWriter {
 }
 
 class FileLogWriter implements LogWriter {
-    static final DateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS", Locale.ENGLISH);
-
     BufferedWriter bw;
     final File file;
     final boolean append;
@@ -43,7 +40,13 @@ class FileLogWriter implements LogWriter {
     public FileLogWriter(File file, boolean append) {
         this.file = file;
         this.append = append;
-        append(Log.Level.A, "Log restarted", new Date().toString());
+        try {
+        bw = new BufferedWriter(new FileWriter(file, append));
+        bw.write(String.format("\r\n\r\n%s %s/%s %s\r\n", DateTimeFormatter.ISO_INSTANT.format(Instant.now()), "FileLogWriter", Log.Level.A, "Log restarted"));
+        } catch (IOException e) {
+            bw = null;
+            android.util.Log.e("FileLogWriter", "Log File create failed: " + e.getMessage());
+        }
     }
 
     public void append(Log.Level level, String tag, String msg) {
@@ -51,7 +54,7 @@ class FileLogWriter implements LogWriter {
             if (bw == null)
                 bw = new BufferedWriter(new FileWriter(file, append));
             synchronized (this) {
-                bw.write(String.format("%s %s/%s %s\r\n", sdf.format(System.currentTimeMillis()), tag, level, msg));
+                bw.write(String.format("%s %s/%s %s\r\n", DateTimeFormatter.ISO_INSTANT.format(Instant.now()), tag, level, msg));
             }
         } catch (IOException e) {
             bw = null;
@@ -60,7 +63,7 @@ class FileLogWriter implements LogWriter {
     }
 
     public void close() {
-        append(Log.Level.A, "Log closed", new Date().toString());
+        append(Log.Level.A, "FileLogWriter", "Log closed");
         try {
             bw.flush();
             bw.close();
@@ -83,7 +86,6 @@ class ViewLogWriter implements LogWriter {
             logActivity.append(message);
         }
     }
-
 }
 
 class AndroidLogWriter implements LogWriter {

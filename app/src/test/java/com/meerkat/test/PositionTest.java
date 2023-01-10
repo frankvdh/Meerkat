@@ -30,6 +30,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.time.Instant;
+
 @RunWith(MockitoJUnitRunner.class)
 public class PositionTest extends TestCase {
     @Test
@@ -66,7 +68,6 @@ public class PositionTest extends TestCase {
 
     @Test
     public void testLinearPredict() {
-        long now = System.currentTimeMillis();
         when(marton.getLatitude()).thenReturn(-(40 + 4 / 60.0 + 9 / 3600.0));
         when(marton.getLongitude()).thenReturn(175 + 22 / 60.0 + 42 / 3600.0);
         when(marton.getAltitude()).thenReturn(Units.Height.FT.toM(5000));

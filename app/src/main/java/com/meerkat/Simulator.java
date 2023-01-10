@@ -16,18 +16,17 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
-import com.meerkat.map.MapActivity;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
 
-import java.io.File;
+import java.time.Instant;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 
 public class Simulator {
 
     private static final Position initialPos = new Position("gps", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0,
-            Units.Height.FT.toM(5000f), Units.Speed.KNOTS.toMps(100d), 350f, Units.VertSpeed.FPM.toMps(0f), true, true, System.currentTimeMillis());
+            Units.Height.FT.toM(5000f), Units.Speed.KNOTS.toMps(100d), 350f, Units.VertSpeed.FPM.toMps(0f), true, true, Instant.now());
     private static VehicleList vehicleList;
 
     private int nextActionTime;
@@ -148,12 +147,11 @@ public class Simulator {
         flight.position.setCrcValid(true);
         flight.position.setSpeed((float) (flight.position.getSpeed() + action.accel));
         flight.position.setTrack((flight.position.getTrack() + action.turn) % 360);
-        flight.position.setTime(System.currentTimeMillis());
         if (isGps)
             Gps.setLocation(flight.position);
         else {
             flight.position.moveBy(1000);
-            vehicleList.upsert(nextActionTime, flight.callsign, flight.id, flight.position, flight.emitterType);
+            vehicleList.upsert(nextActionTime, flight.callsign, flight.id, flight.position, flight.emitterType,Instant.now());
         }
     }
 

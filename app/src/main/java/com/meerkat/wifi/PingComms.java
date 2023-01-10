@@ -47,6 +47,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.time.Instant;
 import java.util.Arrays;
 
 public class PingComms extends Service {
@@ -281,9 +282,8 @@ public class PingComms extends Service {
                     Log.i(sb.toString());
                 }
                 ByteArrayInputStream is = new ByteArrayInputStream(packet);
-                long now = System.currentTimeMillis();
                 while (is.available() > 0) {
-                    Gdl90Message message = Gdl90Message.getMessage(is, now);
+                    Gdl90Message message = Gdl90Message.getMessage(is);
                     if (message == null) continue;
                     if (logDecodedMessages)
                         Log.i(message.toString());
@@ -291,7 +291,7 @@ public class PingComms extends Service {
                         Traffic traffic1 = (Traffic) message;
                         if (traffic1.callsign.equals("********") || traffic1.point.getLatitude() == 0 && traffic1.point.getLongitude() == 0)
                             continue;
-                        traffic1.upsert(vehicleList);
+                        traffic1.upsert(vehicleList, Instant.now());
                     }
                 }
             }

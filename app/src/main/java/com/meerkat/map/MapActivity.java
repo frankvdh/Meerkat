@@ -183,12 +183,7 @@ Log.i("Starting in %s mode", simulate);
             Background background = new Background(binding.mapView, vehicleList, binding.compassView, binding.compassText, binding.scaleText);
             binding.mapView.layers.addLayer(background);
 
-            if (simulate == SettingsActivity.SimType.Simulate) {
-                Simulator.startAll(vehicleList);
-                firstRun = false;
-                return;
-            }
-            if (simulate == SettingsActivity.SimType.LogFast || simulate == SettingsActivity.SimType.LogSlow || simulate == SettingsActivity.SimType.LogRealTime) {
+            if (simulate) {
                 try {
                     new LogReplay(vehicleList, new File(this.getExternalFilesDir(null), "meerkat.save.log")).start();
                 } catch (IOException e) {

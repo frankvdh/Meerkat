@@ -28,10 +28,6 @@ import com.meerkat.map.MapView;
 import com.meerkat.measure.Units;
 
 public class SettingsActivity extends AppCompatActivity {
-    public enum SimType {
-       Live, Simulate, LogRealTime, LogFast, LogSlow
-    }
-
     private static SharedPreferences prefs;
     public static volatile String wifiName;
     public static volatile int port;
@@ -66,7 +62,8 @@ public class SettingsActivity extends AppCompatActivity {
     public static volatile Units.Height altUnits;
     public static volatile Units.Speed speedUnits;
     public static volatile Units.VertSpeed vertSpeedUnits;
-    public static volatile SimType simulate;
+    public static volatile boolean simulate;
+    public static volatile float simulateSpeedFactor;
     public static volatile String countryCode;
     public static volatile String ownCallsign;
     public static volatile MapView.DisplayOrientation displayOrientation;
@@ -140,10 +137,10 @@ public class SettingsActivity extends AppCompatActivity {
             saveNeeded = true;
         }
         screenWidthMetres = (int) (Math.max(Units.Distance.NM.toM(2), Math.min(Units.Distance.NM.toM(50), prefs.getInt("screenWidth", (int) (Units.Distance.NM.toM(10))))));
-        minZoom = (int) (Math.max(Units.Distance.NM.toM(2), Math.min(Units.Distance.NM.toM(screenWidthMetres), prefs.getInt("minZoom", (int) (Units.Distance.NM.toM(10))))));
-        maxZoom = (int) (Math.max(Units.Distance.NM.toM(screenWidthMetres), Math.min(Units.Distance.NM.toM(50), prefs.getInt("maxZoom", (int) (Units.Distance.NM.toM(10))))));
         circleRadiusStepMetres = (int) (Math.max(Units.Distance.NM.toM(1), Math.min(screenWidthMetres, prefs.getInt("circleRadiusStep", (int) (Units.Distance.NM.toM(5))))));
         dangerRadiusMetres = (int) (Math.max(Units.Distance.NM.toM(1), Math.min(screenWidthMetres, prefs.getInt("dangerRadius", (int) (Units.Distance.NM.toM(1))))));
+        minZoom = (int) (Math.max(dangerRadiusMetres, Math.min(Units.Distance.NM.toM(screenWidthMetres), prefs.getInt("minZoom", (int) (Units.Distance.NM.toM(10))))));
+        maxZoom = (int) (Math.max(screenWidthMetres, Math.min(Units.Distance.NM.toM(50), prefs.getInt("maxZoom", (int) (Units.Distance.NM.toM(50))))));
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         ownCallsign = prefs.getString("ownCallsign", "ZKLLY").toUpperCase();
         try {
@@ -158,18 +155,9 @@ public class SettingsActivity extends AppCompatActivity {
         minGpsUpdateIntervalSeconds = prefs.getInt("minGpsUpdateIntervalSeconds", 10);
         toolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("toolbarDelaySecs", 3)))*1000;
         initToolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("initToolbarDelaySecs", 10)))*1000;
-        try {
-            simulate = SimType.valueOf(prefs.getString("simulate", "CsvFast").trim());
-        } catch (Exception e) {
-            Log.e("Invalid simulator type %s", prefs.getString("simulate", null));
-            simulate = SimType.LogRealTime;
-            saveNeeded = true;
-        }
-        simulate = SimType.Live;
-//simulate = SimType.LogRealTime;
-//        autoZoom = true;
-//        minZoom = 5;
-        if (simulate != SimType.Live)
+        simulate = prefs.getBoolean("simulate", false);
+        simulateSpeedFactor = Math.max(0.1f, Math.min(100f, prefs.getFloat("simulateSpeedFactor", 25)));
+        if (simulate)
             displayOrientation = MapView.DisplayOrientation.NorthUp;
         if (saveNeeded) save();
         Log.log(logLevel, "Settings loaded");
@@ -215,7 +203,8 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putInt("initToolbarDelaySecs", initToolbarDelayMilliS / 1000);
         edit.putInt("minGpsDistanceChangeMetres", minGpsDistanceChangeMetres);
         edit.putInt("minGpsUpdateIntervalSeconds", minGpsUpdateIntervalSeconds);
-        edit.putString("simulate", String.valueOf(simulate));
+        edit.putBoolean("simulate", simulate);
+        edit.putFloat("simulateSpeedFactor", simulateSpeedFactor);
         edit.apply();
         Log.log(logLevel, "Settings saved");
     }

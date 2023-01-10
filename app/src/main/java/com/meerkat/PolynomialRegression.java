@@ -12,6 +12,9 @@
  */
 package com.meerkat;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
 /**
  * https://rosettacode.org/wiki/Polynomial_regression#Java
  */
@@ -25,9 +28,9 @@ public class PolynomialRegression {
     private final double[] ySum;
     private final double[] xySum;
     private final double[] x2ySum;
-    private final long initialX;
+    private final Instant initialX;
 
-    public PolynomialRegression(long start, int numSeries) {
+    public PolynomialRegression(Instant start, int numSeries) {
         initialX = start;
         this.numSeries = numSeries;
         N = 0;
@@ -40,8 +43,8 @@ public class PolynomialRegression {
         x2ySum = new double[numSeries];
     }
 
-    public void add(long X, float... Y) {
-        double x = X - initialX;
+    public void add(Instant X, float... Y) {
+        double x = initialX.until(X, ChronoUnit.MILLIS);
         double x2 = x * x;
         xSum += x;
         x2Sum += x2;
@@ -75,7 +78,7 @@ public class PolynomialRegression {
             double sx2yN = (x2ySum[i] - x2m * ySum[i]);
             double coefficient1 = (sxyN * sx2x2N - sx2yN * sxx2N) / div1;
             double coefficient2 = (sx2yN * sxxN - sxyN * sxx2N) / div2;
-            result[i] = new double[]{ym - coefficient1 * xm - coefficient2 * x2m, coefficient1, coefficient2, initialX};
+            result[i] = new double[]{ym - coefficient1 * xm - coefficient2 * x2m, coefficient1, coefficient2, initialX.toEpochMilli()};
         }
         return result;
     }

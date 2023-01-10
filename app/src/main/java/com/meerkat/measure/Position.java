@@ -25,18 +25,22 @@ import android.location.Location;
 
 import androidx.annotation.NonNull;
 
+import java.time.Instant;
+
 public class Position extends Location {
     double vVel;
     private boolean crcValid;
     private boolean airborne;
+    private Instant time;
 
     public Position(String provider) {
         super(provider);
     }
 
-    public Position(String provider, double lat, double lon, double alt, double speed, double track, double vVel, boolean crcValid, boolean airborne, long time) {
+    public Position(String provider, double lat, double lon, double alt, double speed, double track, double vVel, boolean crcValid, boolean airborne, Instant time) {
         super(provider);
-        super.setTime(time);
+        this.time = time;
+        setTime(time.toEpochMilli());
         if (!isNaN(lat)) setLatitude(lat);
         if (!isNaN(lon)) setLongitude(lon);
         if (!isNaN(alt)) setAltitude(alt);
@@ -44,19 +48,30 @@ public class Position extends Location {
         if (!isNaN(speed))
             setSpeed((float) speed);
         else super.removeSpeed();
-        if (!isNaN(track)) setTrack((float) track);
+        if (hasTrack()) setTrack((float) track);
+        else removeBearing();
         this.vVel = (float) vVel;
         this.crcValid = crcValid;
         this.airborne = airborne;
     }
 
-    public Position(String provider, double lat, double lon, double alt, long time) {
+    public Position(String provider, double lat, double lon, double alt, Instant time) {
         this(provider, lat, lon, alt, Float.NaN, Float.NaN, Float.NaN, true, true, time);
     }
 
+    @SuppressWarnings("CopyConstructorMissesField")
     public Position(Position position) {
         super(position.getProvider());
         set(position);
+    }
+
+    public void setInstant(Instant i) {
+        super.setTime(i.toEpochMilli());
+        time = i;
+    }
+
+    public Instant getInstant() {
+        return time;
     }
 
     public void setAirborne(boolean airborne) {
@@ -87,7 +102,7 @@ public class Position extends Location {
     public void setRelative(Position p, float distance, float bearing, float altDifference, int elapsedMilliS) {
         double lat = p.getLatitude();
         double lon = p.getLongitude();
-        if (isNaN(lat) || isNaN(lon)) return;
+        if (isNaN(lat) || isNaN(lon) || isNaN(bearing) || isNaN(distance)) return;
 
         var bearingRad = latLonDegToRad(bearing);
         var latRad = latLonDegToRad(lat);
@@ -105,7 +120,8 @@ public class Position extends Location {
         setLatitude(rad2latLonDeg(latitudeResult));
         setLongitude(rad2latLonDeg(longitudeResult));
         setAltitude(getAltitude() + altDifference);
-//        setTime(p.getTime() + elapsedMilliS);
+        setTime(p.getTime() + elapsedMilliS);
+        setAirborne(p.airborne);
         setCrcValid(p.crcValid);
     }
 
@@ -119,13 +135,15 @@ public class Position extends Location {
         super.set(p);
         this.crcValid = p.crcValid;
         this.airborne = p.airborne;
+        setInstant(p.time);
         setVVel(p.vVel);
     }
 
     // Return new Position seconds into the future, given initial coordinates, altitude, speed and track, and vertical speed
-    public void linearPredict(int elapsedMillis, Position dest) {
+    public Position linearPredict(int elapsedMillis, Position dest) {
         float elapsedSecs = elapsedMillis / 1000f;
         dest.setRelative(this, getSpeed() * elapsedSecs, getTrack(), (float) (vVel * elapsedSecs), elapsedMillis);
+        return dest;
     }
 
     static public double heightAbove(Position p1, Location that) {
@@ -137,7 +155,12 @@ public class Position extends Location {
     }
 
     public void setTrack(float track) {
-        setBearing(track);
+        if (Float.isNaN(track)) removeBearing();
+        else setBearing(track);
+    }
+
+    public boolean hasTrack() {
+        return hasBearing();
     }
 
     public double getVVel() {
@@ -171,7 +194,7 @@ public class Position extends Location {
     public String toString() {
         double lat = getLatitude();
         double lon = getLongitude();
-        return (isNaN(lat) ? "(-----, -----) " : String.format("(%.5f, %.5f) ", lat, lon)) + " " + altUnits.toString(getAltitude()) + ", " + speedUnits.toString(getSpeed()) + ", " + getTrack() + ", VS=" + Units.VertSpeed.FPM.toString(vVel);
+        return (isNaN(lat) ? "(-----, -----) " : String.format("(%.5f, %.5f) ", lat, lon)) + String.format("%s, %s, %03.0f, %s", altUnits.toString(getAltitude()), speedUnits.toString(getSpeed()), getTrack(), Units.VertSpeed.FPM.toString(vVel));
     }
 
     public boolean isAirborne() {

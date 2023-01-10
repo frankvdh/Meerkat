@@ -320,14 +320,20 @@
             androidx:summaryOn="Log decoded messages, as interpreted by the GDL90 parser"
             androidx:title="Log Decoded Messages" />
 
-
-        <androidx.preference.DropDownPreference
-            androidx:defaultValue="Live"
-            androidx:entries="@array/sim_values"
-            androidx:entryValues="@array/sim_values"
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="false"
             androidx:key="simulate"
             androidx:persistent="true"
-            androidx:title="Type of run"
+            androidx:summaryOff="Live data"
+            androidx:summaryOn="Play back logged data"
+            androidx:title="Replay Logged Messages" />
+        androidx:layout="@layout/wifi_preference_layout" />
+
+        <androidx.preference.EditTextPreference
+            androidx:defaultValue="10"
+            androidx:key="simulateSpeedFactor"
+            androidx:persistent="true"
+            androidx:title="Simulated Playback speed"
             androidx:useSimpleSummaryProvider="true" />
     </androidx.preference.PreferenceCategory>
 

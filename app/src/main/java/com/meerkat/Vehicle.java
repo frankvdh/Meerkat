@@ -28,6 +28,8 @@ import com.meerkat.map.AircraftLayer;
 import com.meerkat.map.MapView;
 import com.meerkat.measure.Position;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Locale;
@@ -38,8 +40,9 @@ public class Vehicle implements Comparable<Vehicle> {
     public String callsign;
     public final LinkedList<Position> history;
     public final LinkedList<Position> predicted;
-    public @NonNull Gdl90Message.Emitter emitterType;
-    public final Position lastValid;
+    public @NonNull
+    Gdl90Message.Emitter emitterType;
+    public Position lastValid;
     public final Position predictedPosition;
     public float distance;
     final AircraftLayer layer;
@@ -55,14 +58,18 @@ public class Vehicle implements Comparable<Vehicle> {
         // So history is in decreasing time order, and predicted is in increasing time order
         this.history = new LinkedList<>();
         this.predicted = new LinkedList<>();
-
-        history.addFirst(point);
-        // Always accept the first point, even if it isn't valid
-        lastValid = point;
-        distance = Gps.distanceTo(point); // metres
         // always create predictedPosition for synchronization
-        predictedPosition = new Position("predicted");
         layer = findLayer(this);
+        predictedPosition = new Position("predicted");
+        if (point.isValid()) {
+            addPoint(point);
+            if (showLinearPredictionTrack)
+                point.linearPredict(predictionMilliS, predictedPosition);
+        } else {
+            lastValid = null;
+            distance = Float.NaN;
+            predictedPosition.setLatitude(Double.NaN);
+        }
     }
 
     // If an invisible layer exists, re-use it. Otherwise create a new layer for this vehicle
@@ -90,7 +97,7 @@ public class Vehicle implements Comparable<Vehicle> {
     public String getLabel() {
         char valChar = isValid() ? ' ' : '!';
         if (callsign.isBlank())
-            return String.format("%07x%c", id, valChar);
+            return String.format("%06x%c", id, valChar);
         if (countryCode != null && !countryCode.isEmpty()) {
             if (callsign.toUpperCase().startsWith(countryCode)) {
                 int start = countryCode.length();
@@ -102,67 +109,66 @@ public class Vehicle implements Comparable<Vehicle> {
     }
 
     public void update(int crc, Position point, String callsign, @NonNull Gdl90Message.Emitter emitterType) {
-        var now = System.currentTimeMillis();
-        this.lastCrc = crc;
         Log.d(String.format("%06x, %s, %s, %s", id, callsign, emitterType, point.toString()));
-        if (point.isValid())
-            synchronized (lastValid) {
-                lastValid.set(point);
-                distance = Gps.distanceTo(point); // metres
-                Log.d("Current: %s", lastValid.toString());
 
-                if (emitterType != Gdl90Message.Emitter.Unknown) {
-                    this.emitterType = emitterType;
-                }
-                if (callsign != null && !callsign.equals(this.callsign))
-                    this.callsign = callsign;
+        synchronized (layer) {
+            this.lastCrc = crc;
+            if (emitterType != Gdl90Message.Emitter.Unknown) {
+                this.emitterType = emitterType;
             }
+            if (callsign != null && !callsign.equals(this.callsign))
+                this.callsign = callsign;
 
-        if (showLinearPredictionTrack) {
-            synchronized (predictedPosition) {
-                lastValid.linearPredict((int) (now - lastValid.getTime()) + predictionMilliS, predictedPosition);
+            if (point.isValid()) {
+                addPoint(point);
             }
         }
-
+        var now = point.getInstant();
         // Remove aged-out history entries, and add the new point
-        final long maxAge = now - historySeconds * 1000L;
-        synchronized (history) {
+        final Instant maxAge = now.minus(historySeconds, ChronoUnit.SECONDS);
+        synchronized (layer) {
             Iterator<Position> it = history.descendingIterator();
             while (it.hasNext()) {
                 var p = it.next();
-                if (p.getTime() >= maxAge) break;
+                if (p.getInstant().isAfter(maxAge)) break;
                 it.remove();
             }
-            if (point.isValid())
-                history.addFirst(point);
         }
 
-        if (showPolynomialPredictionTrack) {
-            // History is never empty... it always contains at least the last point
+        if (showLinearPredictionTrack && lastValid != null && !Float.isNaN(lastValid.getTrack()) && point.hasSpeed()) {
+            synchronized (layer) {
+                lastValid.linearPredict((int) (lastValid.getInstant().until(now, ChronoUnit.MILLIS)) + predictionMilliS, predictedPosition);
+            }
+        }
+
+        if (showPolynomialPredictionTrack && !history.isEmpty()) {
             // Only reading history, so need to synchronize
-            PolynomialRegression prSpeedTrack = new PolynomialRegression(history.getLast().getTime(), 3);
+            PolynomialRegression prSpeedTrack = new PolynomialRegression(history.getLast().getInstant(), 3);
             // Assume that the oldest history point is valid, and not turning
             float prevTrack = history.getLast().getTrack();
-            long prevTime = history.getLast().getTime() - 1;
-            Iterator<Position> it = history.descendingIterator();
-            while (it.hasNext()) {
-                var p = it.next();
-                var time = p.getTime();
-                if (time == prevTime || time < lastValid.getTime() - polynomialHistoryMilliS || !p.isValid())
-                    continue;
-                // Unwind modulo arithmetic so that turns in the same direction keep incrementing, even though the result is > 360 or < 0
-                var track = p.getTrack();
-                var turn = track - prevTrack;
-                while (turn > 180) turn -= 360;
-                while (turn < -180) turn += 180;
-                Log.v("Add %d %5.0f %5.0f %5.0f", time, p.getSpeed(), prevTrack + turn, p.getAltitude());
-                prSpeedTrack.add(time, p.getSpeed(), prevTrack + turn, (float) p.getAltitude());
-                prevTrack = track;
-                prevTime = time;
+            var prevTime = history.getLast().getInstant();
+            synchronized (layer) {
+                Iterator<Position> it = history.descendingIterator();
+                while (it.hasNext()) {
+                    var p = it.next();
+                    var time = p.getInstant();
+                    if (time.isBefore(prevTime) || time.isBefore(lastValid.getInstant().minus(polynomialHistoryMilliS, ChronoUnit.MILLIS)))
+                        continue;
+                    if (!p.hasTrack() || !p.hasSpeed() || !p.hasAltitude() || p.getSpeed() == 0) continue;
+                    var track = p.getTrack();
+                    var speed = p.getSpeed();
+                    // Unwind modulo arithmetic so that turns in the same direction keep incrementing, even though the result is > 360 or < 0
+                    var turn = track - prevTrack;
+                    while (turn > 180) turn -= 360;
+                    while (turn < -180) turn += 180;
+                    Log.v("Add %d %5.0f %5.0f %5.0f", time, speed, prevTrack + turn, p.getAltitude());
+                    prSpeedTrack.add(time, speed, prevTrack + turn, (float) p.getAltitude());
+                    prevTrack = track;
+                    prevTime = time;
+                }
             }
-
             double[][] cSpeedTrack = prSpeedTrack.getCoefficients();
-            synchronized (predicted) {
+            synchronized (layer) {
                 predicted.clear();
                 if (cSpeedTrack != null) {
                     Log.v("Speed coeffs %.1f %.3f %.5f", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2]);
@@ -170,16 +176,16 @@ public class Vehicle implements Comparable<Vehicle> {
                     Log.v("Alt   coeffs %.1f %.3f %.5f", cSpeedTrack[2][0], cSpeedTrack[2][1], cSpeedTrack[2][2]);
                     Position p = lastValid;
                     for (int t = polynomialPredictionStepMilliS; t <= predictionMilliS; t += polynomialPredictionStepMilliS) {
-                        var t1 = now - (long) cSpeedTrack[0][3] + t;
+                        long t1 = Instant.ofEpochMilli((long) cSpeedTrack[0][3]).until(now, ChronoUnit.MILLIS) + t;
                         var t2 = t1 * t1;
-                        p.moveBy(polynomialPredictionStepMilliS);
+                        p = p.linearPredict(polynomialPredictionStepMilliS, new Position("poly"));
                         float speed = (float) (cSpeedTrack[0][0] + cSpeedTrack[0][1] * t1 + cSpeedTrack[0][2] * t2);
                         float track = (float) (cSpeedTrack[1][0] + cSpeedTrack[1][1] * t1 + cSpeedTrack[1][2] * t2);
                         float alt = (float) (cSpeedTrack[2][0] + cSpeedTrack[2][1] * t1 + cSpeedTrack[2][2] * t2);
-                        p.setSpeed(speed);
-                        p.setTrack(track % 360);
-                        p.setAltitude(alt);
-                        p.setTime(now + t1);
+                        p.setAltitude(p.getAltitude()/2 + alt/2);
+                        p.setSpeed(p.getSpeed() /2 + speed/2);
+                        p.setTrack((p.getTrack()/2 + track/2) % 360);
+                        p.setInstant(now.plus(t1, ChronoUnit.MILLIS));
                         predicted.addLast(p);
                         Log.v("%s Predict Speed %.1f Track %.1f Alt %.1f %s", callsign, speed, track, alt, p);
                     }
@@ -189,8 +195,14 @@ public class Vehicle implements Comparable<Vehicle> {
         mapView.refresh(layer);
     }
 
+    private void addPoint(Position point) {
+        lastValid = point;
+        history.addFirst(point);
+        distance = Gps.distanceTo(point); // metres
+    }
+
     public boolean isValid() {
-        return history.getFirst().isCrcValid();
+        return !history.isEmpty() && history.getFirst().isCrcValid();
     }
 
     @NonNull

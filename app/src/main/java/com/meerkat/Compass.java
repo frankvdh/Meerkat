@@ -36,6 +36,8 @@ import androidx.annotation.Nullable;
 import com.meerkat.log.Log;
 import com.meerkat.map.MapView;
 
+import java.time.Instant;
+
 public class Compass extends Service implements SensorEventListener {
 
     static GeomagneticField geoField;
@@ -62,7 +64,7 @@ public class Compass extends Service implements SensorEventListener {
 
     public static void updateGeomagneticField() {
         Gps.getLatLonAlt(GpsLocation);
-        geoField = new GeomagneticField((float) GpsLocation.getLatitude(), (float) GpsLocation.getLongitude(), (float) GpsLocation.getAltitude(), System.currentTimeMillis());
+        geoField = new GeomagneticField((float) GpsLocation.getLatitude(), (float) GpsLocation.getLongitude(), (float) GpsLocation.getAltitude(), Instant.now().toEpochMilli());
         Declination = geoField.getDeclination();
     }
 

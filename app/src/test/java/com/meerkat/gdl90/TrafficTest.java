@@ -281,7 +281,7 @@ public class TrafficTest extends TestCase {
             Assert.assertEquals(0x7e, is.read());
             byte messageId = (byte) is.read();
             Assert.assertEquals(20, messageId);
-            Traffic t = new Traffic(messageId, time, p1, is);
+            Traffic t = new Traffic(messageId, p1, is);
             Assert.assertTrue("CRC", t.crcValid);
             System.out.println(t);
             if (prev != null) {

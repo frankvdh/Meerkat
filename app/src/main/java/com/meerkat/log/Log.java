@@ -70,37 +70,35 @@ public final class Log {
         logWriters.add(new ViewLogWriter(logActivity));
     }
 
-    public static synchronized void v(String msg, Object... args) {
-        log(Level.V, msg, args);
+    public static synchronized void v(String format, Object... args) {
+        log(Level.V, format, args);
     }
 
-    public static synchronized void d(String msg, Object... args) {
-        log(Level.D, msg, args);
+    public static synchronized void d(String format, Object... args) {
+        log(Level.D, format, args);
     }
 
-    public static synchronized void i(String msg, Object... args) {
-        log(Level.I, msg, args);
+    public static synchronized void i(String format, Object... args) {
+        log(Level.I, format, args);
     }
 
-    public static synchronized void w(String msg, Object... args) {
-        log(Level.W, msg, args);
+    public static synchronized void w(String format, Object... args) {
+        log(Level.W, format, args);
     }
 
-    public static synchronized void e(String msg, Object... args) {
-        log(Level.E, msg, args);
+    public static synchronized void e(String format, Object... args) {
+        log(Level.E, format, args);
     }
 
-    public static synchronized void a(String msg, Object... args) {
-        log(Level.A, msg, args);
+    public static synchronized void a(String format, Object... args) {
+        log(Level.A, format, args);
     }
 
-    @SuppressWarnings("unused")
     public static void close() {
         for (LogWriter p : logWriters) {
             if (p instanceof FileLogWriter)
                 ((FileLogWriter) p).close();
         }
-
     }
 
     public static void log(Level level, String msg, Object... args) {

@@ -173,7 +173,8 @@ Setting the [simulate] setting to "true" results in the app processing a series 
 | logLevel           | Amount of detail to write to logs... Assert, Error, Warning, Info, Debug, Verbose                                                               | I             |
 | logRawMessages     | Whether to write the raw messages, as received from the device, to the logs                                                                     | false         |
 | logDecodedMessages | Whether to write the decoded messages, as interpreted by the GDL90 parser, to the logs                                                          | false         |
-| simulate           | Play built-in simulated traffic instead of real traffic. No Wifi connection is made.                                                            | false         |
+| simulate           | Play back logged data in /storage/sdcard0/Android/data/com.meerkat/files/meerkat.save.log instead of real traffic. No Wifi connection is made.  | false         |
+| simulateSpeedFactor| Speed at which simulated traffic is played	                                                                                                   | false         |
 
 
 Contributing & Licensing
@@ -195,10 +196,13 @@ have devices other than the PingUSB.
 TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :)
+* Corrupted logs (fixed?)
+* Logs not shown on screen
+* Investigate negative speeds (fixed?)
 * Ownship track... history and prediction
-* Auto-zoom -- all aircraft
 * Indicate Mode-C traffic presence
 * Audio / Haptic alerts of collision threats
+* Fix position of north arrow / track mode letter
 * Use a theme to allow black background
 * Digital filtering of path to predict tracks
 * Handling of Float preference values (custom SeekBar?)
@@ -208,7 +212,3 @@ This list is more-or-less in priority order. At the moment it is shrinking :)
 * Internationalisation
 * Find someone to test usage with other Wifi-enabled ADS-B In devices (Stratux, Foreflight, etc)
 * Find someone to port it to Apple IOS.
-* Corrupted logs
-* Logs not shown on screen
-* Negative speeds
-* Replay log files

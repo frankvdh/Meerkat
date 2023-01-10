@@ -19,12 +19,14 @@ import android.hardware.GeomagneticField;
 
 import androidx.annotation.NonNull;
 
+import com.meerkat.R;
 import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
 
 import java.io.ByteArrayInputStream;
+import java.time.Instant;
 import java.util.Locale;
 
 public class Traffic extends Gdl90Message {
@@ -50,7 +52,7 @@ public class Traffic extends Gdl90Message {
 
     // uAvionix - uAvionix-UCP-Transponder-ICD-Rev-Q.pdf 6.21 (Ownship) & 6.2.
 
-    public Traffic(byte messageId, long time, Position point, ByteArrayInputStream is) {
+    public Traffic(byte messageId, Position point, ByteArrayInputStream is) {
         super(is, 28, messageId);
         this.point = point;
         ownShip = messageId == 10;
@@ -104,16 +106,20 @@ public class Traffic extends Gdl90Message {
         point.setLongitude(lon);
         if (alt < -1000) point.removeAltitude();
         else point.setAltitude(Units.Height.FT.toM(alt));
-        point.setSpeed((float) Units.Speed.KNOTS.toMps(hSpeed));
-        point.setTrack(trueTrack(track, trackType, lat, lon, alt));
+        if (hSpeed == 0xfff) {
+            point.removeSpeed();
+            point.removeBearing();
+        } else {
+            point.setSpeed((float) Units.Speed.KNOTS.toMps(hSpeed));
+            point.setTrack(trueTrack(track, trackType, hSpeed, lat, lon, alt));
+        }
         point.setVVel(Units.VertSpeed.FPM.toMps(vVel));
         point.setCrcValid(crcValid);
         point.setAirborne(airborne);
-        point.setTime(time);
         Log.v(point.toString());
     }
 
-    public Traffic(long time, int id, String callsign, String type, double lat, double lng, double alt, double speed, float track, float vVel) {
+    public Traffic(Instant time, int id, String callsign, String type, double lat, double lng, double alt, double speed, float track, float vVel) {
         this.participantAddr = id;
         this.callsign = callsign;
         emitterType = Emitter.valueOf(type);
@@ -131,13 +137,13 @@ public class Traffic extends Gdl90Message {
         airborne = true;
     }
 
-    private float trueTrack(float track, TrackType trackType, double lat, double lon, int alt) {
+    private float trueTrack(float track, TrackType trackType, int hSpeed, double lat, double lon, int alt) {
         switch (trackType) {
             // Heading rather than track
             case True:
                 return track;
             case Mag:
-                return (track + new GeomagneticField((float) lat, (float) lon, alt, System.currentTimeMillis()).getDeclination()) % 360;
+                return (track + new GeomagneticField((float) lat, (float) lon, alt, Instant.now().toEpochMilli()).getDeclination()) % 360;
             // Track
             case TRK:
                 return track;
@@ -147,8 +153,8 @@ public class Traffic extends Gdl90Message {
         return NaN;
     }
 
-    public void upsert(VehicleList vehicleList) {
-        vehicleList.upsert(crc, callsign, participantAddr, point, emitterType);
+    public void upsert(VehicleList vehicleList, Instant time) {
+        vehicleList.upsert(crc, callsign, participantAddr, point, emitterType, time);
     }
 
     @NonNull

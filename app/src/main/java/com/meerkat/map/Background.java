@@ -86,8 +86,7 @@ public class Background extends Drawable {
         canvas.drawLine(-xCentre, 0, xCentre, 0, circlePaint);
 
         if (autoZoom) {
-            mapView.pixelsPerMetre = getScaleFactor(canvas.getClipBounds(), vehicleList.getMaxDistance());
-            Log.d("Scale factor %.5f", mapView.pixelsPerMetre);
+            mapView.adjustScaleFactor(canvas.getClipBounds(), vehicleList.getFurthest());
         }
         float radiusStep = circleRadiusStepMetres * mapView.pixelsPerMetre;
         Log.v("Radius step = %f", radiusStep);
@@ -98,8 +97,8 @@ public class Background extends Drawable {
 
         Vehicle nearest = vehicleList.getNearest();
         if (nearest != null) {
-            int thickness = nearest.distance <= dangerRadiusMetres ? 20 : (int) (dangerRadiusMetres * 20 / nearest.distance);
-            Log.d("Nearest = %s %s, %d, thickness = %d", nearest.callsign, Units.Distance.NM.toString(nearest.distance), (int) (nearest.distance * 20 / dangerRadiusMetres), thickness);
+            int thickness = nearest.distance <= dangerRadiusMetres ? 40 : (int) (dangerRadiusMetres * 40 / nearest.distance);
+            Log.d("Nearest = %s %s, %.2f, thickness = %d", nearest.callsign, nearest.distance, (nearest.distance * 40 / dangerRadiusMetres), thickness);
             if (thickness > 0) {
                 dangerPaint.setStrokeWidth(thickness);
                 dangerPaint.setStyle(Paint.Style.STROKE);
@@ -120,39 +119,6 @@ public class Background extends Drawable {
         //noinspection IntegerDivisionInFloatingPointContext
         scaleText.setText(distanceUnits.toString((bounds.width() / 2) / mapView.pixelsPerMetre));
         Log.v("finished draw background");
-    }
-
-    /**
-     * Calculate scale factor in pixels per metre to place the furthest aircraft at the edge of the screen.
-     * No aircraft -> default scale factor set by user
-     * Furthest aircraft inside danger radius -> show entire danger radius.
-     *
-     * @param bounds   Bounds of visible window
-     * @param furthest Furthest aircraft position
-     * @return pixels per metre
-     */
-    private float getScaleFactor(Rect bounds, Position furthest) {
-        if (furthest == null) return mapView.defaultPixelsPerMetre;
-        if (Gps.distanceTo(furthest) < mapView.minPixelsPerMetre)
-            return mapView.minPixelsPerMetre;
-        if (Gps.distanceTo(furthest) > mapView.maxPixelsPerMetre)
-            return mapView.minPixelsPerMetre;
-        Point aircraftPoint = mapView.screenPoint(furthest);
-        Log.d("Furthest %d %d %s", aircraftPoint.x, aircraftPoint.y, furthest);
-
-        if (aircraftPoint.x == 0) {
-            if (aircraftPoint.y == 0) return mapView.defaultPixelsPerMetre;
-            // X coordinate is 0 -- Scale the Y coordinate to the edge of the screen
-            if (aircraftPoint.y < 0)
-                return mapView.pixelsPerMetre * (float) (bounds.top + 32) / aircraftPoint.y;
-            return mapView.pixelsPerMetre * (float) (bounds.bottom - 32) / aircraftPoint.y;
-        }
-        float xScale = (float) (aircraftPoint.x < 0 ? (bounds.left + 32) : (bounds.right - 32)) / aircraftPoint.x;
-        Log.d("xScale: %f", xScale);
-        if (aircraftPoint.y == 0) return mapView.pixelsPerMetre * xScale;
-        float yScale = (float) (aircraftPoint.y < 0 ? (bounds.top + 32) : (bounds.bottom - 32)) / aircraftPoint.y;
-        Log.d("xScale %f yScale %f", xScale, yScale);
-        return mapView.pixelsPerMetre * (Math.max(xScale, yScale));
     }
 
     @Override

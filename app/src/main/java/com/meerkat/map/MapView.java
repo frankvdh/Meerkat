@@ -25,6 +25,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
@@ -36,6 +37,7 @@ import androidx.annotation.Nullable;
 
 import com.meerkat.Compass;
 import com.meerkat.Gps;
+import com.meerkat.Vehicle;
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
@@ -48,7 +50,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     final float defaultPixelsPerMetre, minPixelsPerMetre, maxPixelsPerMetre;
     float pixelsPerMetre;
     // Used to detect pinch zoom gesture.
-    private final ScaleGestureDetector scaleGestureDetector = new ScaleGestureDetector(getContext(), new PinchListener(this));
+    private final ScaleGestureDetector scaleGestureDetector = new ScaleGestureDetector(getContext(), new PinchListener());
 
     public MapView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -62,8 +64,8 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         setOnTouchListener(handleTouch);
         // Attach a pinch zoom listener to the map view
         defaultPixelsPerMetre = (float) getWidth(getContext()) / screenWidthMetres;
-        minPixelsPerMetre = (float) getWidth(getContext()) / (float) Math.min(minZoom, dangerRadiusMetres);
-        maxPixelsPerMetre = (float) getWidth(getContext()) / (float) Math.min(screenWidthMetres, maxZoom);
+        maxPixelsPerMetre = (float) getWidth(getContext()) / (float) Math.min(minZoom, dangerRadiusMetres);
+        minPixelsPerMetre = (float) getWidth(getContext()) / (float) Math.max(screenWidthMetres, maxZoom);
         pixelsPerMetre = defaultPixelsPerMetre;
         for (var emitterType : Gdl90Message.Emitter.values()) {
             emitterType.bitmap = loadIcon(getContext(), emitterType.iconId);
@@ -117,6 +119,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     }
 
     public void refresh(AircraftLayer layer) {
+//        Log.d("Refresh %s", layer == null ? "ALL" : layer.vehicle.callsign);
         if (layer == null)
             layers.invalidateSelf();
         else
@@ -125,23 +128,56 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
 
     /* This listener is used to listen pinch zoom gesture. */
     private class PinchListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
-
-        private final MapView mapView;
-
-        // The default constructor pass context and imageview object.
-        public PinchListener(MapView mapView) {
-            this.mapView = mapView;
-        }
-
         // When pinch zoom gesture occurred.
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
             // Scale the image with pinch zoom value.
-            pixelsPerMetre *= detector.getScaleFactor() * mapView.getScaleX();
-            if (pixelsPerMetre < mapView.minPixelsPerMetre) pixelsPerMetre = mapView.minPixelsPerMetre;
-            if (pixelsPerMetre > mapView.maxPixelsPerMetre) pixelsPerMetre = mapView.maxPixelsPerMetre;
+            double scalefactor = detector.getScaleFactor();
+            if (scalefactor == 1.0) return false;
+            pixelsPerMetre *= getScaleX() * scalefactor;
+//            Log.i("Scale factor = %f", scalefactor);
+            if (pixelsPerMetre < minPixelsPerMetre)
+                pixelsPerMetre = minPixelsPerMetre;
+            if (pixelsPerMetre > maxPixelsPerMetre)
+                pixelsPerMetre = maxPixelsPerMetre;
             refresh(null);
             return true;
         }
+    }
+
+    /**
+     * Calculate scale factor in pixels per metre to place the furthest aircraft at the edge of the screen.
+     * No aircraft -> default scale factor set by user
+     * Furthest aircraft inside danger radius -> show entire danger radius.
+     *
+     * @param bounds   Bounds of visible window
+     * @param furthest Furthest aircraft position
+     * @return pixels per metre
+     */
+    private float updateScaleFactor(Rect bounds, Vehicle furthest) {
+        if (furthest == null || furthest.lastValid == null) return defaultPixelsPerMetre;
+        if (furthest.distance < minZoom) return maxPixelsPerMetre;
+        if (furthest.distance > maxZoom) return minPixelsPerMetre;
+
+        Point aircraftPoint = screenPoint(furthest.lastValid);
+        Log.d("Furthest %d %d %s", aircraftPoint.x, aircraftPoint.y, furthest);
+
+        if (aircraftPoint.x == 0) {
+            if (aircraftPoint.y == 0) return defaultPixelsPerMetre;
+            // X coordinate is 0 -- Scale the Y coordinate to the edge of the screen
+            if (aircraftPoint.y < 0)
+                return pixelsPerMetre * (float) (bounds.top + 32) / aircraftPoint.y;
+            return pixelsPerMetre * (float) (bounds.bottom - 32) / aircraftPoint.y;
+        }
+        float xScale = (float) (aircraftPoint.x < 0 ? (bounds.left + 32) : (bounds.right - 32)) / aircraftPoint.x;
+        Log.d("xScale: %f", xScale);
+        if (aircraftPoint.y == 0) return pixelsPerMetre * xScale;
+        float yScale = (float) (aircraftPoint.y < 0 ? (bounds.top + 32) : (bounds.bottom - 32)) / aircraftPoint.y;
+        Log.d("xScale %f yScale %f", xScale, yScale);
+        return pixelsPerMetre * (Math.min(xScale, yScale));
+    }
+
+    void adjustScaleFactor (Rect bounds, Vehicle furthest) {
+        pixelsPerMetre = updateScaleFactor(bounds, furthest);
     }
 }
