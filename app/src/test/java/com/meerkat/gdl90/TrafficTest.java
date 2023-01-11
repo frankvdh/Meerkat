@@ -17,15 +17,16 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.ByteArrayInputStream;
+import java.time.Instant;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TrafficTest extends TestCase {
 
 
     //Try my own object class.
-    class MockLocation extends Location {
+    static class MockLocationTest extends Location {
         double alt;
-        public MockLocation(String provider){
+        public MockLocationTest(String provider){
             super(provider);
         }
         @Override
@@ -37,12 +38,12 @@ public class TrafficTest extends TestCase {
 
 
     //Try my own object class.
-    class MockPosition extends Position {
+    class MockPositionTest extends Position {
         double alt, latitude, longitude;
         float speed, track;
-        long time;
+        Instant time;
         String provider;
-        public MockPosition(String provider){
+        public MockPositionTest(String provider){
             super(provider);
         }
         @Override
@@ -95,13 +96,13 @@ public class TrafficTest extends TestCase {
         }
         //User direct access will not cause a problem when do assertEquals()
         @Override
-        public void setTime(long t){
+        public void setInstant(Instant t){
             time = t;
         }
-        public double distanceTo(MockPosition p) {
+        public double distanceTo(MockPositionTest p) {
             return computeDistance(latitude, longitude, p.latitude, p.longitude);
         }
-        public double bearingTo(MockPosition p) {
+        public double bearingTo(MockPositionTest p) {
             return computeBearing(latitude, longitude, p.latitude, p.longitude);
         }
 
@@ -250,7 +251,7 @@ public class TrafficTest extends TestCase {
     }
 
     //    @Mock
-    MockPosition p1;
+    MockPositionTest p1;
 
     @Test
     public void test() {
@@ -268,7 +269,7 @@ public class TrafficTest extends TestCase {
                 "17.910", "7e1400c82349e36c267cc02d0f29800d3ff38000414e5a3131334d200601aa7e",
                 "19.138", "7e1400c82349e36bfd7cc02d0f19800d3ff38000414e5a3131334d2006fef87e"};
         for (int i = 0; i < rawHex.length; i += 2) {
-            p1 = new MockPosition("ADSB");
+            p1 = new MockPositionTest("ADSB");
             long time = (long) (Double.parseDouble(rawHex[i]) * 1000);
             var data = rawHex[i + 1];
 
@@ -286,11 +287,11 @@ public class TrafficTest extends TestCase {
             System.out.println(t);
             if (prev != null) {
                 int elapsed = (int) (time - prevTime);
-                MockPosition predicted = (MockPosition) prev.point;
+                MockPositionTest predicted = (MockPositionTest) prev.point;
                 predicted.moveBy(elapsed);
                 System.out.printf("Actual    %s\n", t.point);
                 System.out.printf("Predicted %s\n", predicted);
-                System.out.printf("%5.1f @ %d\n", predicted.distanceTo((MockPosition) t.point), (int) predicted.bearingTo((MockPosition)t.point));
+                System.out.printf("%5.1f @ %d\n", predicted.distanceTo((MockPositionTest) t.point), (int) predicted.bearingTo((MockPositionTest)t.point));
             }
             prev = t;
             prevTime = time;

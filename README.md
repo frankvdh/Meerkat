@@ -117,24 +117,24 @@ Alternatively, you can type your device's Wifi name into the WiFi Name text box.
 | speedUnits                      | User's preferred speed units KTS, MPH, KPH                                                                                   | KPH           |
 | vertSpeedUnits                  | User's preferred vertical speed units FPM, MPS                                                                               | FPM           |
 
-| Screen Setting Name             | Usage                                                                                                                        | Default value |
-|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
-| screenYPos                      | Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height                         | 25%           |
-| screenWidth                     | Distance that the width of the screen represents in the user's [distance unit]s                                              | 10            |
-| circleStep                      | Distance apart of the circles on the screen in the user's [distance unit]s                                                   | 5             |
-| dangerRadius                    | Radius of "danger" circle on the screen in the user's [distance unit]s                                                       | 1             |
-| displayOrientation              | Display orientation... Heading-up, Track-up, or North-up                                                                     | Heading-up    |
-| keepScreenOn                    | Keep the display on when in the Map or Aircraft List views                                                                   | true          |
-| autoZoom	                       | Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen.      | true          |
-| gradMaxDiff                     | How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green        | 5000          |
-| gradMinDiff                     | How many [altitude unit]s above/below the phone's GPS altitude an aircraft displays as completely red                        | 1000          |
-| countryCode                     | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed. | ZK            |
+| Screen Setting Name | Usage                                                                                                                        | Default value |
+|---------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
+| screenYPos          | Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height                         | 25%           |
+| screenWidth         | Distance that the width of the screen represents in the user's [distance unit]s                                              | 10            |
+| circleStep          | Distance apart of the circles on the screen in the user's [distance unit]s                                                   | 5             |
+| dangerRadius        | Radius of "danger" circle on the screen in the user's [distance unit]s                                                       | 1             |
+| displayOrientation  | Display orientation... Heading-up, Track-up, or North-up                                                                     | Heading-up    |
+| keepScreenOn        | Keep the display on when in the Map or Aircraft List views                                                                   | true          |
+| autoZoom	          | Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen.       | true          |
+| gradMaxDiff         | How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green        | 5000          |
+| gradMinDiff         | How many [altitude unit]s above/below the phone's GPS altitude an aircraft displays as completely red                        | 1000          |
+| countryCode         | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed. | ZK            |
 
-| Sensitivity Setting Name        | Usage                                                                                                                        | Default value |
-|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
-| sensorSmoothingConstant         | The sensitivity of the display to phone orientation change (1 - 99). Larger values make it more responsive                   | 20            |
-| minGpsDistanceChangeMetres      | Minimum Gps distance between updates in metres                                        	                                     | 5             |
-| minGpsUpdateIntervalSeconds     | Minimum Gps update interval in seconds                                                                                       | 10            |
+| Sensitivity Setting Name    | Usage                                                                                                      | Default value |
+|-----------------------------|------------------------------------------------------------------------------------------------------------|---------------|
+| sensorSmoothingConstant     | The sensitivity of the display to phone orientation change (1 - 99). Larger values make it more responsive | 20            |
+| minGpsDistanceChangeMetres  | Minimum Gps distance between updates in metres                                        	                    | 5             |
+| minGpsUpdateIntervalSeconds | Minimum Gps update interval in seconds                                                                     | 10            |
 
 | History Settings                | Usage                                                                                                                        | Default value |
 |---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|

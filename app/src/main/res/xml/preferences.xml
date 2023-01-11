@@ -331,7 +331,7 @@
 
         <androidx.preference.EditTextPreference
             androidx:defaultValue="10"
-            androidx:key="simulateSpeedFactor"
+            androidx:key="simulateSpeedFactorString"
             androidx:persistent="true"
             androidx:title="Simulated Playback speed"
             androidx:useSimpleSummaryProvider="true" />

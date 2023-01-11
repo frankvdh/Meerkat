@@ -18,7 +18,12 @@ import static com.meerkat.SettingsActivity.keepScreenOn;
 import static com.meerkat.SettingsActivity.maxZoom;
 import static com.meerkat.SettingsActivity.minZoom;
 import static com.meerkat.SettingsActivity.screenWidthMetres;
+import static com.meerkat.SettingsActivity.screenYPosPercent;
+import static com.meerkat.SettingsActivity.showLinearPredictionTrack;
+import static com.meerkat.SettingsActivity.showPolynomialPredictionTrack;
 import static java.lang.Math.cos;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.lang.Math.sin;
 
 import android.content.Context;
@@ -64,8 +69,8 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         setOnTouchListener(handleTouch);
         // Attach a pinch zoom listener to the map view
         defaultPixelsPerMetre = (float) getWidth(getContext()) / screenWidthMetres;
-        maxPixelsPerMetre = (float) getWidth(getContext()) / (float) Math.min(minZoom, dangerRadiusMetres);
-        minPixelsPerMetre = (float) getWidth(getContext()) / (float) Math.max(screenWidthMetres, maxZoom);
+        maxPixelsPerMetre = (float) getWidth(getContext()) / (float) min(minZoom, dangerRadiusMetres);
+        minPixelsPerMetre = (float) getWidth(getContext()) / (float) max(screenWidthMetres, maxZoom);
         pixelsPerMetre = defaultPixelsPerMetre;
         for (var emitterType : Gdl90Message.Emitter.values()) {
             emitterType.bitmap = loadIcon(getContext(), emitterType.iconId);
@@ -146,9 +151,11 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     }
 
     /**
-     * Calculate scale factor in pixels per metre to place the furthest aircraft at the edge of the screen.
+     * Calculate scale factor in pixels per metre to place the furthest aircraft or one of its
+     * predicted points at the edge of the screen.
+     * It's possible that a nearer aircraft's predicted points may end up off the screen,
+     * but that will be OK.
      * No aircraft -> default scale factor set by user
-     * Furthest aircraft inside danger radius -> show entire danger radius.
      *
      * @param bounds   Bounds of visible window
      * @param furthest Furthest aircraft position
@@ -159,25 +166,39 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         if (furthest.distance < minZoom) return maxPixelsPerMetre;
         if (furthest.distance > maxZoom) return minPixelsPerMetre;
 
-        Point aircraftPoint = screenPoint(furthest.lastValid);
-        Log.d("Furthest %d %d %s", aircraftPoint.x, aircraftPoint.y, furthest);
+        Point furthestPoint = new Point(0, 0);
+        extend(furthestPoint,furthest.lastValid);
+        if (showLinearPredictionTrack)
+            extend(furthestPoint, furthest.predictedPosition);
+        if (showPolynomialPredictionTrack)
+            extend(furthestPoint, furthest.predicted.get(furthest.predicted.size()-1));
+        Log.d("Furthest %d %d %s", furthestPoint.x, furthestPoint.y, furthest);
 
-        if (aircraftPoint.x == 0) {
-            if (aircraftPoint.y == 0) return defaultPixelsPerMetre;
+        // Both points can't be 0 because then furthest.distance < minZoom
+        if (furthestPoint.x == 0) {
             // X coordinate is 0 -- Scale the Y coordinate to the edge of the screen
-            if (aircraftPoint.y < 0)
-                return pixelsPerMetre * (float) (bounds.top + 32) / aircraftPoint.y;
-            return pixelsPerMetre * (float) (bounds.bottom - 32) / aircraftPoint.y;
+            return pixelsPerMetre * (float) (bounds.top + 32) / furthestPoint.y;
         }
-        float xScale = (float) (aircraftPoint.x < 0 ? (bounds.left + 32) : (bounds.right - 32)) / aircraftPoint.x;
+        float xScale = (float) (bounds.right - 32) / furthestPoint.x;
         Log.d("xScale: %f", xScale);
-        if (aircraftPoint.y == 0) return pixelsPerMetre * xScale;
-        float yScale = (float) (aircraftPoint.y < 0 ? (bounds.top + 32) : (bounds.bottom - 32)) / aircraftPoint.y;
+        if (furthestPoint.y == 0) return pixelsPerMetre * xScale;
+        float yScale = (float) (bounds.bottom - 32) / furthestPoint.y;
         Log.d("xScale %f yScale %f", xScale, yScale);
-        return pixelsPerMetre * (Math.min(xScale, yScale));
+        return pixelsPerMetre * (min(xScale, yScale));
     }
 
-    void adjustScaleFactor (Rect bounds, Vehicle furthest) {
-        pixelsPerMetre = updateScaleFactor(bounds, furthest);
+   private void extend(Point furthest, Position pos) {
+        if (pos == null || !pos.hasAccuracy()) return;
+        Point p = screenPoint(pos);
+        // Screen size is symmetric around vertical axis
+        if (Math.abs(p.x) > furthest.x) furthest.x = Math.abs(p.x);
+        // Scale negative Y coordinates so that a negative value at the top edge of the screen maps to the bottom edge of the screen
+        if (p.y < 0) p.y = (int) (-p.y * screenYPosPercent/(100f - screenYPosPercent));
+        if (p.y > furthest.y) furthest.y = p.y;
+    }
+
+    void adjustScaleFactor(Rect bounds, Vehicle furthest) {
+        float newScale = updateScaleFactor(bounds, furthest);
+        pixelsPerMetre =  Math.max(minPixelsPerMetre, Math.min(newScale, maxPixelsPerMetre));
     }
 }

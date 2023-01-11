@@ -115,7 +115,7 @@ public class WifiScanActivity extends AppCompatActivity implements ApListAdapter
         Log.d("onScanResultItemClick(): ssid: %s", wifiName);
 
         // User has selected a Wifi SSID -- save it for future use
-        SettingsActivity.save();
+        SettingsActivity.savePrefs();
         Log.i("Wifi changed to %s", wifiName);
         // Force comms to stop so that port is released
         finish();

@@ -27,7 +27,6 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathDashPathEffect;
 import android.graphics.PixelFormat;
-import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -36,12 +35,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.meerkat.Gps;
 import com.meerkat.Vehicle;
 import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
-import com.meerkat.measure.Position;
-import com.meerkat.measure.Units;
 
 public class Background extends Drawable {
     private final Paint dangerPaint;
@@ -97,8 +93,8 @@ public class Background extends Drawable {
 
         Vehicle nearest = vehicleList.getNearest();
         if (nearest != null) {
-            int thickness = nearest.distance <= dangerRadiusMetres ? 40 : (int) (dangerRadiusMetres * 40 / nearest.distance);
-            Log.d("Nearest = %s %s, %.2f, thickness = %d", nearest.callsign, nearest.distance, (nearest.distance * 40 / dangerRadiusMetres), thickness);
+            int thickness = (int) ((nearest.distance <= dangerRadiusMetres ? dangerRadiusMetres/2 :  (dangerRadiusMetres / nearest.distance)) * mapView.pixelsPerMetre);
+            Log.d("Nearest = %s %s, %d, thickness = %d", nearest.callsign, nearest.distance, dangerRadiusMetres, thickness);
             if (thickness > 0) {
                 dangerPaint.setStrokeWidth(thickness);
                 dangerPaint.setStyle(Paint.Style.STROKE);

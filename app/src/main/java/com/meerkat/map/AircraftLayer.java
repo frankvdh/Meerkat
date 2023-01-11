@@ -49,11 +49,12 @@ import java.util.List;
 
 public class AircraftLayer extends Drawable {
     private static final PathEffect historyEffect;
-    private static final PathEffect predictEffect;
+    private static final PathEffect[] predictEffect;
     private static final Paint textPaint = new Paint(Color.BLACK);
     private static final Paint trackPaint = new Paint();
     Vehicle vehicle;
     private final MapView mapView;
+    private final Rect bounds;
 
     static {
         trackPaint.setStrokeWidth(10);
@@ -63,7 +64,10 @@ public class AircraftLayer extends Drawable {
         Path path = new Path();
         path.addCircle(0, 0, 4, Path.Direction.CW);
         historyEffect = new PathDashPathEffect(path, 8, 0, PathDashPathEffect.Style.TRANSLATE);
-        predictEffect = new PathDashPathEffect(path, 16, 0, PathDashPathEffect.Style.TRANSLATE);
+        predictEffect = new PathEffect[]{
+                new PathDashPathEffect(path, 16, 0, PathDashPathEffect.Style.TRANSLATE),
+                new PathDashPathEffect(path, 32, 0, PathDashPathEffect.Style.TRANSLATE),
+        };
     }
 
     public void set(Vehicle v) {
@@ -75,6 +79,7 @@ public class AircraftLayer extends Drawable {
     public AircraftLayer(Vehicle vehicle, MapView view) {
         mapView = view;
         set(vehicle);
+        bounds = new Rect();
     }
 
     private Bitmap replaceColor(Bitmap src, int targetColor) {
@@ -112,6 +117,7 @@ public class AircraftLayer extends Drawable {
         Point point = mapView.screenPoint(p);
         if (current.x == point.x && current.y == point.y)
             return current;
+//        Log.d("%s Alt: %.0f %.0f", vehicle.callsign, p.getAltitude(), Gps.getAltitude());
         trackPaint.setColor(altColour((int) (p.getAltitude() - Gps.getAltitude()), p.isAirborne()));
         trackPaint.setPathEffect(effect);
         canvas.drawLine(current.x, current.y, point.x, point.y, trackPaint);
@@ -136,34 +142,37 @@ public class AircraftLayer extends Drawable {
         synchronized (this) {
             currentPos = new Position(vehicle.lastValid);
             emitter = vehicle.emitterType;
-            //       Log.d("draw %06x %s %s %s", vehicle.id, vehicle.callsign, emitter, currentPos);
+            Log.d("draw %06x %s %s %s", vehicle.id, vehicle.callsign, emitter, currentPos);
             track = currentPos.getTrack();
             isAirborne = currentPos.isAirborne();
             // Canvas is already translated so that 0,0 is at the ownShip point
-            Rect bounds = canvas.getClipBounds();
+            Rect clipBounds = canvas.getClipBounds();
             Point aircraftPoint = mapView.screenPoint(currentPos);
             // Draw the icon if part of it is visible
             var bmpWidth = emitter.bitmap.getWidth();
+            var bmpHeight = emitter.bitmap.getHeight();
+            bounds.set(aircraftPoint.x-bmpWidth/2,aircraftPoint.y-bmpHeight/2,aircraftPoint.x+bmpWidth/2, aircraftPoint.y+bmpHeight/2);
             double altDiff = currentPos.getAltitude() - Gps.getAltitude();
             var displayAngle = MapView.displayRotation();
-            if (aircraftPoint.x > bounds.left - bmpWidth / 2 && aircraftPoint.x < bounds.right + bmpWidth / 2 && aircraftPoint.y > bounds.top - bmpWidth / 2 && aircraftPoint.y < bounds.bottom + bmpWidth / 2) {
+            if (bounds.right > clipBounds.left && bounds.left < clipBounds.right && bounds.bottom > clipBounds.top && bounds.top < clipBounds.bottom) {
                 canvas.drawBitmap(replaceColor(emitter.bitmap, altColour(altDiff, isAirborne)),
                         positionMatrix(emitter.bitmap.getWidth() / 2, emitter.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
                                 (isNaN(track) ? 0 : track) - (isNaN(displayAngle) ? 0 : displayAngle)), null);
                 int lineHeight = (int) (textPaint.getTextSize() + 1);
                 String[] text = {vehicle.getLabel(), isNaN(altDiff) ? "" : altUnits.toString(altDiff)};
-                drawText(canvas, aircraftPoint, lineHeight, text, bounds, bmpWidth);
+                drawText(canvas, aircraftPoint, lineHeight, text, clipBounds, bmpWidth);
             }
             if (showLinearPredictionTrack && vehicle.predictedPosition != null) {
+                Log.d("%s predict %b %f %f %f", vehicle.callsign, vehicle.predictedPosition.hasAltitude(), vehicle.predictedPosition.getAltitude(), Gps.getAltitude(), vehicle.predictedPosition.heightAboveGps());
                 synchronized (vehicle.predictedPosition) {
-                    if (vehicle.predictedPosition.isValid()) {
-                        line(canvas, aircraftPoint, vehicle.predictedPosition, predictEffect);
+                    if (vehicle.predictedPosition.hasAccuracy()) {
+                        line(canvas, aircraftPoint, vehicle.predictedPosition, predictEffect[vehicle.predictedPosition.hasAltitude() && ! Double.isNaN(Gps.getAltitude()) ? 0 : 1]);
                     }
                 }
             }
 
-            if (showPolynomialPredictionTrack) {
-                polyLine(canvas, aircraftPoint, vehicle.predicted, predictEffect);
+            if (showPolynomialPredictionTrack && vehicle.predicted.get(0).hasAccuracy()) {
+                polyLine(canvas, aircraftPoint, vehicle.predicted, predictEffect[! Double.isNaN(Gps.getAltitude()) ? 0 : 1]);
             }
 
             if (historySeconds > 0) {
@@ -183,30 +192,33 @@ public class AircraftLayer extends Drawable {
         return matrix;
     }
 
-    private void drawText(Canvas canvas, final Point aircraftPos, int textHeight, String[] text, Rect bounds, int bmpWidth) {
+    private void drawText(Canvas canvas, final Point aircraftPos, int textHeight, String[] text, Rect clipBounds, int bmpWidth) {
         Log.v("drawText: " + text[0] + ", " + text[1]);
         // Assume first line of text is always the longest
         float textWidth = textPaint.measureText(text[0]);
-        if (aircraftPos.x + bmpWidth / 2f + textWidth <= bounds.left) return;
-        if (aircraftPos.x - bmpWidth / 2f - textWidth >= bounds.right) return;
-        if (aircraftPos.y + textHeight <= bounds.top) return;
-        if (aircraftPos.y - textHeight >= bounds.bottom) return;
+        if (aircraftPos.x + bmpWidth / 2f + textWidth <= clipBounds.left) return;
+        if (aircraftPos.x - bmpWidth / 2f - textWidth >= clipBounds.right) return;
+        if (aircraftPos.y + textHeight <= clipBounds.top) return;
+        if (aircraftPos.y - textHeight >= clipBounds.bottom) return;
 
-        // Some part of text will be visible
+        // Some part of text will be visible, so make all of it visible
         int x = aircraftPos.x;
-        if (x < bounds.left) x = bounds.left;
-        else if (x >= bounds.right) x = bounds.right - 1;
-        if (x > bounds.width() / 4) {
+        if (x < clipBounds.left) x = clipBounds.left;
+        else if (x >= clipBounds.right) x = clipBounds.right - 1;
+        // If icon is in the left quarter of the window, put the left-aligned label to the right of it
+        // If icon is in the right quarter of the window, put the right-aligned label to the left of it
+        // If the icon is in the middle 2 quarters, don't change the alignment
+        if (x > clipBounds.width() / 4) {
             textPaint.setTextAlign(Paint.Align.RIGHT);
-        } else if (x < -bounds.width() / 4) {
+        } else if (x < -clipBounds.width() / 4) {
             textPaint.setTextAlign(Paint.Align.LEFT);
         }
         x += (textPaint.getTextAlign() == Paint.Align.LEFT ? bmpWidth : -bmpWidth) / 2;
 
         int y = aircraftPos.y;
-        if (y < bounds.top + textHeight) y = bounds.top + textHeight;
-        else if (y >= bounds.bottom - textHeight)
-            y = bounds.bottom - textHeight - 1;
+        if (y < clipBounds.top + textHeight) y = clipBounds.top + textHeight;
+        else if (y >= clipBounds.bottom - textHeight)
+            y = clipBounds.bottom - textHeight - 1;
         canvas.drawText(text[0], x, y, textPaint);
         if (text[1] != null && !text[1].isEmpty())
             canvas.drawText(text[1], x, y + textHeight, textPaint);

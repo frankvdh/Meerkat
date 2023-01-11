@@ -10,37 +10,28 @@ import com.meerkat.log.Log;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LogReplay extends Thread {
     private final VehicleList vehicleList;
-    private final File logFile;
+    private final BufferedReader logReader;
+    private Instant prev = null;
+    private Instant prevRealtime = null;
     static final Pattern rawPattern = Pattern.compile("(.*?\\d\\d:\\d\\d:\\d\\d\\.\\d\\d\\dZ)\\s(PingComms.*?)/[AEWIVD]\\sRAW\\s(.*)");
 
     public LogReplay(VehicleList v, File logFile) throws IOException {
         this.vehicleList = v;
-        this.logFile = logFile;
+        Log.level(Log.Level.D);
+        Log.i("new LogReplay");
+        logReader = new BufferedReader(new FileReader(logFile));
     }
 
     public void run() {
-        Log.level(Log.Level.D);
-        Log.i("new LogReplay");
-        BufferedReader logReader;
-        try {
-            logReader = new BufferedReader(new FileReader(logFile));
-        } catch (FileNotFoundException e) {
-            Log.e("Log replay file not found: %s", logFile.getAbsolutePath());
-            return;
-        }
-        Instant prev = null;
-        Instant prevRealtime = null;
         while (true) {
             String s;
             try {

@@ -15,10 +15,7 @@ package com.meerkat;
 import static com.meerkat.SettingsActivity.autoZoom;
 import static com.meerkat.SettingsActivity.purgeSeconds;
 import static com.meerkat.SettingsActivity.simulate;
-import static com.meerkat.SettingsActivity.simulateSpeedFactor;
 import static java.lang.Double.isNaN;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.meerkat.gdl90.Gdl90Message;
@@ -45,6 +42,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         furthest = null;
         nearest = null;
         Instant purgeTime = Instant.now().minus(purgeSeconds, ChronoUnit.SECONDS);
+        if (simulate) return;
         Log.i("Purge before %s", purgeTime.toString());
         synchronized (this) {
             Iterator<HashMap.Entry<Integer, Vehicle>> iterator = this.entrySet().iterator();
@@ -52,7 +50,6 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
                 HashMap.Entry<Integer, Vehicle> entry = iterator.next();
                 Vehicle v = entry.getValue();
                 if (v.lastValid == null) continue;
-                Log.i("Vehicle %s ", v.callsign);
                 if (v.lastValid.getInstant().isBefore(purgeTime)) {
                     iterator.remove();
                     Log.i("Purge %s", v.callsign);

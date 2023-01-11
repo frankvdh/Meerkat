@@ -16,7 +16,7 @@ import static android.os.Environment.MEDIA_MOUNTED;
 import static com.meerkat.SettingsActivity.appendLogFile;
 import static com.meerkat.SettingsActivity.fileLog;
 import static com.meerkat.SettingsActivity.initToolbarDelayMilliS;
-import static com.meerkat.SettingsActivity.load;
+import static com.meerkat.SettingsActivity.loadPrefs;
 import static com.meerkat.SettingsActivity.port;
 import static com.meerkat.SettingsActivity.simulate;
 import static com.meerkat.SettingsActivity.wifiName;
@@ -50,7 +50,6 @@ import com.meerkat.Gps;
 import com.meerkat.LogReplay;
 import com.meerkat.R;
 import com.meerkat.SettingsActivity;
-import com.meerkat.Simulator;
 import com.meerkat.VehicleList;
 import com.meerkat.databinding.ActivityMapBinding;
 import com.meerkat.log.Log;
@@ -78,13 +77,13 @@ public class MapActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        load(getApplicationContext());
+        loadPrefs(getApplicationContext());
 
         if (fileLog && Environment.getExternalStorageState().equals(MEDIA_MOUNTED)) {
             File logFile = new File(this.getExternalFilesDir(null), "meerkat.log");
             Log.useFileWriter(logFile, appendLogFile);
         }
-Log.i("Starting in %s mode", simulate);
+        Log.i("Starting in %s mode", simulate);
 
         ActivityMapBinding binding = ActivityMapBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -209,14 +208,16 @@ Log.i("Starting in %s mode", simulate);
     protected void onResume() {
         Log.i("Resume");
         super.onResume();
-        compass.resume();
+        if (compass != null)
+            compass.resume();
     }
 
     @Override
     protected void onPause() {
         Log.i("Pause");
         super.onPause();
-        compass.pause();
+        if (compass != null)
+            compass.pause();
     }
 
     @Override

@@ -27,6 +27,8 @@ import com.meerkat.log.Log;
 import com.meerkat.map.MapView;
 import com.meerkat.measure.Units;
 
+import java.util.Locale;
+
 public class SettingsActivity extends AppCompatActivity {
     private static SharedPreferences prefs;
     public static volatile String wifiName;
@@ -64,6 +66,7 @@ public class SettingsActivity extends AppCompatActivity {
     public static volatile Units.VertSpeed vertSpeedUnits;
     public static volatile boolean simulate;
     public static volatile float simulateSpeedFactor;
+    public static volatile String simulateSpeedFactorString;
     public static volatile String countryCode;
     public static volatile String ownCallsign;
     public static volatile MapView.DisplayOrientation displayOrientation;
@@ -75,7 +78,7 @@ public class SettingsActivity extends AppCompatActivity {
      */
     public static volatile int toolbarDelayMilliS, initToolbarDelayMilliS;
 
-    public static void load(Context context) {
+    public static void loadPrefs(Context context) {
         String currentVersionName = BuildConfig.VERSION_NAME;
         prefs = context.getSharedPreferences("com.meerkat_preferences", MODE_PRIVATE);
         String settingsVersionName = prefs.getString("version", null);
@@ -108,7 +111,7 @@ public class SettingsActivity extends AppCompatActivity {
         predictionMilliS = Math.max(0, Math.min(300, prefs.getInt("predictionSeconds", 60))) * 1000;
         polynomialPredictionStepMilliS = Math.max(1, Math.min(60, prefs.getInt("polynomialPredictionStepSeconds", 10))) * 1000;
         polynomialHistoryMilliS = Math.max(1, Math.min(60, prefs.getInt("polynomialHistorySeconds", 10))) * 1000;
-        gradientMaximumDiff = Math.max(1000, Math.min(5000, prefs.getInt("gradientMaximumDiff", 2500)));
+        gradientMaximumDiff = Math.max(1000, Math.min(5000, prefs.getInt("gradientMaximumDiff", 1000)));
         gradientMinimumDiff = Math.max(100, Math.min(gradientMaximumDiff, prefs.getInt("gradientMinimumDiff", 1000)));
         screenYPosPercent = Math.max(0, Math.min(100, prefs.getInt("screenYPosPercent", 25)));
         sensorSmoothingConstant = Math.max(0, Math.min(100, prefs.getInt("sensorSmoothingConstant", 20))) / 100f;
@@ -150,20 +153,26 @@ public class SettingsActivity extends AppCompatActivity {
             saveNeeded = true;
         }
         keepScreenOn = prefs.getBoolean("keepScreenOn", true);
-        autoZoom = prefs.getBoolean("autoZoom", false);
+        autoZoom = prefs.getBoolean("autoZoom", true);
         minGpsDistanceChangeMetres = prefs.getInt("minGpsDistanceChangeMetres", 10);
         minGpsUpdateIntervalSeconds = prefs.getInt("minGpsUpdateIntervalSeconds", 10);
-        toolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("toolbarDelaySecs", 3)))*1000;
-        initToolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("initToolbarDelaySecs", 10)))*1000;
+        toolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("toolbarDelaySecs", 3))) * 1000;
+        initToolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("initToolbarDelaySecs", 10))) * 1000;
         simulate = prefs.getBoolean("simulate", false);
-        simulateSpeedFactor = Math.max(0.1f, Math.min(100f, prefs.getFloat("simulateSpeedFactor", 25)));
+        simulateSpeedFactorString = prefs.getString("simulateSpeedFactorString", "10");
+        try {
+            simulateSpeedFactor = Math.max(0.1f, Math.min(100f, Float.parseFloat(simulateSpeedFactorString)));
+        } catch (NumberFormatException ex) {
+            Log.e("NumberFormatException: %s (%s)", ex.getMessage(), simulateSpeedFactorString);
+            simulateSpeedFactor = 10;
+        }
         if (simulate)
             displayOrientation = MapView.DisplayOrientation.NorthUp;
-        if (saveNeeded) save();
+        if (saveNeeded) savePrefs();
         Log.log(logLevel, "Settings loaded");
     }
 
-    public static void save() {
+    public static void savePrefs() {
         SharedPreferences.Editor edit = prefs.edit();
         edit.putString("version", BuildConfig.VERSION_NAME);
         edit.putString("wifiName", wifiName);
@@ -204,7 +213,7 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putInt("minGpsDistanceChangeMetres", minGpsDistanceChangeMetres);
         edit.putInt("minGpsUpdateIntervalSeconds", minGpsUpdateIntervalSeconds);
         edit.putBoolean("simulate", simulate);
-        edit.putFloat("simulateSpeedFactor", simulateSpeedFactor);
+        edit.putString("simulateSpeedFactorString", String.format(Locale.ENGLISH,"%.2f", simulateSpeedFactor));
         edit.apply();
         Log.log(logLevel, "Settings saved");
     }
@@ -212,6 +221,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        simulateSpeedFactorString = String.format(Locale.ENGLISH,"%.2f", simulateSpeedFactor);
         setContentView(R.layout.settings_activity);
         if (savedInstanceState == null) {
             getSupportFragmentManager()
@@ -227,13 +237,16 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    // The "Home" button is clicked
+    // The "Return" button is clicked...
+    // Reload from storage to get changes into public variables
+    // Strings, booleans, and ints can be edited directly, and are saved automatically
+    // Floats cannot be edited, so they are edited as strings, which are saved automatically.
+    // Preferences are then reloaded, which recalculates the float values
     @Override
     public void onDestroy() {
-
-        load(getApplicationContext());
+        loadPrefs(getApplicationContext());
         super.onDestroy();
-     }
+    }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
 
@@ -241,6 +254,7 @@ public class SettingsActivity extends AppCompatActivity {
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.preferences, rootKey);
             makeNumber("port", port);
+            makeNumber("simulateSpeedFactorString", simulateSpeedFactor);
             setRange("scrYPos", 5, 25, 95, 5);
             setRange("scrWidth", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(50), (int) Units.Distance.NM.toM(1));
             setRange("minZoom", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), screenWidthMetres, (int) Units.Distance.NM.toM(1));
@@ -276,10 +290,21 @@ public class SettingsActivity extends AppCompatActivity {
             EditTextPreference numberPreference = findPreference(key);
 
             if (numberPreference == null) {
-                android.util.Log.e("Unknown number preference: %s", key);
+                android.util.Log.e("Unknown int number preference: %s", key);
                 return;
             }
             numberPreference.setText(Integer.toString(value));
+            numberPreference.setOnBindEditTextListener(eT -> eT.setInputType(InputType.TYPE_CLASS_NUMBER));
+        }
+
+        private void makeNumber(@SuppressWarnings("SameParameterValue") String key, float value) {
+            EditTextPreference numberPreference = findPreference(key);
+
+            if (numberPreference == null) {
+                android.util.Log.e("Unknown float number preference: %s", key);
+                return;
+            }
+            numberPreference.setText(String.format(Locale.ENGLISH,"%.02f", value));
             numberPreference.setOnBindEditTextListener(eT -> eT.setInputType(InputType.TYPE_CLASS_NUMBER));
         }
     }

@@ -19,7 +19,6 @@ import android.hardware.GeomagneticField;
 
 import androidx.annotation.NonNull;
 
-import com.meerkat.R;
 import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
@@ -104,6 +103,10 @@ public class Traffic extends Gdl90Message {
         point.setProvider("ADS-B");
         point.setLatitude(lat);
         point.setLongitude(lon);
+        if (Double.isNaN(lat) || Double.isNaN(lon))
+            point.removeAccuracy();
+        else
+            point.setAccuracy(20);
         if (alt < -1000) point.removeAltitude();
         else point.setAltitude(Units.Height.FT.toM(alt));
         if (hSpeed == 0xfff) {

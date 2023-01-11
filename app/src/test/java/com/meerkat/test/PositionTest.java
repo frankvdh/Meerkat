@@ -30,8 +30,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.time.Instant;
-
 @RunWith(MockitoJUnitRunner.class)
 public class PositionTest extends TestCase {
     @Test
@@ -72,9 +70,9 @@ public class PositionTest extends TestCase {
         when(marton.getLongitude()).thenReturn(175 + 22 / 60.0 + 42 / 3600.0);
         when(marton.getAltitude()).thenReturn(Units.Height.FT.toM(5000));
         when(marton.getSpeed()).thenReturn(120f);
-        when(marton.getBearing()).thenReturn(0f);
+        when(marton.getTrack()).thenReturn(0f);
 
-        var bearingRad = Position.latLonDegToRad(marton.getBearing());
+        var trackRad = Position.latLonDegToRad(marton.getTrack());
         var latRad = Position.latLonDegToRad(marton.getLatitude());
         var lonRad = Position.latLonDegToRad(marton.getLongitude());
         var distFraction = marton.getSpeed()*3600 / 6371000d; // earth Radius In Metres
@@ -83,8 +81,8 @@ public class PositionTest extends TestCase {
         var sinDist = sin(distFraction);
         var cosDist = cos(distFraction);
 
-        var latitudeResult = asin(sinLat * cosDist + cosLat * sinDist * cos(bearingRad));
-        var a = atan2(sin(bearingRad) * sinDist * cosLat, cosDist - sinLat * sin(latitudeResult));
+        var latitudeResult = asin(sinLat * cosDist + cosLat * sinDist * cos(trackRad));
+        var a = atan2(sin(trackRad) * sinDist * cosLat, cosDist - sinLat * sin(latitudeResult));
         var longitudeResult = (lonRad + a + 3 * PI) % (2 * PI) - PI;
         var lat = Position.rad2latLonDeg(latitudeResult);
         var lon = Position.rad2latLonDeg(longitudeResult);
@@ -98,7 +96,7 @@ public class PositionTest extends TestCase {
     public void testHeightAbove() {
         when(p1.getAltitude()).thenReturn(Units.Height.FT.toM(4000d));
         when(marton.getAltitude()).thenReturn(Units.Height.FT.toM(5000f));
-        var diff = Position.heightAbove(p1, marton);
+        var diff = p1.heightAboveGps();
         Assert.assertEquals(Units.Height.FT.toM(-1000d), diff , 0.1);
     }
 

@@ -30,6 +30,7 @@ import com.meerkat.measure.Position;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Locale;
@@ -39,13 +40,13 @@ public class Vehicle implements Comparable<Vehicle> {
     private final MapView mapView;
     public String callsign;
     public final LinkedList<Position> history;
-    public final LinkedList<Position> predicted;
+    public final ArrayList<Position> predicted;
     public @NonNull
     Gdl90Message.Emitter emitterType;
     public Position lastValid;
     public final Position predictedPosition;
     public float distance;
-    final AircraftLayer layer;
+    public final AircraftLayer layer;
     int lastCrc;
 
     public Vehicle(int crc, int id, String callsign, Position point, @NonNull Gdl90Message.Emitter emitterType, @NonNull MapView mapView) {
@@ -57,18 +58,24 @@ public class Vehicle implements Comparable<Vehicle> {
         // History & Predicted go in opposite directions... in each case, the last entry is the furthest away from the current position of the aircraft.
         // So history is in decreasing time order, and predicted is in increasing time order
         this.history = new LinkedList<>();
-        this.predicted = new LinkedList<>();
         // always create predictedPosition for synchronization
         layer = findLayer(this);
         predictedPosition = new Position("predicted");
-        if (point.isValid()) {
+        predicted = new ArrayList<>(predictionMilliS / polynomialPredictionStepMilliS + 1);
+        if (showPolynomialPredictionTrack) {
+            for (int i = 0; i <= predictionMilliS / polynomialPredictionStepMilliS; i++)
+                predicted.add(new Position("predicted"));
+        }
+        if (point.hasAccuracy()) {
             addPoint(point);
-            if (showLinearPredictionTrack)
+            if (showLinearPredictionTrack) {
                 point.linearPredict(predictionMilliS, predictedPosition);
+                Log.d("Predict from %s to %s", point.toString(), predictedPosition);
+            }
         } else {
             lastValid = null;
             distance = Float.NaN;
-            predictedPosition.setLatitude(Double.NaN);
+            predictedPosition.removeAccuracy();
         }
     }
 
@@ -119,7 +126,7 @@ public class Vehicle implements Comparable<Vehicle> {
             if (callsign != null && !callsign.equals(this.callsign))
                 this.callsign = callsign;
 
-            if (point.isValid()) {
+            if (point.hasAccuracy()) {
                 addPoint(point);
             }
         }
@@ -135,30 +142,32 @@ public class Vehicle implements Comparable<Vehicle> {
             }
         }
 
-        if (showLinearPredictionTrack && lastValid != null && !Float.isNaN(lastValid.getTrack()) && point.hasSpeed()) {
+        if (showLinearPredictionTrack && lastValid != null && lastValid.hasTrack() && lastValid.hasSpeed()) {
             synchronized (layer) {
                 lastValid.linearPredict((int) (lastValid.getInstant().until(now, ChronoUnit.MILLIS)) + predictionMilliS, predictedPosition);
+                Log.d("Predict from %s to %s", lastValid, predictedPosition);
             }
         }
 
         if (showPolynomialPredictionTrack && !history.isEmpty()) {
             // Only reading history, so need to synchronize
             PolynomialRegression prSpeedTrack = new PolynomialRegression(history.getLast().getInstant(), 3);
-            // Assume that the oldest history point is valid, and not turning
-            float prevTrack = history.getLast().getTrack();
+            // History only contains valid points, assume not turning
+            float prevTrack = history.getLast().hasTrack() ? history.getLast().getTrack() : 0;
             var prevTime = history.getLast().getInstant();
             synchronized (layer) {
                 Iterator<Position> it = history.descendingIterator();
                 while (it.hasNext()) {
                     var p = it.next();
                     var time = p.getInstant();
-                    if (time.isBefore(prevTime) || time.isBefore(lastValid.getInstant().minus(polynomialHistoryMilliS, ChronoUnit.MILLIS)))
+                    if (!p.hasTrack() || !point.hasSpeed() || time.isBefore(prevTime) || time.isBefore(lastValid.getInstant().minus(polynomialHistoryMilliS, ChronoUnit.MILLIS)))
                         continue;
-                    if (!p.hasTrack() || !p.hasSpeed() || !p.hasAltitude() || p.getSpeed() == 0) continue;
-                    var track = p.getTrack();
                     var speed = p.getSpeed();
+                    var track = p.getTrack();
+                    if (!p.hasTrack() || !p.hasAltitude() || speed == 0 || Float.isNaN(speed))
+                        continue;
                     // Unwind modulo arithmetic so that turns in the same direction keep incrementing, even though the result is > 360 or < 0
-                    var turn = track - prevTrack;
+                    var turn = Float.isNaN(prevTrack) ? 0 : track - prevTrack;
                     while (turn > 180) turn -= 360;
                     while (turn < -180) turn += 180;
                     Log.v("Add %d %5.0f %5.0f %5.0f", time, speed, prevTrack + turn, p.getAltitude());
@@ -169,24 +178,25 @@ public class Vehicle implements Comparable<Vehicle> {
             }
             double[][] cSpeedTrack = prSpeedTrack.getCoefficients();
             synchronized (layer) {
-                predicted.clear();
                 if (cSpeedTrack != null) {
                     Log.v("Speed coeffs %.1f %.3f %.5f", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2]);
                     Log.v("Track coeffs %.1f %.3f %.5f", cSpeedTrack[1][0], cSpeedTrack[1][1], cSpeedTrack[1][2]);
                     Log.v("Alt   coeffs %.1f %.3f %.5f", cSpeedTrack[2][0], cSpeedTrack[2][1], cSpeedTrack[2][2]);
                     Position p = lastValid;
-                    for (int t = polynomialPredictionStepMilliS; t <= predictionMilliS; t += polynomialPredictionStepMilliS) {
-                        long t1 = Instant.ofEpochMilli((long) cSpeedTrack[0][3]).until(now, ChronoUnit.MILLIS) + t;
+                    for (int i = 0; i <= predicted.size()-1; i++) {
+                        long t1 = Instant.ofEpochMilli((long) cSpeedTrack[0][3]).until(now, ChronoUnit.MILLIS) + (long) i * polynomialPredictionStepMilliS;
                         var t2 = t1 * t1;
-                        p = p.linearPredict(polynomialPredictionStepMilliS, new Position("poly"));
-                        float speed = (float) (cSpeedTrack[0][0] + cSpeedTrack[0][1] * t1 + cSpeedTrack[0][2] * t2);
-                        float track = (float) (cSpeedTrack[1][0] + cSpeedTrack[1][1] * t1 + cSpeedTrack[1][2] * t2);
-                        float alt = (float) (cSpeedTrack[2][0] + cSpeedTrack[2][1] * t1 + cSpeedTrack[2][2] * t2);
-                        p.setAltitude(p.getAltitude()/2 + alt/2);
-                        p.setSpeed(p.getSpeed() /2 + speed/2);
-                        p.setTrack((p.getTrack()/2 + track/2) % 360);
-                        p.setInstant(now.plus(t1, ChronoUnit.MILLIS));
-                        predicted.addLast(p);
+                        p.linearPredict(polynomialPredictionStepMilliS, predicted.get(i));
+                        p = predicted.get(i);
+                        var speed = p.getSpeed();
+                        var track = p.getTrack();
+                        var alt = p.getAltitude();
+                        var newSpeed = (float) (cSpeedTrack[0][0] + cSpeedTrack[0][1] * t1 + cSpeedTrack[0][2] * t2);
+                        var newTrack = (float) (cSpeedTrack[1][0] + cSpeedTrack[1][1] * t1 + cSpeedTrack[1][2] * t2);
+                        var newAlt = (float) (cSpeedTrack[2][0] + cSpeedTrack[2][1] * t1 + cSpeedTrack[2][2] * t2);
+                        p.setAltitude(Double.isNaN(alt) ? newAlt : Float.isNaN(newAlt) ? alt : 0.9f * alt + 0.1f * newAlt);
+                        p.setSpeed(Float.isNaN(speed) ? newSpeed : Float.isNaN(newSpeed) ? speed : 0.9f * speed + 0.1f * newSpeed);
+                        p.setTrack((Float.isNaN(track) ? newTrack : Float.isNaN(newTrack) ? track : 0.9f * track + 0.1f * newTrack) % 360);
                         Log.v("%s Predict Speed %.1f Track %.1f Alt %.1f %s", callsign, speed, track, alt, p);
                     }
                 }
@@ -197,12 +207,12 @@ public class Vehicle implements Comparable<Vehicle> {
 
     private void addPoint(Position point) {
         lastValid = point;
-        history.addFirst(point);
         distance = Gps.distanceTo(point); // metres
+        history.addFirst(point);
     }
 
     public boolean isValid() {
-        return !history.isEmpty() && history.getFirst().isCrcValid();
+        return lastValid != null && lastValid.isCrcValid() && lastValid.hasAccuracy();
     }
 
     @NonNull

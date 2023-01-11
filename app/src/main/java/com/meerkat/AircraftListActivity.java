@@ -84,7 +84,7 @@ public class AircraftListActivity extends AppCompatActivity {
                 float speed;
                 double vVel;
                 double alt;
-                synchronized (v.lastValid) {
+                synchronized (v) {
                     distance = v.distance;
                     bearing = String.format(Locale.getDefault(), "%03d", (int) (Gps.bearingTo(v.lastValid) + 360) % 360);
                     track = Float.isNaN(v.lastValid.getTrack()) ? "---" : String.format(Locale.getDefault(), "%03.0f", v.lastValid.getTrack());

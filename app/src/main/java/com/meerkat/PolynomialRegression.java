@@ -12,6 +12,8 @@
  */
 package com.meerkat;
 
+import com.meerkat.log.Log;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
@@ -52,6 +54,9 @@ public class PolynomialRegression {
         x4Sum += x2 * x2;
         for (int i = 0; i < numSeries; i++) {
             double y = Y[i];
+            if (Double.isNaN(y)) {
+                Log.e("NaN in data at %d", i);
+            }
             ySum[i] += y;
             xySum[i] += x * y;
             x2ySum[i] += x2 * y;
