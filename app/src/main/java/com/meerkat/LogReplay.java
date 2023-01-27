@@ -60,8 +60,7 @@ public class LogReplay extends Thread {
             while (is.available() > 0) {
                 if ((byte) is.read() != 0x7e) continue;
                 Gdl90Message msg = Gdl90Message.getMessage(is);
-                if (!(msg instanceof Traffic)) continue;
-                Traffic t = (Traffic) msg;
+                if (!(msg instanceof Traffic t)) continue;
                 var now = Instant.now();
                 var msgTime = t.point.getInstant();
                 long delay = prev == null ? 0 : Math.min(2000, (prev.until(msgTime, ChronoUnit.MILLIS)) - (prevRealtime.until(now, ChronoUnit.MILLIS)));

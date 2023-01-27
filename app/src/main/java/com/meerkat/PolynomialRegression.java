@@ -18,7 +18,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 /**
- * https://rosettacode.org/wiki/Polynomial_regression#Java
+ * <a href="https://rosettacode.org/wiki/Polynomial_regression#Java">...</a>
  */
 public class PolynomialRegression {
     private int N;

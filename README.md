@@ -117,18 +117,18 @@ Alternatively, you can type your device's Wifi name into the WiFi Name text box.
 | speedUnits                      | User's preferred speed units KTS, MPH, KPH                                                                                   | KPH           |
 | vertSpeedUnits                  | User's preferred vertical speed units FPM, MPS                                                                               | FPM           |
 
-| Screen Setting Name | Usage                                                                                                                        | Default value |
-|---------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
-| screenYPos          | Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height                         | 25%           |
-| screenWidth         | Distance that the width of the screen represents in the user's [distance unit]s                                              | 10            |
-| circleStep          | Distance apart of the circles on the screen in the user's [distance unit]s                                                   | 5             |
-| dangerRadius        | Radius of "danger" circle on the screen in the user's [distance unit]s                                                       | 1             |
-| displayOrientation  | Display orientation... Heading-up, Track-up, or North-up                                                                     | Heading-up    |
-| keepScreenOn        | Keep the display on when in the Map or Aircraft List views                                                                   | true          |
-| autoZoom	          | Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen.       | true          |
-| gradMaxDiff         | How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green        | 5000          |
-| gradMinDiff         | How many [altitude unit]s above/below the phone's GPS altitude an aircraft displays as completely red                        | 1000          |
-| countryCode         | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed. | ZK            |
+| Screen Setting Name  | Usage                                                                                                                        | Default value |
+|----------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
+| screenYPos           | Distance of the ownShip position from the bottom of the screen, as a percentage of the screen height                         | 25%           |
+| screenWidth          | Distance that the width of the screen represents in the user's [distance unit]s                                              | 10            |
+| circleStep           | Distance apart of the circles on the screen in the user's [distance unit]s                                                   | 5             |
+| dangerRadius         | Radius of "danger" circle on the screen in the user's [distance unit]s                                                       | 1             |
+| displayOrientation   | Display orientation... Heading-up, Track-up, or North-up                                                                     | Heading-up    |
+| keepScreenOn         | Keep the display on when in the Map or Aircraft List views                                                                   | true          |
+| autoZoom	            | Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen.       | true          |
+| gradientMaximumDiff  | How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green        | 1000          |
+| gradientMinimumDiff  | How many [altitude unit]s above/below the phone's GPS altitude an aircraft displays as completely red                        | 1000          |
+| countryCode          | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed. | ZK            |
 
 | Sensitivity Setting Name    | Usage                                                                                                      | Default value |
 |-----------------------------|------------------------------------------------------------------------------------------------------------|---------------|
@@ -163,29 +163,29 @@ can be sent to the logs, and/or decoded messages.
 
 Setting the [simulate] setting to "true" results in the app processing a series of simulated events from several simulated aircraft, and simulating the Gps position of the phone.
 
-| Debug Setting Name | Usage                                                                                                                                           | Default value |
-|--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
-| version            | The version of Meerkat that saved the settings                                                                                                  | 1.0           |
-| showLog            | Whether to output logs to a window on the screen                                                                                                | false         |
-| fileLog            | Whether to output logs to /storage/sdcard0/Android/data/com.meerkat/files/meerkat.log.                                                          | false         |
-| appendLogFile      | Whether to append to the existing log file, or erase it and start a new one.                                                                    | false         |
-|                    | If this is false, this file is never erased or shortened. If left alone, this will eventually chew up all the storage at the rate of ~100MB/hr! |               |
-| logLevel           | Amount of detail to write to logs... Assert, Error, Warning, Info, Debug, Verbose                                                               | I             |
-| logRawMessages     | Whether to write the raw messages, as received from the device, to the logs                                                                     | false         |
-| logDecodedMessages | Whether to write the decoded messages, as interpreted by the GDL90 parser, to the logs                                                          | false         |
-| simulate           | Play back logged data in /storage/sdcard0/Android/data/com.meerkat/files/meerkat.save.log instead of real traffic. No Wifi connection is made.  | false         |
-| simulateSpeedFactor| Speed at which simulated traffic is played	                                                                                                   | false         |
+| Debug Setting Name  | Usage                                                                                                                                           | Default value |
+|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
+| version             | The version of Meerkat that saved the settings                                                                                                  | 1.0           |
+| showLog             | Whether to output logs to a window on the screen                                                                                                | false         |
+| fileLog             | Whether to output logs to /storage/sdcard0/Android/data/com.meerkat/files/meerkat.log.                                                          | false         |
+| appendLogFile       | Whether to append to the existing log file, or erase it and start a new one.                                                                    | false         |
+|                     | If this is false, this file is never erased or shortened. If left alone, this will eventually chew up all the storage at the rate of ~100MB/hr! |               |
+| logLevel            | Amount of detail to write to logs... Assert, Error, Warning, Info, Debug, Verbose                                                               | I             |
+| logRawMessages      | Whether to write the raw messages, as received from the device, to the logs                                                                     | false         |
+| logDecodedMessages  | Whether to write the decoded messages, as interpreted by the GDL90 parser, to the logs                                                          | false         |
+| simulate            | Play back logged data in /storage/sdcard0/Android/data/com.meerkat/files/meerkat.save.log instead of real traffic. No Wifi connection is made.  | false         |
+| simulateSpeedFactor | Speed at which simulated traffic is played	                                                                                                     | false         |
 
 
 Contributing & Licensing
 ------------------------
 This software is free (as in beer AND speech). I figure that, although I could maybe sell it for a few hundred dollars total, it is way more
-valuable to me (as a pilot) if it saves one person from running into me mid-air. So, it's free. 
+valuable to me (as a pilot) if it saves one person from running into me mid-air. And hopefully it will save other people from collisions too.
+So, it's free. 
 
 It is made available under a Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License. https://creativecommons.org/licenses/by-nc/4.0/
 
-You are free to share (copy and redistribute the material in any medium or format) and
-adapt (remix, transform, and build upon the material) this software under the following terms:
+You are free to share (copy and redistribute the material in any medium or format) and adapt (remix, transform, and build upon the material) this software under the following terms:
 Attribution — You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
 NonCommercial — You may not use the material for commercial purposes.
 
@@ -197,8 +197,12 @@ TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :)
 * Corrupted logs (fixed?)
-* Logs not shown on screen
+* Logs not shown on screen (fixed?)
 * Investigate negative speeds (fixed?)
+* Reduce frequency of heading change updates
+* Reduce frequency of auto-zooming in
+* Reduce power consumption (frequent screen redraws)
+* Allow screen to be used vertically
 * Ownship track... history and prediction
 * Indicate Mode-C traffic presence
 * Audio / Haptic alerts of collision threats

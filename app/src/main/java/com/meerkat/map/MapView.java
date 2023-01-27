@@ -100,8 +100,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     static private Bitmap loadIcon(Context context, int iconId) {
         Icon icon = Icon.createWithResource(context, iconId);
         Drawable drawable = icon.loadDrawable(context);
-        if (drawable instanceof BitmapDrawable) {
-            BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+        if (drawable instanceof BitmapDrawable bitmapDrawable) {
             return bitmapDrawable.getBitmap();
         }
         if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {

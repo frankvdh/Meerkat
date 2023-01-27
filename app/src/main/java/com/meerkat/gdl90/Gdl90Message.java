@@ -213,33 +213,20 @@ public class Gdl90Message {
             }
             if (messageId == 0x7e) continue;     // Flag byte
             Log.v("messageId = " + messageId);
-            switch (messageId) {
-                case 0:
-                    return new Heartbeat(is);
-                case 11:
-                    return new OwnShipGeometricAltitude(is);
-                case 10:
-                case 20:
-                    return new Traffic(messageId, new Position("ADSB"), is);
-                case 37:
-                    return new Identification(is);
-                case 40:
-                    return new Barometer(is);
-                case 43:
-                    return new TransponderConfiguration(is);
-                case 45:
-                    return new Control(is);
-                case 46:
-                    return new GnssData(is);
-                case 47:
-                    return new TransponderStatus(is);
-                case 101:
-                    return new SkyRadar(is);
-                case 117:
-                    return new UavionixOem(is);
-                default:
-                    return new Invalid(messageId, is);
-            }
+            return switch (messageId) {
+                case 0 -> new Heartbeat(is);
+                case 11 -> new OwnShipGeometricAltitude(is);
+                case 10, 20 -> new Traffic(messageId, new Position("ADSB"), is);
+                case 37 -> new Identification(is);
+                case 40 -> new Barometer(is);
+                case 43 -> new TransponderConfiguration(is);
+                case 45 -> new Control(is);
+                case 46 -> new GnssData(is);
+                case 47 -> new TransponderStatus(is);
+                case 101 -> new SkyRadar(is);
+                case 117 -> new UavionixOem(is);
+                default -> new Invalid(messageId, is);
+            };
         }
         return null;
     }

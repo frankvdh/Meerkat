@@ -287,8 +287,7 @@ public class PingComms extends Service {
                     if (message == null) continue;
                     if (logDecodedMessages)
                         Log.i(message.toString());
-                    if (message instanceof Traffic) {
-                        Traffic traffic1 = (Traffic) message;
+                    if (message instanceof Traffic traffic1) {
                         if (traffic1.callsign.equals("********") || traffic1.point.getLatitude() == 0 && traffic1.point.getLongitude() == 0)
                             continue;
                         traffic1.upsert(vehicleList, Instant.now());

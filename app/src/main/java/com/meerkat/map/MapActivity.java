@@ -93,9 +93,9 @@ public class MapActivity extends AppCompatActivity {
         assert actionBar != null : "Action bar not found";
 
         // Set up custom layout
-//        actionBar.setCustomView(R.layout.actionbar_layout);
+        //      actionBar.setCustomView(R.layout.actionbar_layout);
         //      actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
-        //    actionBar.setDisplayShowCustomEnabled(true);
+        //      actionBar.setDisplayShowCustomEnabled(true);
         showActionbar(initToolbarDelayMilliS);
 
         Display display =

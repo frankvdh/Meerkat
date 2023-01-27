@@ -37,9 +37,8 @@ public class Control extends Gdl90Message {
         ident = (b & 0x08) != 0;
         byte airGroundState = (byte) ((b & 0x6) >> 1);
         switch (airGroundState) {
-            case 0:
-            case 1: airborne = true; break;
-            case 2: airborne = false;
+            case 0, 1 -> airborne = true;
+            case 2 -> airborne = false;
         }
         baroChecked = (b & 0x01) != 0;
         pressureAlt = (int) getInt();

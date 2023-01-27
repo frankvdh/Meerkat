@@ -141,19 +141,15 @@ public class Traffic extends Gdl90Message {
     }
 
     private float trueTrack(float track, TrackType trackType, int hSpeed, double lat, double lon, int alt) {
-        switch (trackType) {
+        return switch (trackType) {
             // Heading rather than track
-            case True:
-                return track;
-            case Mag:
-                return (track + new GeomagneticField((float) lat, (float) lon, alt, Instant.now().toEpochMilli()).getDeclination()) % 360;
+            case True -> track;
+            case Mag ->
+                    (track + new GeomagneticField((float) lat, (float) lon, alt, Instant.now().toEpochMilli()).getDeclination()) % 360;
             // Track
-            case TRK:
-                return track;
-            case Invalid:
-                return NaN;
-        }
-        return NaN;
+            case TRK -> track;
+            case Invalid -> NaN;
+        };
     }
 
     public void upsert(VehicleList vehicleList, Instant time) {

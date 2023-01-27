@@ -16,13 +16,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:divider="?attr/dividerVertical"
-            android:dividerPadding="@dimen/margin_tiny"
-            android:outlineProvider="bounds">
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -120,8 +113,6 @@
                 android:textSize="14sp"
                 android:paddingHorizontal="@dimen/margin_small"
                 tools:ignore="TextContrastCheck" />
-
-        </TableRow>
 
     </TableLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -47,6 +47,13 @@ public class Background extends Drawable {
     private final CompassView compassView;
     private final TextView compassText, scaleText;
 
+    /**
+     * @param mapView mapView that contains this Background
+     * @param vehicleList vehicle list that controls zoom level
+     * @param compassView compassView contained in this background
+     * @param compassText textView in compassView to show orientation mode
+     * @param scaleText textView in this Background to display zoom level
+     */
     public Background(MapView mapView, VehicleList vehicleList, CompassView compassView, TextView compassText, TextView scaleText) {
         this.mapView = mapView;
         this.vehicleList = vehicleList;
@@ -93,7 +100,8 @@ public class Background extends Drawable {
 
         Vehicle nearest = vehicleList.getNearest();
         if (nearest != null) {
-            int thickness = (int) ((nearest.distance <= dangerRadiusMetres ? dangerRadiusMetres/2 :  (dangerRadiusMetres / nearest.distance)) * mapView.pixelsPerMetre);
+            int thickness = (int) ((nearest.distance <= dangerRadiusMetres ? dangerRadiusMetres/2 :
+                    (dangerRadiusMetres / nearest.distance)) * mapView.pixelsPerMetre);
             Log.d("Nearest = %s %s, %d, thickness = %d", nearest.callsign, nearest.distance, dangerRadiusMetres, thickness);
             if (thickness > 0) {
                 dangerPaint.setStrokeWidth(thickness);
