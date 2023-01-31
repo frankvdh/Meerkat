@@ -15,6 +15,7 @@ package com.meerkat.gdl90;
 import androidx.annotation.NonNull;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
 public class OwnShipGeometricAltitude extends Gdl90Message {
@@ -23,7 +24,7 @@ public class OwnShipGeometricAltitude extends Gdl90Message {
     private final int vfom;
 
     // uAvionix - uAvionix-UCP-Transponder-ICD-Rev-Q.pdf
-    public OwnShipGeometricAltitude(ByteArrayInputStream is) {
+    public OwnShipGeometricAltitude(ByteArrayInputStream is)  throws UnsupportedEncodingException {
         super(is, 4, (byte) 11);
         alt = getShort();
         byte message3 = (byte) getByte();

@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import com.meerkat.log.Log;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
 public class GnssData extends Gdl90Message {
@@ -31,13 +32,12 @@ public class GnssData extends Gdl90Message {
     private final boolean hplActive, fault, magNorthRef;
 
     // uAvionix - uAvionix-UCP-Transponder-ICD-Rev-Q.pdf
-    public GnssData(ByteArrayInputStream is) {
+    public GnssData(ByteArrayInputStream is)  throws UnsupportedEncodingException {
         super(is, 44, (byte) 46);
         msgVersion = (byte) getByte();
         int msgSize = msgVersion == 2 ? 48 : 44;
         if (is.available() < msgSize + 1) {
-            Log.i("Message too short: expected %d but received %d", msgSize, is.available() - 2);
-            throw new RuntimeException("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
+            throw new  UnsupportedEncodingException ("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
         }
         seconds = getInt() & 0xffff;
         int i = (int) getInt();

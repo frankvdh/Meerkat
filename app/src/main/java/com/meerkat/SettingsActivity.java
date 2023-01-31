@@ -166,7 +166,7 @@ public class SettingsActivity extends AppCompatActivity {
             Log.e("NumberFormatException: %s (%s)", ex.getMessage(), simulateSpeedFactorString);
             simulateSpeedFactor = 10;
         }
-        if (simulate)
+         if (simulate)
             displayOrientation = MapView.DisplayOrientation.NorthUp;
         if (saveNeeded) savePrefs();
         Log.log(logLevel, "Settings loaded");

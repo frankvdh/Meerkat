@@ -14,6 +14,7 @@ package com.meerkat.gdl90;
 import androidx.annotation.NonNull;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
 public class Barometer extends Gdl90Message {
@@ -22,7 +23,7 @@ public class Barometer extends Gdl90Message {
     private final double pressMBar;
     private final double sensorTemp;
 
-    public Barometer(ByteArrayInputStream is) {
+    public Barometer(ByteArrayInputStream is) throws UnsupportedEncodingException {
         super(is, 10, (byte) 40);
         sensorType = (byte) getByte();
         long p = getInt();

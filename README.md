@@ -196,10 +196,6 @@ have devices other than the PingUSB.
 TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :)
-* Corrupted logs (fixed?)
-* Logs not shown on screen (fixed?)
-* Investigate negative speeds (fixed?)
-* Reduce frequency of heading change updates
 * Reduce frequency of auto-zooming in
 * Reduce power consumption (frequent screen redraws)
 * Allow screen to be used vertically
@@ -207,6 +203,7 @@ This list is more-or-less in priority order. At the moment it is shrinking :)
 * Indicate Mode-C traffic presence
 * Audio / Haptic alerts of collision threats
 * Fix position of north arrow / track mode letter
+* Further Reduce frequency of heading change updates ???
 * Use a theme to allow black background
 * Digital filtering of path to predict tracks
 * Handling of Float preference values (custom SeekBar?)
@@ -216,3 +213,4 @@ This list is more-or-less in priority order. At the moment it is shrinking :)
 * Internationalisation
 * Find someone to test usage with other Wifi-enabled ADS-B In devices (Stratux, Foreflight, etc)
 * Find someone to port it to Apple IOS.
+

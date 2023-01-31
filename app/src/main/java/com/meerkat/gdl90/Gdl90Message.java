@@ -42,6 +42,8 @@ import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
+import java.util.zip.DataFormatException;
 
 public class Gdl90Message {
     protected byte messageId;
@@ -105,12 +107,12 @@ public class Gdl90Message {
 
     protected static final LateralGpsOfs[] lateralGpsOfsLookup = new LateralGpsOfs[]{LateralGpsOfs.NO_DATA, LEFT_2M, LEFT_4M, LEFT_6M, RIGHT_0M, RIGHT_2M, RIGHT_4M, RIGHT_6M};
 
-    protected Gdl90Message(ByteArrayInputStream is, int msgSize, byte messageId) {
+    protected Gdl90Message(ByteArrayInputStream is, int msgSize, byte messageId) throws UnsupportedEncodingException {
         this.messageId = messageId;
         this.is = is;
         if (is.available() < msgSize + 2) {
-            Log.i("Message too short: expected %d but received %d", msgSize, is.available() - 2);
-            throw new RuntimeException("Message too short: expected " + msgSize + " but received " + (is.available() - 2));
+            Log.e("Message too short: expected %d but received %d", msgSize, is.available() - 2);
+            throw new UnsupportedEncodingException("Message too short: expected " + msgSize + " but received " + (is.available() - 2));
         }
         crc = Crc16Table[0] ^ messageId;
     }
@@ -121,14 +123,14 @@ public class Gdl90Message {
 
     protected void checkCrc() {
         if (is.available() < 3)
-            Log.w("Message to short");
+            Log.e("Message too short");
         int savedCrc = crc;
         // Call getByte because it handles escaping
         int recCrc = getByte() + (getByte() << 8);
         if (is.available() < 1) {
-            Log.w("Message unexpectedly short");
+            Log.e("Message unexpectedly short");
         } else if (is.read() != 0x7e)
-            Log.w("Missing closing flag");
+            Log.e("Missing closing flag");
         crcValid = (savedCrc == recCrc);
     }
 
@@ -147,7 +149,7 @@ public class Gdl90Message {
     protected char getChar() {
         short b = (short) (((byte) is.read()) & 0xff);
         if (b == 0x7e) {
-            Log.w("Flag found unexpectedly");
+            Log.e("Flag found unexpectedly");
             return 0x7e;
         }
         if (b == 0x7d) b = (byte) (is.read() ^ 0x20);
@@ -159,7 +161,7 @@ public class Gdl90Message {
     protected short getByte() {
         short b = (short) (((byte) is.read()) & 0xff);
         if (b == 0x7e) {
-            Log.w("Flag found unexpectedly");
+            Log.e("Flag found unexpectedly");
             return 0x7e;
         }
         if (b == 0x7d) b = (short) ((((byte) is.read()) & 0xff) ^ 0x20);
@@ -208,25 +210,29 @@ public class Gdl90Message {
         while (is.available() > 0) {
             byte messageId = (byte) is.read();
             if ((messageId & 0x80) != 0 && (messageId & 0x7f) == 0x7e) {
-                Log.w("MSB set on message ID");
+                Log.e("MSB set on message ID");
                 continue;
             }
             if (messageId == 0x7e) continue;     // Flag byte
             Log.v("messageId = " + messageId);
-            return switch (messageId) {
-                case 0 -> new Heartbeat(is);
-                case 11 -> new OwnShipGeometricAltitude(is);
-                case 10, 20 -> new Traffic(messageId, new Position("ADSB"), is);
-                case 37 -> new Identification(is);
-                case 40 -> new Barometer(is);
-                case 43 -> new TransponderConfiguration(is);
-                case 45 -> new Control(is);
-                case 46 -> new GnssData(is);
-                case 47 -> new TransponderStatus(is);
-                case 101 -> new SkyRadar(is);
-                case 117 -> new UavionixOem(is);
-                default -> new Invalid(messageId, is);
-            };
+            try {
+                return switch (messageId) {
+                    case 0 -> new Heartbeat(is);
+                    case 11 -> new OwnShipGeometricAltitude(is);
+                    case 10, 20 -> new Traffic(messageId, new Position("ADSB"), is);
+                    case 37 -> new Identification(is);
+                    case 40 -> new Barometer(is);
+                    case 43 -> new TransponderConfiguration(is);
+                    case 45 -> new Control(is);
+                    case 46 -> new GnssData(is);
+                    case 47 -> new TransponderStatus(is);
+                    case 101 -> new SkyRadar(is);
+                    case 117 -> new UavionixOem(is);
+                    default -> new Invalid(messageId, is);
+                };
+            } catch(UnsupportedEncodingException ex) {
+                Log.e(ex.getMessage());
+            }
         }
         return null;
     }

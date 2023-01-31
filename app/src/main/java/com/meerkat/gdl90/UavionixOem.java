@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import com.meerkat.log.Log;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
 @SuppressWarnings({"FieldCanBeLocal", "unused"})
@@ -37,7 +38,7 @@ public class UavionixOem extends Gdl90Message {
 
     // uAvionix - uAvionix-UCP-Transponder-ICD-Rev-Q.pdf
 
-    public UavionixOem(ByteArrayInputStream is) {
+    public UavionixOem(ByteArrayInputStream is)  throws UnsupportedEncodingException {
         super(is, 4, (byte) 117);
         signature = Character.highSurrogate(getByte());
         subType = getByte();
@@ -47,8 +48,7 @@ public class UavionixOem extends Gdl90Message {
                 msgVersion = (byte) getByte();
                 int msgSize = msgVersion == 1 ? 4 : 29;
                 if (is.available() < msgSize + 1) {
-                    Log.i("Message too short: expected %d but received %d", msgSize, is.available() - 2);
-                    throw new RuntimeException("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
+                    throw new UnsupportedEncodingException ("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
                 }
                 qiMode = getByte() == 0;
                 if (msgVersion > 1) {
@@ -73,8 +73,7 @@ public class UavionixOem extends Gdl90Message {
                 msgVersion = (byte) getByte();
                 msgSize = 8;
                 if (is.available() < msgSize + 1) {
-                    Log.i("Message too short: expected %d but received %d", msgSize, is.available() - 2);
-                    throw new RuntimeException("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
+                    throw new  UnsupportedEncodingException("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
                 }
                 baudRate = (int) getInt();
                 numHops = getByte();

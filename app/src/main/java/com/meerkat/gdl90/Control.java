@@ -11,9 +11,11 @@
  * NonCommercial — You may not use the material for commercial purposes.
  */
 package com.meerkat.gdl90;
+
 import androidx.annotation.NonNull;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
 public class Control extends Gdl90Message {
@@ -26,7 +28,7 @@ public class Control extends Gdl90Message {
     final private String callsign;
 
     // uAvionix - uAvionix-UCP-Transponder-ICD-Rev-Q.pdf
-    public Control(ByteArrayInputStream is) {
+    public Control(ByteArrayInputStream is)  throws UnsupportedEncodingException {
         super(is, 10, (byte) 45);
         msgVersion = (byte) getByte();
         byte b = (byte) getByte();
@@ -53,15 +55,15 @@ public class Control extends Gdl90Message {
     public String toString() {
         return String.format(Locale.ENGLISH, "C%c: %s %d %c%c%c%c%c%c%c %.0fft %04d %s",
                 crcValidChar(), callsign, msgVersion,
-                tx1090ES ? 'T':'.',
-                modeSReply ? 'S':'.',
-                modeCReply ? 'C':'.',
-                modeAReply ? 'A':'.',
-                ident ? 'I':'.',
-                airborne ? 'A':'.',
-                baroChecked ? 'B':'.',
-                pressureAlt  * 3.28084,
+                tx1090ES ? 'T' : '.',
+                modeSReply ? 'S' : '.',
+                modeCReply ? 'C' : '.',
+                modeAReply ? 'A' : '.',
+                ident ? 'I' : '.',
+                airborne ? 'A' : '.',
+                baroChecked ? 'B' : '.',
+                pressureAlt * 3.28084,
                 modeASquawk, priority
-                );
+        );
     }
 }

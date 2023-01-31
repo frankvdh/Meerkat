@@ -47,6 +47,8 @@ import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
 
+import java.time.Instant;
+
 public class MapView extends androidx.appcompat.widget.AppCompatImageView {
 
     public enum DisplayOrientation {NorthUp, TrackUp, HeadingUp}
@@ -166,14 +168,14 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         if (furthest.distance > maxZoom) return minPixelsPerMetre;
 
         Point furthestPoint = new Point(0, 0);
-        extend(furthestPoint,furthest.lastValid);
+        extend(furthestPoint, furthest.lastValid);
         if (showLinearPredictionTrack)
             extend(furthestPoint, furthest.predictedPosition);
         if (showPolynomialPredictionTrack)
-            extend(furthestPoint, furthest.predicted.get(furthest.predicted.size()-1));
-        Log.d("Furthest %d %d %s", furthestPoint.x, furthestPoint.y, furthest);
+            extend(furthestPoint, furthest.predicted.get(furthest.predicted.size() - 1));
+        Log.d("Furthest (%d, %d) %s", furthestPoint.x, furthestPoint.y, furthest);
 
-        // Both points can't be 0 because then furthest.distance < minZoom
+        // Both points can't be 0 because then furthest.distance must be < minZoom
         if (furthestPoint.x == 0) {
             // X coordinate is 0 -- Scale the Y coordinate to the edge of the screen
             return pixelsPerMetre * (float) (bounds.top + 32) / furthestPoint.y;
@@ -186,18 +188,31 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         return pixelsPerMetre * (min(xScale, yScale));
     }
 
-   private void extend(Point furthest, Position pos) {
+    private void extend(Point furthest, Position pos) {
         if (pos == null || !pos.hasAccuracy()) return;
         Point p = screenPoint(pos);
         // Screen size is symmetric around vertical axis
         if (Math.abs(p.x) > furthest.x) furthest.x = Math.abs(p.x);
         // Scale negative Y coordinates so that a negative value at the top edge of the screen maps to the bottom edge of the screen
-        if (p.y < 0) p.y = (int) (-p.y * screenYPosPercent/(100f - screenYPosPercent));
+        if (p.y < 0) p.y = (int) (-p.y * screenYPosPercent / (100f - screenYPosPercent));
         if (p.y > furthest.y) furthest.y = p.y;
     }
 
+    private double previousFurthest;
+    private Instant nextZoomAllowed = Instant.EPOCH;
+
+    /** Adjust the screen zoom factor to show the furthest away aircraft and it's predicted positions
+     * @param bounds Bounds of the Background (i.e. the visible map) where 0,0 is the ownship position
+     * @param furthest Vehicle whose position is furthest from the ownship position
+     */
     void adjustScaleFactor(Rect bounds, Vehicle furthest) {
-        float newScale = updateScaleFactor(bounds, furthest);
-        pixelsPerMetre =  Math.max(minPixelsPerMetre, Math.min(newScale, maxPixelsPerMetre));
+        if (furthest == null) return;
+        Instant now = Instant.now();
+        if (previousFurthest > furthest.distance || now.isAfter(nextZoomAllowed)) {
+            nextZoomAllowed = now.plusSeconds(5);
+            previousFurthest = furthest.distance;
+            float newScale = updateScaleFactor(bounds, furthest);
+            pixelsPerMetre = Math.max(minPixelsPerMetre, Math.min(newScale, maxPixelsPerMetre));
+        }
     }
 }

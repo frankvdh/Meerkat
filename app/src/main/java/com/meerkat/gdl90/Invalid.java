@@ -14,13 +14,14 @@ package com.meerkat.gdl90;
 import androidx.annotation.NonNull;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Locale;
 
 public class Invalid extends Gdl90Message {
     final ArrayList<Byte> data;
 
-    public Invalid(byte messageId, ByteArrayInputStream is) {
+    public Invalid(byte messageId, ByteArrayInputStream is)  throws UnsupportedEncodingException {
         super(is, 0, messageId);
         data = new ArrayList<>();
         do {

@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import com.meerkat.log.Log;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
 public class Identification extends Gdl90Message {
@@ -29,12 +30,12 @@ public class Identification extends Gdl90Message {
 
     // uAvionix - uAvionix-UCP-Transponder-ICD-Rev-Q.pdf
 
-    public Identification(ByteArrayInputStream is) {
+    public Identification(ByteArrayInputStream is)  throws UnsupportedEncodingException {
         super(is, 22, (byte) 37);
         msgVersion = (byte) getByte();
         int msgSize = msgVersion == 1 ? 18 : msgVersion == 2 ? 36 : 66;
         if (is.available() < msgSize + 1) {
-            Log.w("Message too short: expected %d but received %d",msgSize, is.available()-1);
+            throw new UnsupportedEncodingException(String.format("Message too short: expected %d but received %d",msgSize, is.available()-1));
         }
         priFwMajorVersion = (byte) getByte();
         priFwMinorVersion = (byte) getByte();

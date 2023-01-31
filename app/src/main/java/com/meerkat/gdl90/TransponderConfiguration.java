@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import com.meerkat.log.Log;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 public class TransponderConfiguration extends Gdl90Message {
@@ -51,14 +52,13 @@ public class TransponderConfiguration extends Gdl90Message {
     public ArrayList<Protocol> inputProtocol, outputProtocol;
 
     // uAvionix - uAvionix-UCP-Transponder-ICD-Rev-Q.pdf
-    public TransponderConfiguration(ByteArrayInputStream is) {
+    public TransponderConfiguration(ByteArrayInputStream is)  throws UnsupportedEncodingException {
         super(is, 19, (byte) 43);
         msgVersion = (byte) getByte();
         //noinspection ConditionalExpressionWithIdenticalBranches
         int msgSize = msgVersion == 1 ? 19 : msgVersion == 2 ? 21 : msgVersion == 3 ? 22 : msgVersion == 4 ? 29 : 29;
         if (is.available() < msgSize + 1) {
-            Log.i("Message too short: expected %d but received %d", msgSize, is.available() - 2);
-            throw new RuntimeException("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
+              throw new UnsupportedEncodingException ("Message too short: expected " + msgSize + " but received " + (is.available() - 1));
         }
         participantAddr = (getByte() << 16) + (getByte() << 8) + getByte();
         byte b = (byte) getByte();

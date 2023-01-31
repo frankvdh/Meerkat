@@ -25,6 +25,7 @@ import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.util.Locale;
 
@@ -51,7 +52,7 @@ public class Traffic extends Gdl90Message {
 
     // uAvionix - uAvionix-UCP-Transponder-ICD-Rev-Q.pdf 6.21 (Ownship) & 6.2.
 
-    public Traffic(byte messageId, Position point, ByteArrayInputStream is) {
+    public Traffic(byte messageId, Position point, ByteArrayInputStream is) throws UnsupportedEncodingException {
         super(is, 28, messageId);
         this.point = point;
         ownShip = messageId == 10;
@@ -114,7 +115,7 @@ public class Traffic extends Gdl90Message {
             point.removeBearing();
         } else {
             point.setSpeed((float) Units.Speed.KNOTS.toMps(hSpeed));
-            point.setTrack(trueTrack(track, trackType, hSpeed, lat, lon, alt));
+            point.setTrack(trueTrack(track, trackType, lat, lon, alt));
         }
         point.setVVel(Units.VertSpeed.FPM.toMps(vVel));
         point.setCrcValid(crcValid);
@@ -140,7 +141,7 @@ public class Traffic extends Gdl90Message {
         airborne = true;
     }
 
-    private float trueTrack(float track, TrackType trackType, int hSpeed, double lat, double lon, int alt) {
+    private float trueTrack(float track, TrackType trackType, double lat, double lon, int alt) {
         return switch (trackType) {
             // Heading rather than track
             case True -> track;

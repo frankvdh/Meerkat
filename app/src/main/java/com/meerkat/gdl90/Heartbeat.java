@@ -14,6 +14,7 @@ package com.meerkat.gdl90;
 import androidx.annotation.NonNull;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
 public class Heartbeat extends Gdl90Message {
@@ -39,7 +40,7 @@ public class Heartbeat extends Gdl90Message {
 
     // uAvionix - uAvionix-UCP-Transponder-ICD-Rev-Q.pdf
 
-    public Heartbeat(ByteArrayInputStream is) {
+    public Heartbeat(ByteArrayInputStream is)  throws UnsupportedEncodingException {
         super(is, 7, (byte) 0);
         status1 = (byte) getByte();
         validPos = (status1 & 0x80) != 0;
