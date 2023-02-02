@@ -166,6 +166,10 @@ public class SettingsActivity extends AppCompatActivity {
             Log.e("NumberFormatException: %s (%s)", ex.getMessage(), simulateSpeedFactorString);
             simulateSpeedFactor = 10;
         }
+        simulate = true;
+        autoZoom = true;
+        simulateSpeedFactor = 1;
+        saveNeeded = true;
          if (simulate)
             displayOrientation = MapView.DisplayOrientation.NorthUp;
         if (saveNeeded) savePrefs();

@@ -110,6 +110,7 @@ public class LogReplay extends Thread {
 
                     if (delay > 0) {
                         try {
+                            Log.d("Delay %d", delay);
                             Thread.sleep(delay);
                         } catch (InterruptedException e) {
                             e.printStackTrace();

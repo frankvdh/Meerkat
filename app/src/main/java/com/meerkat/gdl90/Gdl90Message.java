@@ -43,7 +43,7 @@ import com.meerkat.measure.Position;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.zip.DataFormatException;
+import java.time.Instant;
 
 public class Gdl90Message {
     protected byte messageId;
@@ -219,7 +219,7 @@ public class Gdl90Message {
                 return switch (messageId) {
                     case 0 -> new Heartbeat(is);
                     case 11 -> new OwnShipGeometricAltitude(is);
-                    case 10, 20 -> new Traffic(messageId, new Position("ADSB"), is);
+                    case 10, 20 -> new Traffic(messageId, new Position("ADSB", Instant.now()), is);
                     case 37 -> new Identification(is);
                     case 40 -> new Barometer(is);
                     case 43 -> new TransponderConfiguration(is);
