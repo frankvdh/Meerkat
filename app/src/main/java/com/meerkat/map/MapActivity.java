@@ -190,13 +190,14 @@ public class MapActivity extends AppCompatActivity {
                 }
                 return;
             }
-            pingComms = new PingComms(getApplicationContext(), vehicleList);
+
             Log.i("Connecting: %s", wifiName, port);
             if (wifiName == null) {
                 this.startActivity(new Intent(this, SettingsActivity.class));
             } else {
                 // Already configured
                 Log.i("Starting Ping comms: %s %d", wifiName, port);
+                pingComms = new PingComms(getApplicationContext(), vehicleList);
                 pingComms.start();
             }
             firstRun = false;

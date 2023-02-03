@@ -13,37 +13,62 @@ This is very much in the pre-release state. Currently it does
 * Write log files to /storage/sdcard0/Android/data/com.meerkat/files/meerkat.log
 * Display logs & raw messages in a text window
 * Display nearby traffic as text
-* Display nearby traffic in a zoomable graphic map window, either Heading-Up, Track-Up, or North-Up
+* Display nearby traffic, including past tracks and predicted positions, in a zoomable graphic map window, either Heading-Up, Track-Up, or North-Up
 * Display and edit Preferences via a Settings screen.
-* A simulator to generate "traffic" for testing (currently turned on by default!)
+* Display a red "threat alert" circle when traffic is very close.
+* A simulator to play back a saved log file
+
+
+Getting Started
+===============
+1. Download and install the app from the Google Play Store as usual.
+2. Power up your Ping-USB device (blue LED)
+3. Open the app.
+4. Allow Meerkat to access this device's location
+5. The app will display its Settings screen. (If it doesn't, press "back" button or swipe left and choose "Settings" from the menu)
+6. Tap "Scan"
+7. Choose your Ping-USB's Wifi network, typically "Ping-xxxx" (e.g. Ping-12E3)
+8. Press the back button or swipe left to return to the main Map screen.
+
+
+Shutting Down
+=============
+The app uses quite a lot of power, so when you're not using it, it's a good idea to shut it down. To do so, press the back button or swipe left to get the menu bar
+up on the screen and press the on/off icon.
+
 
 The Main Map Screen
 ===================
-In the main map screen, the current GPS position is located at the lower centre of the screen. 
+This is a "moving map", so the the phone is always at the same point on the screen and other objects are shown relative to it. The current GPS position of the phone
+is located at 25% of the way up the screen and halfway across the screen. You can adjust the 25% value; for example if you have a slow aircraft you might want it to
+be further up the screen to give more warning of traffic approaching from behind.
+ 
 The background has some circles and lines to make it easier to estimate distance and direction.
 
-When other aircraft are detected within 20nm, a red "danger" circle is drawn around the phone's GPS location. The nearer an aircraft's position (not predicted
-or historical) is to the danger circle, the heavier the border is drawn. Eventually, if another aircraft is predicted to enter that circle, a warning will be issued.
+When other aircraft are detected within 20nm, a red "danger" circle is drawn around the phone's GPS location. The nearer any aircraft's position (not predicted
+or historical) is to your location, the heavier the border is drawn. There is currently no other warning.
 
-
-Each aircraft (or ADS-B-equipped ground vehicle or obstacle) is displayed as an icon depending on its GDL90 emitter type. Unknown types (typically when only some information has been received from the sender) are shown with a UFO icon.
+Each aircraft (or ADS-B-equipped ground vehicle or obstacle) is displayed as an icon depending on its GDL90 emitter type. Unknown types (typically when incomplete 
+information has been received from the sender) are shown with a UFO icon.
 
 Each aircraft's icon is coloured to indicate the altitude relative to the phone's GPS position:
-* green if 5000ft or more below, transitioning through brown/yellow/orange to red if less than 1000ft below 
-* blue if 5000ft or more above, transitioning through shades of purple to red if less than 1000ft above
+* green if 2000ft or more below, transitioning through brown/yellow/orange to red if less than 1000ft below 
+* blue if 2000ft or more above, transitioning through shades of purple to red if less than 1000ft above
 * black if not airborne.
-* The 5000ft and 1000ft limits (and altitude units) are settable via the Settings screen.
+* The 2000ft and 1000ft limits (and altitude units) are settable via the Settings screen.
 
 Each icon has text alongside, giving
 * The aircraft's callsign (if available)
-* An exclamation mark if the CRC on the last message was incorrect
+* An exclamation mark if the last message was not received correctly
 * If airborne, the altitude of the aircraft relative to the phone's GPS altitude
 
 Each icon can also optionally (controlled by Settings) have associated with it:
-* The aircraft's history track, for the previous [historySeconds] seconds
+* The aircraft's history track, for the previous 60 seconds 
 * A "linear" predicted track, assuming the aircraft continues at the same speed, rate of climb, and track for the next 60 seconds (settable via [predictionSeconds]).
-* A "polynomial" predicted track, based on the previous 10 (settable via [polynomialHistorySeconds]) seconds, so it predicts a turning flight path.
-These use the same colour coding as the icon
+* A "polynomial" predicted track, based on the previous 5 (settable via [polynomialHistorySeconds]) seconds, so it predicts a turning flight path.
+These use the same colour coding as the icon, so an aircraft 2,000 feet above and descending will have a blue icon, but red predictions. When an
+aircraft is being flown straight by autopilot, these predictions coincide. When an aircraft is manoeuvring, these predictions will vary, and the actual path 
+of the aircraft is uncertain.
 
 Screen Orientation
 ------------------
@@ -63,11 +88,13 @@ Screen Zoom
 -----------
 The map screen may be in either Manual or Automatic Zoom mode (Currently only settable via the Settings screen).
 
-In manual zoom mode, the map window is zoomable with a pinch gesture. The current zoom level is indicated by a number at the bottom right of the screen... this is the distance in [distance unit]s from the centre to the edge of the screen.
-The app may also be put into an "auto-Zoom" mode via a Setting, so that it automatically zooms in or out so that the furthest aircraft is at the edge of the screen.
+In manual zoom mode, the map window is zoomable with a pinch gesture.  In "auto-Zoom" mode, it automatically zooms in or out so that the furthest aircraft is at 
+the edge of the screen.
+
+The current zoom level is indicated by a number at the bottom right of the screen... this is the distance in [distance unit]s from the centre to the edge of the screen.
 
 Switching to other screens
---------------------------
+==========================
 Pressing the "back" button (swiping left from the right edge of the screen on some phones) brings up the app's action bar. 
 This has icons for moving to the aircraft list screen and to quit the app. It also has a menu which allows moving to the Log or Settings screen.
 
@@ -123,17 +150,20 @@ Alternatively, you can type your device's Wifi name into the WiFi Name text box.
 | screenWidth          | Distance that the width of the screen represents in the user's [distance unit]s                                              | 10            |
 | circleStep           | Distance apart of the circles on the screen in the user's [distance unit]s                                                   | 5             |
 | dangerRadius         | Radius of "danger" circle on the screen in the user's [distance unit]s                                                       | 1             |
-| displayOrientation   | Display orientation... Heading-up, Track-up, or North-up                                                                     | Heading-up    |
+| displayOrientation   | Display orientation... Heading-up, Track-up, or North-up                                                                     | TrackUp       |
 | keepScreenOn         | Keep the display on when in the Map or Aircraft List views                                                                   | true          |
-| autoZoom	            | Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen.       | true          |
+| autoZoom	           | Auto-zoom to the furthest aircraft. NB: This may mean that *nearer* aircraft are off the side or bottom of the screen.       | true          |
 | gradientMaximumDiff  | How many [altitude unit]s above/below the phone's GPS altitude an aircraft needs to be to be completely blue or green        | 1000          |
 | gradientMinimumDiff  | How many [altitude unit]s above/below the phone's GPS altitude an aircraft displays as completely red                        | 1000          |
 | countryCode          | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed. | ZK            |
+| toolbarDelaySecs     | How long the toolbar stays on the screen when "back" is pressed.                                                             | 3             |
+| initToolbarDelaySecs | How long the toolbar stays on the screen when the app is started                                                             | 10            |
+| ownCallsign          | Callsign to ignore for the purpose of alerts (currently unused)                                                              | null          |
 
 | Sensitivity Setting Name    | Usage                                                                                                      | Default value |
 |-----------------------------|------------------------------------------------------------------------------------------------------------|---------------|
 | sensorSmoothingConstant     | The sensitivity of the display to phone orientation change (1 - 99). Larger values make it more responsive | 20            |
-| minGpsDistanceChangeMetres  | Minimum Gps distance between updates in metres                                        	                    | 5             |
+| minGpsDistanceChangeMetres  | Minimum Gps distance between updates in metres                                        	                   | 10            |
 | minGpsUpdateIntervalSeconds | Minimum Gps update interval in seconds                                                                     | 10            |
 
 | History Settings                | Usage                                                                                                                        | Default value |
@@ -174,7 +204,7 @@ Setting the [simulate] setting to "true" results in the app processing a series 
 | logRawMessages      | Whether to write the raw messages, as received from the device, to the logs                                                                     | false         |
 | logDecodedMessages  | Whether to write the decoded messages, as interpreted by the GDL90 parser, to the logs                                                          | false         |
 | simulate            | Play back logged data in /storage/sdcard0/Android/data/com.meerkat/files/meerkat.save.log instead of real traffic. No Wifi connection is made.  | false         |
-| simulateSpeedFactor | Speed at which simulated traffic is played	                                                                                                     | false         |
+| simulateSpeedFactor | Speed at which simulated traffic is played back                                                                                                | 10            |
 
 
 Contributing & Licensing
@@ -196,9 +226,8 @@ have devices other than the PingUSB.
 TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :)
-* Reduce frequency of auto-zooming in
 * Reduce power consumption (frequent screen redraws)
-* Allow screen to be used vertically
+* Allow screen to be used vertically in heading mode
 * Ownship track... history and prediction
 * Indicate Mode-C traffic presence
 * Audio / Haptic alerts of collision threats

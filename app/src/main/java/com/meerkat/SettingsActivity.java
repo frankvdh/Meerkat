@@ -85,7 +85,7 @@ public class SettingsActivity extends AppCompatActivity {
         Log.d("Current version = %s, Settings version = %s", currentVersionName, settingsVersionName);
         boolean saveNeeded = settingsVersionName == null || !settingsVersionName.equals(currentVersionName);
 
-        wifiName = prefs.getString("wifiName", "Ping-6C7A");
+        wifiName = prefs.getString("wifiName", null);
         try {
             port = Integer.parseInt(prefs.getString("port", "4000"));
         } catch (Exception e) {
@@ -111,7 +111,7 @@ public class SettingsActivity extends AppCompatActivity {
         predictionMilliS = Math.max(0, Math.min(300, prefs.getInt("predictionSeconds", 60))) * 1000;
         polynomialPredictionStepMilliS = Math.max(1, Math.min(60, prefs.getInt("polynomialPredictionStepSeconds", 10))) * 1000;
         polynomialHistoryMilliS = Math.max(1, Math.min(30, prefs.getInt("polynomialHistorySeconds", 5))) * 1000;
-        gradientMaximumDiff = Math.max(1000, Math.min(5000, prefs.getInt("gradientMaximumDiff", 1000)));
+        gradientMaximumDiff = Math.max(1000, Math.min(5000, prefs.getInt("gradientMaximumDiff", 2000)));
         gradientMinimumDiff = Math.max(100, Math.min(gradientMaximumDiff, prefs.getInt("gradientMinimumDiff", 1000)));
         screenYPosPercent = Math.max(0, Math.min(100, prefs.getInt("screenYPosPercent", 25)));
         sensorSmoothingConstant = Math.max(0, Math.min(100, prefs.getInt("sensorSmoothingConstant", 20))) / 100f;
@@ -147,9 +147,9 @@ public class SettingsActivity extends AppCompatActivity {
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         ownCallsign = prefs.getString("ownCallsign", "ZKLLY").toUpperCase();
         try {
-            displayOrientation = MapView.DisplayOrientation.valueOf(prefs.getString("displayOrientation", "HeadingUp").trim());
+            displayOrientation = MapView.DisplayOrientation.valueOf(prefs.getString("displayOrientation", "TrackUp").trim());
         } catch (Exception e) {
-            displayOrientation = MapView.DisplayOrientation.HeadingUp;
+            displayOrientation = MapView.DisplayOrientation.TrackUp;
             saveNeeded = true;
         }
         keepScreenOn = prefs.getBoolean("keepScreenOn", true);
