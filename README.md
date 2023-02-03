@@ -23,13 +23,16 @@ Getting Started
 ===============
 1. Download and install the app from the Google Play Store as usual.
 2. Power up your Ping-USB device (blue LED)
-3. Open the app.
-4. Allow Meerkat to access this device's location
-5. The app will display its Settings screen. (If it doesn't, press "back" button or swipe left and choose "Settings" from the menu)
-6. Tap "Scan"
-7. Choose your Ping-USB's Wifi network, typically "Ping-xxxx" (e.g. Ping-12E3)
-8. Press the back button or swipe left to return to the main Map screen.
+3. Shut down your phone's WiFi connection and then turn it on again. (If you have your phone set up to automatically connect to (e.g.) your home WiFi, it may refuse
+   to connect to a non-Internet-providing Wifi like the Ping-USB).
+4. Open the app.
+5. Allow Meerkat to access this device's location
+6. The app will display its Settings screen. (If it doesn't, press "back" button or swipe left and choose "Settings" from the menu)
+7. Tap "Scan"
+8. Choose your Ping-USB's Wifi network, typically "Ping-xxxx" (e.g. Ping-12E3)
+9. Press the back button or swipe left to return to the main Map screen.
 
+Meerkat uses quite a lot of power, so it's best to connect to a charger or powerbank when you're running Meerkat.
 
 Shutting Down
 =============
