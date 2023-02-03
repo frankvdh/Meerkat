@@ -1,6 +1,5 @@
 package com.meerkat;
 
-import static com.meerkat.SettingsActivity.simulate;
 import static com.meerkat.SettingsActivity.simulateSpeedFactor;
 
 import android.location.Location;
@@ -86,6 +85,7 @@ public class LogReplay extends Thread {
                     continue;
 
                 var timestamp = Instant.parse(m.group(1));
+                var now = Instant.now();
                 byte[] raw = new byte[data.length() / 2];
                 for (int j = 0; j < data.length(); j += 2) {
                     try {
@@ -100,17 +100,14 @@ public class LogReplay extends Thread {
                     if ((byte) is.read() != 0x7e) continue;
                     Gdl90Message msg = Gdl90Message.getMessage(is);
                     if (!(msg instanceof Traffic t)) continue;
-                    var now = Instant.now();
-                    var msgTime = t.point.getInstant();
-                    long delay = prev == null ? 0 : Math.min(2000, (prev.until(msgTime, ChronoUnit.MILLIS)) - (prevRealtime.until(now, ChronoUnit.MILLIS)));
-                    prev = msgTime;
+                    t.point.setInstant(timestamp);
+                    long delay = prev == null ? 0 : Math.min(2000, (prev.until(timestamp, ChronoUnit.MILLIS)) - (prevRealtime.until(now, ChronoUnit.MILLIS)));
+                    prev = timestamp;
                     prevRealtime = now;
-                    if (simulate)
-                        delay /= simulateSpeedFactor;
+                    delay /= simulateSpeedFactor;
 
                     if (delay > 0) {
                         try {
-                            Log.d("Delay %d", delay);
                             Thread.sleep(delay);
                         } catch (InterruptedException e) {
                             e.printStackTrace();

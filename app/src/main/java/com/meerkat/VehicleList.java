@@ -14,7 +14,6 @@ package com.meerkat;
 
 import static com.meerkat.SettingsActivity.autoZoom;
 import static com.meerkat.SettingsActivity.purgeSeconds;
-import static com.meerkat.SettingsActivity.simulate;
 import static java.lang.Double.isNaN;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -42,7 +41,6 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         furthest = null;
         nearest = null;
         Instant purgeTime = Instant.now().minus(purgeSeconds, ChronoUnit.SECONDS);
-        if (simulate) return;
         Log.i("Purge before %s", purgeTime.toString());
         synchronized (this) {
             Iterator<HashMap.Entry<Integer, Vehicle>> iterator = this.entrySet().iterator();

@@ -107,10 +107,10 @@ public class SettingsActivity extends AppCompatActivity {
         showLinearPredictionTrack = prefs.getBoolean("showLinearPredictionTrack", true);
         showPolynomialPredictionTrack = prefs.getBoolean("showPolynomialPredictionTrack", true);
         historySeconds = Math.max(0, Math.min(300, prefs.getInt("historySeconds", 60)));
-        purgeSeconds = Math.max(1, Math.min(300, prefs.getInt("purgeSeconds", 60)));
+        purgeSeconds = Math.max(1, Math.min(300, prefs.getInt("purgeSeconds", 30)));
         predictionMilliS = Math.max(0, Math.min(300, prefs.getInt("predictionSeconds", 60))) * 1000;
         polynomialPredictionStepMilliS = Math.max(1, Math.min(60, prefs.getInt("polynomialPredictionStepSeconds", 10))) * 1000;
-        polynomialHistoryMilliS = Math.max(1, Math.min(60, prefs.getInt("polynomialHistorySeconds", 10))) * 1000;
+        polynomialHistoryMilliS = Math.max(1, Math.min(30, prefs.getInt("polynomialHistorySeconds", 5))) * 1000;
         gradientMaximumDiff = Math.max(1000, Math.min(5000, prefs.getInt("gradientMaximumDiff", 1000)));
         gradientMinimumDiff = Math.max(100, Math.min(gradientMaximumDiff, prefs.getInt("gradientMinimumDiff", 1000)));
         screenYPosPercent = Math.max(0, Math.min(100, prefs.getInt("screenYPosPercent", 25)));
@@ -166,12 +166,6 @@ public class SettingsActivity extends AppCompatActivity {
             Log.e("NumberFormatException: %s (%s)", ex.getMessage(), simulateSpeedFactorString);
             simulateSpeedFactor = 10;
         }
-        simulate = true;
-        autoZoom = true;
-        simulateSpeedFactor = 1;
-        saveNeeded = true;
-         if (simulate)
-            displayOrientation = MapView.DisplayOrientation.NorthUp;
         if (saveNeeded) savePrefs();
         Log.log(logLevel, "Settings loaded");
     }

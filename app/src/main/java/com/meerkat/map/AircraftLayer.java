@@ -142,7 +142,7 @@ public class AircraftLayer extends Drawable {
         synchronized (this) {
             currentPos = new Position(vehicle.lastValid);
             emitter = vehicle.emitterType;
-            Log.d("draw %06x %s %s %s", vehicle.id, vehicle.callsign, emitter, currentPos);
+            Log.v("draw %06x %s %s %s", vehicle.id, vehicle.callsign, emitter, currentPos);
             track = currentPos.getTrack();
             isAirborne = currentPos.isAirborne();
             // Canvas is already translated so that 0,0 is at the ownShip point
@@ -163,7 +163,7 @@ public class AircraftLayer extends Drawable {
                 drawText(canvas, aircraftPoint, lineHeight, text, clipBounds, bmpWidth);
             }
             if (showLinearPredictionTrack && vehicle.predictedPosition != null) {
-                Log.d("%s predict %b %f %f %f", vehicle.callsign, vehicle.predictedPosition.hasAltitude(), vehicle.predictedPosition.getAltitude(), Gps.getAltitude(), vehicle.predictedPosition.heightAboveGps());
+                Log.v("%s predict %b %f %f %f", vehicle.callsign, vehicle.predictedPosition.hasAltitude(), vehicle.predictedPosition.getAltitude(), Gps.getAltitude(), vehicle.predictedPosition.heightAboveGps());
                 synchronized (vehicle.predictedPosition) {
                     if (vehicle.predictedPosition.hasAccuracy()) {
                         line(canvas, aircraftPoint, vehicle.predictedPosition, predictEffect[vehicle.predictedPosition.hasAltitude() && ! Double.isNaN(Gps.getAltitude()) ? 0 : 1]);

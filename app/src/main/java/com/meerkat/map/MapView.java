@@ -173,7 +173,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
             extend(furthestPoint, furthest.predictedPosition);
         if (showPolynomialPredictionTrack)
             extend(furthestPoint, furthest.predicted.get(furthest.predicted.size() - 1));
-        Log.d("Furthest (%d, %d) %s", furthestPoint.x, furthestPoint.y, furthest);
+        Log.v("Furthest (%d, %d) %s", furthestPoint.x, furthestPoint.y, furthest);
 
         // Both points can't be 0 because then furthest.distance must be < minZoom
         if (furthestPoint.x == 0) {
@@ -181,10 +181,10 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
             return pixelsPerMetre * (float) (bounds.top + 32) / furthestPoint.y;
         }
         float xScale = (float) (bounds.right - 32) / furthestPoint.x;
-        Log.d("xScale: %f", xScale);
+        Log.v("xScale: %f", xScale);
         if (furthestPoint.y == 0) return pixelsPerMetre * xScale;
         float yScale = (float) (bounds.bottom - 32) / furthestPoint.y;
-        Log.d("xScale %f yScale %f", xScale, yScale);
+        Log.v("xScale %f yScale %f", xScale, yScale);
         return pixelsPerMetre * (min(xScale, yScale));
     }
 

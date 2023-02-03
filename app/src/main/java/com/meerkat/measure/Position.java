@@ -51,10 +51,6 @@ public class Position extends Location {
     public Position(String provider) {
         super(provider);
     }
-    public Position(String provider, Instant time) {
-        super(provider);
-        setInstant(time);
-    }
 
     public Position(String provider, double lat, double lon, double alt, double speed, double track, double vVel, boolean crcValid, boolean airborne, Instant time) {
         super(provider);

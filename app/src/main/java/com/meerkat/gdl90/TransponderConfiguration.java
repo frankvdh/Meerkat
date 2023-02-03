@@ -16,8 +16,6 @@ import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
 
-import com.meerkat.log.Log;
-
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
