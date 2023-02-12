@@ -24,7 +24,7 @@ public class LogReplay extends Thread {
     private final BufferedReader logReader;
     private Instant prev = null;
     private Instant prevRealtime = null;
-    static final Pattern rawPattern = Pattern.compile("(.*?\\d\\d:\\d\\d:\\d\\d\\.\\d+Z)\\s.*?\\s(RAW|GPS):?\\s(.*)");
+    static final Pattern timestampPattern = Pattern.compile("(^\\d\\d:\\d\\d:\\d\\d\\.\\d+)\\s.*?\\s(GDL90|GPS):?\\s(.*)");
     static final Pattern gpsPattern = Pattern.compile("^\\(([\\-+]?\\d+\\.\\d+),\\s*([\\-+]?\\d+\\.\\d+)\\)\\s*([+\\-]?\\d+)ft,\\s*(\\d+\\.\\d+)kts\\s*(\\d+)[!\\s]$");
 
     public LogReplay(VehicleList v, File logFile) throws IOException {
@@ -47,7 +47,7 @@ public class LogReplay extends Thread {
                 Log.i("Traffic EOF");
                 return;
             }
-            Matcher m = rawPattern.matcher(s);
+            Matcher m = timestampPattern.matcher(s);
             if (!m.matches()) continue;
             if (m.groupCount() < 3)
                 continue;
@@ -79,7 +79,7 @@ public class LogReplay extends Thread {
                 } catch (NumberFormatException ex) {
                     // do nothing... continue
                 }
-            } else if (msgType.equals("RAW")) {
+            } else if (msgType.equals("GDL90")) {
                 // Some datagrams contain 2 messages
                 if (!data.contains("7e14"))
                     continue;

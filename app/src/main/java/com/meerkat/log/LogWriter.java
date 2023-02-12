@@ -18,6 +18,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 interface LogWriter {
@@ -35,13 +36,14 @@ class FileLogWriter implements LogWriter {
     BufferedWriter bw;
     final File file;
     final boolean append;
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS").withZone(ZoneId.systemDefault());
 
     public FileLogWriter(File file, boolean append) {
         this.file = file;
         this.append = append;
         try {
         bw = new BufferedWriter(new FileWriter(file, append));
-        bw.write(String.format("\r\n\r\n%s %s/%s %s\r\n", DateTimeFormatter.ISO_INSTANT.format(Instant.now()), "FileLogWriter", Log.Level.A, "Log restarted"));
+        bw.write(String.format("\r\n\r\n%s %s/%s %s\r\n", Instant.now().toString(), "FileLogWriter", Log.Level.A, "Log restarted"));
         } catch (IOException e) {
             bw = null;
             android.util.Log.e("FileLogWriter", "Log File create failed: " + e.getMessage());
@@ -53,7 +55,7 @@ class FileLogWriter implements LogWriter {
             if (bw == null)
                 bw = new BufferedWriter(new FileWriter(file, append));
             synchronized (this) {
-                bw.write(String.format("%s %s/%s %s\r\n", DateTimeFormatter.ISO_INSTANT.format(Instant.now()), tag, level, msg));
+                bw.write(String.format("%s %s/%s %s\r\n", formatter.format(Instant.now()), tag, level, msg));
             }
         } catch (IOException e) {
             bw = null;

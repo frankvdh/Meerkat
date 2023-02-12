@@ -26,6 +26,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
@@ -34,6 +35,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.meerkat.R;
 import com.meerkat.SettingsActivity;
 import com.meerkat.databinding.ActivityWifiScanBinding;
 import com.meerkat.log.Log;
@@ -117,7 +119,6 @@ public class WifiScanActivity extends AppCompatActivity implements ApListAdapter
         // User has selected a Wifi SSID -- save it for future use
         SettingsActivity.savePrefs();
         Log.i("Wifi changed to %s", wifiName);
-        // Force comms to stop so that port is released
         finish();
         // When MapActivity reloads, it will start PingComms up again with the new network
     }

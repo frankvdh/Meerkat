@@ -276,7 +276,7 @@ public class PingComms extends Service {
                 Log.v("received datagram %d bytes", numBytes);
                 byte[] packet = Arrays.copyOfRange(recvDatagram.getData(), 0, numBytes);
                 if (logRawMessages) {
-                    StringBuilder sb = new StringBuilder("RAW ");
+                    StringBuilder sb = new StringBuilder("GDL90 ");
                     for (byte b : packet)
                         sb.append(String.format("%02x", b));
                     Log.i(sb.toString());

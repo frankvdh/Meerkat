@@ -16,11 +16,13 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
+import android.widget.EditText;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.EditTextPreference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 import androidx.preference.SeekBarPreference;
 
 import com.meerkat.log.Log;
@@ -216,6 +218,7 @@ public class SettingsActivity extends AppCompatActivity {
         Log.log(logLevel, "Settings saved");
     }
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -235,6 +238,25 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
+    private SharedPreferences.OnSharedPreferenceChangeListener listener;
+
+    public void onResume() {
+        Log.i("SettingsActivity Resume");
+        super.onResume();
+//        prefs.registerOnSharedPreferenceChangeListener(listener);
+        //Setup a shared preference listener for hpwAddress and restart transport
+//        listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+ //           public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+//                if (key.equals(R.id.wifiRescanButton)) {
+//                    //Do stuff; restart activity in your case
+//                }
+//            }
+ //       };
+//        EditText editTextWifiName = (EditText) findViewById(R.id.editTextWifiName);
+//        editTextWifiName.setText(wifiName);
+    }
+
+
     // The "Return" button is clicked...
     // Reload from storage to get changes into public variables
     // Strings, booleans, and ints can be edited directly, and are saved automatically
@@ -245,7 +267,6 @@ public class SettingsActivity extends AppCompatActivity {
         loadPrefs(getApplicationContext());
         super.onDestroy();
     }
-
     public static class SettingsFragment extends PreferenceFragmentCompat {
 
         @Override

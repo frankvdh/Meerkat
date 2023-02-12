@@ -29,7 +29,7 @@ Getting Started
 5. Allow Meerkat to access this device's location
 6. The app will display its Settings screen. (If it doesn't, press "back" button or swipe left and choose "Settings" from the menu)
 7. Tap "Scan"
-8. Choose your Ping-USB's Wifi network, typically "Ping-xxxx" (e.g. Ping-12E3)
+8. Tap on your Ping-USB's Wifi network name, typically "Ping-xxxx" (e.g. Ping-12E3)
 9. Press the back button or swipe left to return to the main Map screen.
 
 Meerkat uses quite a lot of power, so it's best to connect to a charger or powerbank when you're running Meerkat.
@@ -229,6 +229,10 @@ have devices other than the PingUSB.
 TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :)
+* 2023-02-10T22:35:26.459Z AircraftListActivity/132/E Exception: com.google.android.material.textview.MaterialTextView cannot be cast to android.widget.TableRow
+* Replace icon
+* Insert wifi name in TextEdit box when changed via scan
+* Fix icon when reloading
 * Reduce power consumption (frequent screen redraws)
 * Allow screen to be used vertically in heading mode
 * Ownship track... history and prediction
