@@ -39,6 +39,8 @@ import com.meerkat.Vehicle;
 import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
 
+import java.time.Instant;
+
 public class Background extends Drawable {
     private final Paint dangerPaint;
     private final Paint circlePaint;
@@ -70,13 +72,17 @@ public class Background extends Drawable {
         path.addCircle(0, 0, 4, Path.Direction.CW);
         circlePaint.setPathEffect(new PathDashPathEffect(path, 16, 0, PathDashPathEffect.Style.TRANSLATE));
         dangerPaint = new Paint();
-        dangerPaint.setColor(Color.RED);
+        dangerPaint.setColor(Color.YELLOW);
         dangerPaint.setStrokeWidth(3);
         dangerPaint.setStyle(Paint.Style.STROKE);
     }
 
+    private static Instant lastDraw = Instant.ofEpochSecond(0);
     @Override
     public void draw(@NonNull Canvas canvas) {
+        Instant now = Instant.now();
+        if (Instant.now().isBefore(lastDraw.plusMillis(1000))) return;
+        lastDraw = now;
         Log.v("draw background");
         canvas.drawColor(Color.WHITE, PorterDuff.Mode.SRC);
         Rect bounds = getBounds();

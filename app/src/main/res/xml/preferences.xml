@@ -30,7 +30,7 @@
             androidx:defaultValue="FT"
             androidx:entries="@array/altitude_units"
             androidx:entryValues="@array/altitude_values"
-            androidx:key="altitudeUnits"
+            androidx:key="altUnits"
             androidx:persistent="true"
             androidx:title="Altitude"
             androidx:useSimpleSummaryProvider="true" />

@@ -19,8 +19,8 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 public class Units {
-    private final String label;
-    private final float factor;
+    public final String label;
+    public final float factor;
 
     private Units(String label, float factor) {
         this.label = label;

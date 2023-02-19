@@ -26,7 +26,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
@@ -35,7 +34,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.meerkat.R;
 import com.meerkat.SettingsActivity;
 import com.meerkat.databinding.ActivityWifiScanBinding;
 import com.meerkat.log.Log;

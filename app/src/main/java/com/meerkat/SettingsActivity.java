@@ -16,13 +16,11 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
-import android.widget.EditText;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.EditTextPreference;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.PreferenceManager;
 import androidx.preference.SeekBarPreference;
 
 import com.meerkat.log.Log;
@@ -147,7 +145,7 @@ public class SettingsActivity extends AppCompatActivity {
         minZoom = (int) (Math.max(dangerRadiusMetres, Math.min(Units.Distance.NM.toM(screenWidthMetres), prefs.getInt("minZoom", (int) (Units.Distance.NM.toM(10))))));
         maxZoom = (int) (Math.max(screenWidthMetres, Math.min(Units.Distance.NM.toM(50), prefs.getInt("maxZoom", (int) (Units.Distance.NM.toM(50))))));
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
-        ownCallsign = prefs.getString("ownCallsign", "ZKLLY").toUpperCase();
+        ownCallsign = prefs.getString("ownCallsign", "ZKTHK").toUpperCase();
         try {
             displayOrientation = MapView.DisplayOrientation.valueOf(prefs.getString("displayOrientation", "TrackUp").trim());
         } catch (Exception e) {
@@ -275,11 +273,11 @@ public class SettingsActivity extends AppCompatActivity {
             makeNumber("port", port);
             makeNumber("simulateSpeedFactorString", simulateSpeedFactor);
             setRange("scrYPos", 5, 25, 95, 5);
-            setRange("scrWidth", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(50), (int) Units.Distance.NM.toM(1));
-            setRange("minZoom", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), screenWidthMetres, (int) Units.Distance.NM.toM(1));
-            setRange("maxZoom", screenWidthMetres, (int) Units.Distance.NM.toM(50), (int) Units.Distance.NM.toM(50), (int) Units.Distance.NM.toM(1));
-            setRange("circleStep", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(25), (int) Units.Distance.NM.toM(1));
-            setRange("dangerRadius", (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(1), (int) Units.Distance.NM.toM(5), (int) Units.Distance.NM.toM(1));
+            setRange("scrWidth", 1, 1,50, 1);
+            setRange("minZoom", 1, Math.round(screenWidthMetres/distanceUnits.units.factor), 50, 1);
+            setRange("maxZoom", Math.round(screenWidthMetres/distanceUnits.units.factor), 50, 50, 1);
+            setRange("circleStep", 1, 1, 25, 1);
+            setRange("dangerRadius", 1, 1, Math.round(screenWidthMetres/distanceUnits.units.factor), 1);
             setRange("gradMaxDiff", 2100, 5000, 10000, 100);
             setRange("gradMinDiff", 100, 1000, 2000, 100);
             setRange("minGpsDistMetres", 1, 10, 50, 1);

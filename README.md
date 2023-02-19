@@ -15,7 +15,7 @@ This is very much in the pre-release state. Currently it does
 * Display nearby traffic as text
 * Display nearby traffic, including past tracks and predicted positions, in a zoomable graphic map window, either Heading-Up, Track-Up, or North-Up
 * Display and edit Preferences via a Settings screen.
-* Display a red "threat alert" circle when traffic is very close.
+* Display a yellow "threat alert" circle when traffic is very close.
 * A simulator to play back a saved log file
 
 
@@ -207,7 +207,7 @@ Setting the [simulate] setting to "true" results in the app processing a series 
 | logRawMessages      | Whether to write the raw messages, as received from the device, to the logs                                                                     | false         |
 | logDecodedMessages  | Whether to write the decoded messages, as interpreted by the GDL90 parser, to the logs                                                          | false         |
 | simulate            | Play back logged data in /storage/sdcard0/Android/data/com.meerkat/files/meerkat.save.log instead of real traffic. No Wifi connection is made.  | false         |
-| simulateSpeedFactor | Speed at which simulated traffic is played back                                                                                                | 10            |
+| simulateSpeedFactor | Speed at which simulated traffic is played back                                                                                                 | 10            |
 
 
 Contributing & Licensing
@@ -230,7 +230,6 @@ TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :)
 * 2023-02-10T22:35:26.459Z AircraftListActivity/132/E Exception: com.google.android.material.textview.MaterialTextView cannot be cast to android.widget.TableRow
-* Replace icon
 * Insert wifi name in TextEdit box when changed via scan
 * Fix icon when reloading
 * Reduce power consumption (frequent screen redraws)

@@ -13,6 +13,7 @@
 package com.meerkat;
 
 import static com.meerkat.SettingsActivity.autoZoom;
+import static com.meerkat.SettingsActivity.ownCallsign;
 import static com.meerkat.SettingsActivity.purgeSeconds;
 import static java.lang.Double.isNaN;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -27,6 +28,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 
 public class VehicleList extends HashMap<Integer, Vehicle> {
@@ -86,12 +88,12 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         if (isNaN(v.distance)) return;
 
         var backgroundChanged = false;
-        if (nearest == null || v.distance < nearest.distance) {
+        if (nearest == null || (v.distance < nearest.distance && !v.callsign.equals(ownCallsign))) {
             nearest = v;
             // Change to threat circle needed
             backgroundChanged = true;
         }
-        if (autoZoom && (furthest == null || v.distance > furthest.distance)) {
+        if (autoZoom && (furthest == null || (v.distance > furthest.distance  && !v.callsign.equals(ownCallsign)))) {
             furthest = v;
             // Change to zoom level needed
             backgroundChanged = true;

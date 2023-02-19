@@ -108,7 +108,7 @@ public final class Log {
         print(level, tag(), format(msg, args));
     }
 
-    private static String format(String head, Object... args) {
+    private static String format(String fmt, Object... args) {
         Throwable t = null;
         if (args != null && args.length > 0 && args[args.length - 1] instanceof Throwable) {
             t = (Throwable) args[args.length - 1];
@@ -116,11 +116,11 @@ public final class Log {
         }
         StringBuilder sb = new StringBuilder();
         if (args == null || args.length == 0) {
-            sb.append(head == null ? "null" : head);
-        } else if (head != null && head.indexOf('%') != -1) {
-            sb.append(String.format(head, args));
+            sb.append(fmt == null ? "null" : fmt);
+        } else if (fmt != null && fmt.indexOf('%') != -1) {
+            sb.append(String.format(fmt, args));
         } else {
-            sb.append(head == null ? "null" : head);
+            sb.append(fmt == null ? "null" : fmt);
             for (Object arg : args) {
                 sb.append("\t");
                 sb.append(arg == null ? "null" : arg.toString());
