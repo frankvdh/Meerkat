@@ -230,13 +230,10 @@ TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :)
 * 2023-02-10T22:35:26.459Z AircraftListActivity/132/E Exception: com.google.android.material.textview.MaterialTextView cannot be cast to android.widget.TableRow
-* Insert wifi name in TextEdit box when changed via scan
-* Fix icon when reloading
-* Reduce power consumption (frequent screen redraws)
 * Allow screen to be used vertically in heading mode
-* Ownship track... history and prediction
 * Indicate Mode-C traffic presence
 * Audio / Haptic alerts of collision threats
+* Allow to use Ownship ADSB position instead of Phone GPS position
 * Fix position of north arrow / track mode letter
 * Further Reduce frequency of heading change updates ???
 * Use a theme to allow black background

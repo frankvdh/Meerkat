@@ -16,6 +16,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.InputType;
+import android.widget.EditText;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -211,7 +212,7 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putInt("minGpsDistanceChangeMetres", minGpsDistanceChangeMetres);
         edit.putInt("minGpsUpdateIntervalSeconds", minGpsUpdateIntervalSeconds);
         edit.putBoolean("simulate", simulate);
-        edit.putString("simulateSpeedFactorString", String.format(Locale.ENGLISH,"%.2f", simulateSpeedFactor));
+        edit.putString("simulateSpeedFactorString", String.format(Locale.ENGLISH, "%.2f", simulateSpeedFactor));
         edit.apply();
         Log.log(logLevel, "Settings saved");
     }
@@ -220,7 +221,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        simulateSpeedFactorString = String.format(Locale.ENGLISH,"%.2f", simulateSpeedFactor);
+        simulateSpeedFactorString = String.format(Locale.ENGLISH, "%.2f", simulateSpeedFactor);
         setContentView(R.layout.settings_activity);
         if (savedInstanceState == null) {
             getSupportFragmentManager()
@@ -236,22 +237,18 @@ public class SettingsActivity extends AppCompatActivity {
         }
     }
 
-    private SharedPreferences.OnSharedPreferenceChangeListener listener;
-
     public void onResume() {
         Log.i("SettingsActivity Resume");
         super.onResume();
-//        prefs.registerOnSharedPreferenceChangeListener(listener);
         //Setup a shared preference listener for hpwAddress and restart transport
-//        listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
- //           public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-//                if (key.equals(R.id.wifiRescanButton)) {
-//                    //Do stuff; restart activity in your case
-//                }
-//            }
- //       };
-//        EditText editTextWifiName = (EditText) findViewById(R.id.editTextWifiName);
-//        editTextWifiName.setText(wifiName);
+        SharedPreferences.OnSharedPreferenceChangeListener listener = (prefs, key) -> {
+            if (key.equals("wifiName")) {
+                Log.i("Wifi Name changed");
+                EditText editTextWifiName = findViewById(R.id.editTextWifiName);
+                editTextWifiName.setText(wifiName);
+            }
+        };
+        prefs.registerOnSharedPreferenceChangeListener(listener);
     }
 
 
@@ -265,6 +262,7 @@ public class SettingsActivity extends AppCompatActivity {
         loadPrefs(getApplicationContext());
         super.onDestroy();
     }
+
     public static class SettingsFragment extends PreferenceFragmentCompat {
 
         @Override
@@ -273,11 +271,11 @@ public class SettingsActivity extends AppCompatActivity {
             makeNumber("port", port);
             makeNumber("simulateSpeedFactorString", simulateSpeedFactor);
             setRange("scrYPos", 5, 25, 95, 5);
-            setRange("scrWidth", 1, 1,50, 1);
-            setRange("minZoom", 1, Math.round(screenWidthMetres/distanceUnits.units.factor), 50, 1);
-            setRange("maxZoom", Math.round(screenWidthMetres/distanceUnits.units.factor), 50, 50, 1);
+            setRange("scrWidth", 1, 1, 50, 1);
+            setRange("minZoom", 1, Math.round(screenWidthMetres / distanceUnits.units.factor), 50, 1);
+            setRange("maxZoom", Math.round(screenWidthMetres / distanceUnits.units.factor), 50, 50, 1);
             setRange("circleStep", 1, 1, 25, 1);
-            setRange("dangerRadius", 1, 1, Math.round(screenWidthMetres/distanceUnits.units.factor), 1);
+            setRange("dangerRadius", 1, 1, Math.round(screenWidthMetres / distanceUnits.units.factor), 1);
             setRange("gradMaxDiff", 2100, 5000, 10000, 100);
             setRange("gradMinDiff", 100, 1000, 2000, 100);
             setRange("minGpsDistMetres", 1, 10, 50, 1);
@@ -321,7 +319,7 @@ public class SettingsActivity extends AppCompatActivity {
                 android.util.Log.e("Unknown float number preference: %s", key);
                 return;
             }
-            numberPreference.setText(String.format(Locale.ENGLISH,"%.02f", value));
+            numberPreference.setText(String.format(Locale.ENGLISH, "%.02f", value));
             numberPreference.setOnBindEditTextListener(eT -> eT.setInputType(InputType.TYPE_CLASS_NUMBER));
         }
     }

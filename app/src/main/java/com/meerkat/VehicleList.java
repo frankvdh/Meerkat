@@ -28,7 +28,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 
 public class VehicleList extends HashMap<Integer, Vehicle> {

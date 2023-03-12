@@ -137,11 +137,11 @@ public class MapActivity extends AppCompatActivity {
                 if (needed.isEmpty()) break;
                 // Handle the user's response to the system permissions dialog. Save the return value, an instance of
                 // ActivityResultLauncher, as an instance variable.
-                Log.i("Requesting permissions ");
+                Log.i("Need permissions: %s", String.join(", ", needed));
                 ActivityResultLauncher<String[]> requestPermissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), isGranted -> {
                     for (String s : isGranted.keySet())
                         if (Boolean.TRUE.equals(isGranted.get(s))) {
-                            Log.i("Permission granted: " + s);
+                            Log.i("Permission granted: %s", s);
                             Iterator<String> it = needed.iterator();
                             while (it.hasNext()) {
                                 String n = it.next();
@@ -160,9 +160,11 @@ public class MapActivity extends AppCompatActivity {
                             // decision.
                         }
                 });
+                // Can request only one set of permissions at a time with a single request
+                for (var n: needed) {
+                    requestPermissionLauncher.launch(new String[]{n});
+                }
                 if (needed.isEmpty()) break;
-                String[] x = {};
-                requestPermissionLauncher.launch(needed.toArray(x));
 
                 try {
                     //noinspection BusyWait

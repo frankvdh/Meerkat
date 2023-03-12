@@ -144,7 +144,7 @@
             androidx:title="Auto zoom" />
 
         <androidx.preference.SeekBarPreference
-            androidx:dependency="altitudeUnits"
+            androidx:dependency="altUnits"
             androidx:key="gradMaxDiff"
             androidx:persistent="true"
             androidx:showSeekBarValue="true"
@@ -152,7 +152,7 @@
             androidx:title="Maximum altitude for colour gradient" />
 
         <androidx.preference.SeekBarPreference
-            androidx:dependency="altitudeUnits"
+            androidx:dependency="altUnits"
             androidx:key="gradMinDiff"
             androidx:persistent="true"
             androidx:showSeekBarValue="true"

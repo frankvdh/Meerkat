@@ -55,7 +55,7 @@ public class WifiScanActivity extends AppCompatActivity implements ApListAdapter
 
         accessPoints = new ArrayList<>();
         myAdapter = new ApListAdapter(accessPoints, this);
-        Log.i("Scanning WiFi");
+        Log.i("Creating WifiScanActivity");
         wifiName = null;
         getApplicationContext().registerReceiver(wifiScanReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         RecyclerView apListView = binding.apListView;
