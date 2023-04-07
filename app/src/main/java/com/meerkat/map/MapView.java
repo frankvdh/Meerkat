@@ -94,9 +94,20 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     }
 
     static float displayRotation() {
-        if (displayOrientation == DisplayOrientation.HeadingUp) return Compass.degTrue();
-        if (displayOrientation == DisplayOrientation.TrackUp) return Gps.getTrack();
-        return 0;
+        // Do not allow return of NaN from direction sensors... this causes cos() & sin() to
+        // both return 0.
+        var rot = 0f;
+        if (displayOrientation == DisplayOrientation.HeadingUp) {
+            rot = Compass.degTrue();
+        }
+        if (displayOrientation == DisplayOrientation.TrackUp) {
+            rot = Gps.getTrack();
+        }
+        if (Float.isNaN(rot)) {
+            displayOrientation = DisplayOrientation.NorthUp;
+            rot = 0;
+        }
+        return rot;
     }
 
     static private Bitmap loadIcon(Context context, int iconId) {
@@ -140,7 +151,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
             // Scale the image with pinch zoom value.
             double scalefactor = detector.getScaleFactor();
             if (scalefactor == 1.0) return false;
-            pixelsPerMetre *= getScaleX() * scalefactor;
+            pixelsPerMetre /=  scalefactor;
 //            Log.i("Scale factor = %f", scalefactor);
             if (pixelsPerMetre < minPixelsPerMetre)
                 pixelsPerMetre = minPixelsPerMetre;

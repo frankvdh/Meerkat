@@ -30,10 +30,12 @@ public class LogActivity extends AppCompatActivity {
     private int numLines;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d("Create Log");
         super.onCreate(savedInstanceState);
         com.meerkat.databinding.ActivityLogBinding binding = ActivityLogBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         textView = binding.textMessages;
+        numLines = getApplicationContext().getResources().getDisplayMetrics().heightPixels / textView.getLineHeight();
         int maxTextViewWidth = textView.getMaxWidth();
         int widthMeasureSpec = View.MeasureSpec.makeMeasureSpec(maxTextViewWidth, View.MeasureSpec.AT_MOST);
         int heightMeasureSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
@@ -42,7 +44,6 @@ public class LogActivity extends AppCompatActivity {
         textView.setGravity(Gravity.START);
         if (showLog) Log.useViewLogWriter(this);
         textView.setKeepScreenOn(keepScreenOn);
-        numLines = getApplicationContext().getResources().getDisplayMetrics().heightPixels / textView.getLineHeight();
     }
 
     public void append(String str) {
@@ -67,6 +68,7 @@ public class LogActivity extends AppCompatActivity {
     // The "back" button is clicked
     @Override
     public boolean onSupportNavigateUp() {
+        Log.d("Log back button");
         finish();
         return super.onSupportNavigateUp();
     }

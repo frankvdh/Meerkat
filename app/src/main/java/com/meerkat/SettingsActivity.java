@@ -156,7 +156,7 @@ public class SettingsActivity extends AppCompatActivity {
         keepScreenOn = prefs.getBoolean("keepScreenOn", true);
         autoZoom = prefs.getBoolean("autoZoom", true);
         minGpsDistanceChangeMetres = prefs.getInt("minGpsDistanceChangeMetres", 10);
-        minGpsUpdateIntervalSeconds = prefs.getInt("minGpsUpdateIntervalSeconds", 10);
+        minGpsUpdateIntervalSeconds = prefs.getInt("minGpsUpdateIntervalSeconds", 1);
         toolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("toolbarDelaySecs", 3))) * 1000;
         initToolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("initToolbarDelaySecs", 10))) * 1000;
         simulate = prefs.getBoolean("simulate", false);
@@ -168,6 +168,7 @@ public class SettingsActivity extends AppCompatActivity {
             simulateSpeedFactor = 10;
         }
         if (saveNeeded) savePrefs();
+        autoZoom = false;
         Log.log(logLevel, "Settings loaded");
     }
 
