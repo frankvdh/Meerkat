@@ -80,7 +80,7 @@ public class Units {
         }
 
         public String toString(double value) {
-            return units.toString(value);
+            return units.toString("%+.0f", value);
         }
 
         public double toMps(float value) {
@@ -104,7 +104,7 @@ public class Units {
         }
 
         public String toString(double value) {
-            return units.toString("+%.0f%s", value);
+            return units.toString("%+.0f%s", value);
         }
     }
 

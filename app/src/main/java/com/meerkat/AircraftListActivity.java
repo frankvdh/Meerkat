@@ -22,6 +22,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -69,71 +70,91 @@ public class AircraftListActivity extends AppCompatActivity {
         Log.i("%s paused", this.getLocalClassName());
     }
 
-    @SuppressWarnings("unused")
+
     private void refreshAircraftDisplay() {
         try {
-            Log.d("refreshAircraftDisplay: ", vehicleList.keySet().size());
+            Log.d("refreshAircraftDisplay: %d vehicles, %d rows", vehicleList.keySet().size(), tableAircraft.getChildCount());
             Stream<Vehicle> s = vehicleList.getVehicles().stream().sorted();
             int i = 1; // row 0 is header
+
             for (Iterator<Vehicle> it = s.iterator(); it.hasNext(); i++) {
                 Vehicle v = it.next();
                 Log.i(v.toString());
                 double distance;
-                String bearing;
-                String track;
-                float speed;
-                double vVel;
-                double alt;
+                String bearing = "???";
+                String track = "???";
+                float speed = 0;
+                double vVel = 0;
+                double alt = -10000;
+
                 synchronized (v) {
                     distance = v.distance;
-                    bearing = String.format(Locale.getDefault(), "%03d", (int) (Gps.bearingTo(v.lastValid) + 360) % 360);
-                    track = Float.isNaN(v.lastValid.getTrack()) ? "---" : String.format(Locale.getDefault(), "%03.0f", v.lastValid.getTrack());
-                    speed = v.lastValid.getSpeed();
-                    vVel = v.lastValid.getVVel();
-                    alt = v.lastValid.getAltitude();
+                    if (v.lastValid != null) {
+                        bearing = String.format(Locale.getDefault(), "%03d", (int) (Gps.bearingTo(v.lastValid) + 360) % 360);
+                        track = Float.isNaN(v.lastValid.getTrack()) ? "---" : String.format(Locale.getDefault(), "%03.0f", v.lastValid.getTrack());
+                        speed = v.lastValid.getSpeed();
+                        vVel = v.lastValid.getVVel();
+                        alt = v.lastValid.getAltitude();
+                    }
                 }
                 if (i < tableAircraft.getChildCount()) {
-                    TableRow row = (TableRow) tableAircraft.getChildAt(i);
-                    runOnUiThread(() -> {
-                        ((TextView) row.getChildAt(0)).setText(v.getLabel());
-                        ((TextView) row.getChildAt(1)).setText(distanceUnits.toString(distance));
-                        ((TextView) row.getChildAt(2)).setText(bearing);
-                        ((TextView) row.getChildAt(3)).setText(altUnits.toString(alt));
-                        ((TextView) row.getChildAt(4)).setText(track);
-                        ((TextView) row.getChildAt(5)).setText(speedUnits.toString(speed));
-                        ((TextView) row.getChildAt(6)).setText(vertSpeedUnits.toString(vVel));
-                        row.postInvalidate();
-                    });
+                    try {
+                        TableRow row = (TableRow) tableAircraft.getChildAt(i);
+                        String finalBearing = bearing;
+                        double finalAlt = alt;
+                        String finalTrack = track;
+                        float finalSpeed = speed;
+                        double finalVVel = vVel;
+                        runOnUiThread(() -> {
+                            ((TextView) row.getChildAt(0)).setText(v.getLabel());
+                            ((TextView) row.getChildAt(1)).setText(distanceUnits.toString(distance));
+                            ((TextView) row.getChildAt(2)).setText(finalBearing);
+                            ((TextView) row.getChildAt(3)).setText(altUnits.toString(finalAlt));
+                            ((TextView) row.getChildAt(4)).setText(finalTrack);
+                            ((TextView) row.getChildAt(5)).setText(speedUnits.toString(finalSpeed));
+                            ((TextView) row.getChildAt(6)).setText(vertSpeedUnits.toString(finalVVel));
+                            row.setVisibility(View.VISIBLE);
+                            row.postInvalidate();
+                        });
+                    } catch (Exception ex) {
+                        Log.e("Exception in getting tableAircraft row %d: %s", i, ex.getMessage());
+                    }
                 } else {
-                    TableRow row = new TableRow(getApplicationContext());
-                    row.setLayoutParams(tableAircraft.getChildAt(0).getLayoutParams()); // Copy layout from heading row
-                    row.addView(view(v.getLabel()));
-                    row.addView(view(distanceUnits.toString(distance)));
-                    row.addView(view(bearing));
-                    row.addView(view(altUnits.toString(alt)));
-                    row.addView(view(track));
-                    row.addView(view(speedUnits.toString(speed)));
-                    row.addView(view(vertSpeedUnits.toString(vVel)));
-                    runOnUiThread(() -> tableAircraft.addView(row));
+                    try {
+                        TableRow row = new TableRow(getApplicationContext());
+                        row.setLayoutParams(tableAircraft.getChildAt(0).getLayoutParams()); // Copy layout from heading row
+                        row.addView(view(v.getLabel()));
+                        row.addView(view(distanceUnits.toString(distance)));
+                        row.addView(view(bearing));
+                        row.addView(view(altUnits.toString(alt)));
+                        row.addView(view(track));
+                        row.addView(view(speedUnits.toString(speed)));
+                        row.addView(view(vertSpeedUnits.toString(vVel)));
+                        runOnUiThread(() -> tableAircraft.addView(row));
+                    } catch (Exception ex) {
+                        Log.e("Exception in creating tableAircraft row %d: %s", i, ex.getMessage());
+                    }
                 }
             }
 
             // If the number of aircraft in range decreases, there will be some entries in tableAircraft that are out of date and should not be displayed
-            for (int j = tableAircraft.getChildCount() - 1; j >= i; j--) {
-                Log.i("Remove %d from %d", j, tableAircraft.getChildCount());
-                int finalJ = j;
-                runOnUiThread(() -> tableAircraft.removeViewAt(finalJ));
+            for (; i < tableAircraft.getChildCount(); i++) {
+                Log.i("Hide tablerow %d from %d", i, tableAircraft.getChildCount());
+                TableRow row = (TableRow) tableAircraft.getChildAt(i);
+                row.setVisibility(View.INVISIBLE);
             }
+
+
             //noinspection SynchronizeOnNonFinalField
-            synchronized(tableAircraft) {
+            synchronized (tableAircraft) {
                 tableAircraft.notifyAll();
             }
-        } catch (Exception ex) {
-            Log.e("Exception: %s", ex.getMessage());
+        } catch(Exception e) {
+            Log.e("Exception: %s", e.toString());
         }
     }
 
-    private TextView view(@SuppressWarnings("unused") String txt) {
+    private TextView view(String txt) {
         TextView tv = new TextView(getApplicationContext());
         tv.setText(txt);
         tv.setTextColor(Color.BLACK);

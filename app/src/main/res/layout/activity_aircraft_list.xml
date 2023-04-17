@@ -16,6 +16,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/white"
+            tools:ignore="UselessParent">
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -24,10 +30,10 @@
                 android:background="@color/teal_700"
                 android:breakStrategy="high_quality"
                 android:outlineProvider="bounds"
+                android:paddingHorizontal="@dimen/margin_small"
                 android:text="@string/callsign"
                 android:textColor="@color/white"
                 android:textSize="14sp"
-                android:paddingHorizontal="@dimen/margin_small"
                 tools:ignore="TextContrastCheck" />
 
             <TextView
@@ -38,10 +44,10 @@
                 android:background="@color/teal_700"
                 android:breakStrategy="high_quality"
                 android:outlineProvider="bounds"
+                android:paddingHorizontal="@dimen/margin_small"
                 android:text="@string/dist"
                 android:textColor="@color/white"
                 android:textSize="14sp"
-                android:paddingHorizontal="@dimen/margin_small"
                 tools:ignore="TextContrastCheck" />
 
             <TextView
@@ -52,10 +58,10 @@
                 android:background="@color/teal_700"
                 android:breakStrategy="high_quality"
                 android:outlineProvider="bounds"
+                android:paddingHorizontal="@dimen/margin_small"
                 android:text="@string/brg"
                 android:textColor="@color/white"
                 android:textSize="14sp"
-                android:paddingHorizontal="@dimen/margin_small"
                 tools:ignore="TextContrastCheck" />
 
             <TextView
@@ -66,10 +72,10 @@
                 android:background="@color/teal_700"
                 android:breakStrategy="high_quality"
                 android:outlineProvider="bounds"
+                android:paddingHorizontal="@dimen/margin_small"
                 android:text="@string/altitude"
                 android:textColor="@color/white"
                 android:textSize="14sp"
-                android:paddingHorizontal="@dimen/margin_small"
                 tools:ignore="TextContrastCheck" />
 
             <TextView
@@ -80,10 +86,10 @@
                 android:background="@color/teal_700"
                 android:breakStrategy="high_quality"
                 android:outlineProvider="bounds"
+                android:paddingHorizontal="@dimen/margin_small"
                 android:text="@string/trk"
                 android:textColor="@color/white"
                 android:textSize="14sp"
-                android:paddingHorizontal="@dimen/margin_small"
                 tools:ignore="TextContrastCheck" />
 
             <TextView
@@ -94,10 +100,10 @@
                 android:background="@color/teal_700"
                 android:breakStrategy="high_quality"
                 android:outlineProvider="bounds"
+                android:paddingHorizontal="@dimen/margin_small"
                 android:text="@string/speed"
                 android:textColor="@color/white"
                 android:textSize="14sp"
-                android:paddingHorizontal="@dimen/margin_small"
                 tools:ignore="TextContrastCheck" />
 
             <TextView
@@ -108,11 +114,12 @@
                 android:background="@color/teal_700"
                 android:breakStrategy="high_quality"
                 android:outlineProvider="bounds"
+                android:paddingHorizontal="@dimen/margin_small"
                 android:text="@string/v_speed"
                 android:textColor="@color/white"
                 android:textSize="14sp"
-                android:paddingHorizontal="@dimen/margin_small"
                 tools:ignore="TextContrastCheck" />
+        </TableRow>
 
     </TableLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

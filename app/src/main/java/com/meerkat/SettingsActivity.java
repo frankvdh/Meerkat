@@ -167,6 +167,8 @@ public class SettingsActivity extends AppCompatActivity {
             Log.e("NumberFormatException: %s (%s)", ex.getMessage(), simulateSpeedFactorString);
             simulateSpeedFactor = 10;
         }
+        simulate = true;
+        simulateSpeedFactor = 1;
         if (saveNeeded) savePrefs();
         autoZoom = false;
         Log.log(logLevel, "Settings loaded");
@@ -273,7 +275,7 @@ public class SettingsActivity extends AppCompatActivity {
             makeNumber("simulateSpeedFactorString", simulateSpeedFactor);
             setRange("scrYPos", 5, 25, 95, 5);
             setRange("scrWidth", 1, 1, 50, 1);
-            setRange("minZoom", 1, Math.round(screenWidthMetres / distanceUnits.units.factor), 50, 1);
+            setRange("minZoom", 1, Math.round(screenWidthMetres / distanceUnits.units.factor), 10, 1);
             setRange("maxZoom", Math.round(screenWidthMetres / distanceUnits.units.factor), 50, 50, 1);
             setRange("circleStep", 1, 1, 25, 1);
             setRange("dangerRadius", 1, 1, Math.round(screenWidthMetres / distanceUnits.units.factor), 1);

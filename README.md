@@ -228,13 +228,12 @@ have devices other than the PingUSB.
 
 TO DO
 -----
-This list is more-or-less in priority order. At the moment it is shrinking :)
-* 2023-02-10T22:35:26.459Z AircraftListActivity/132/E Exception: com.google.android.material.textview.MaterialTextView cannot be cast to android.widget.TableRow
+This list is more-or-less in priority order. At the moment it is shrinking :) slowly :(
+* Revise UI to not use menu
+* Allow to use Ownship ADSB position instead of Phone GPS position
 * Allow screen to be used vertically in heading mode
 * Indicate Mode-C traffic presence
 * Audio / Haptic alerts of collision threats
-* Allow to use Ownship ADSB position instead of Phone GPS position
-* Fix position of north arrow / track mode letter
 * Further Reduce frequency of heading change updates ???
 * Use a theme to allow black background
 * Digital filtering of path to predict tracks

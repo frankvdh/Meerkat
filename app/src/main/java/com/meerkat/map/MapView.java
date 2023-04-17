@@ -151,7 +151,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
             // Scale the image with pinch zoom value.
             double scalefactor = detector.getScaleFactor();
             if (scalefactor == 1.0) return false;
-            pixelsPerMetre /=  scalefactor;
+            pixelsPerMetre *=  scalefactor;
 //            Log.i("Scale factor = %f", scalefactor);
             if (pixelsPerMetre < minPixelsPerMetre)
                 pixelsPerMetre = minPixelsPerMetre;

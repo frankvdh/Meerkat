@@ -83,7 +83,7 @@ public class MapActivity extends AppCompatActivity {
             File logFile = new File(this.getExternalFilesDir(null), "meerkat.log");
             Log.useFileWriter(logFile, appendLogFile);
         }
-        Log.i("Starting in %s mode", simulate);
+        Log.i("Starting in %s mode", simulate ? "Simulation" : "Live");
 
         ActivityMapBinding binding = ActivityMapBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -192,16 +192,6 @@ public class MapActivity extends AppCompatActivity {
                 }
                 return;
             }
-
-            Log.i("Connecting: %s", wifiName, port);
-            if (wifiName == null) {
-                this.startActivity(new Intent(this, SettingsActivity.class));
-            } else {
-                // Already configured
-                Log.i("Starting Ping comms: %s %d", wifiName, port);
-                pingComms = new PingComms(getApplicationContext(), vehicleList);
-                pingComms.start();
-            }
             firstRun = false;
         }
     }
@@ -213,6 +203,19 @@ public class MapActivity extends AppCompatActivity {
         super.onResume();
         if (compass != null)
             compass.resume();
+
+        if (!simulate) {
+            Log.i("Connecting: %s", wifiName, port);
+            if (wifiName == null) {
+                this.startActivity(new Intent(this, SettingsActivity.class));
+            } else {
+                // Already configured
+                if (pingComms == null)
+                    pingComms = new PingComms(getApplicationContext(), vehicleList);
+                Log.i("Starting Ping comms: %s %d", wifiName, port);
+                pingComms.start();
+            }
+        }
     }
 
     @Override

@@ -16,6 +16,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,8 +26,8 @@ public class LogReplay extends Thread {
     private final BufferedReader logReader;
     private Instant prev = null;
     private Instant prevRealtime = null;
-    static final Pattern timestampPattern = Pattern.compile("(^\\d\\d:\\d\\d:\\d\\d\\.\\d+)\\s.*?\\s(GDL90|GPS):?\\s(.*)");
-    static final Pattern gpsPattern = Pattern.compile("^\\(([\\-+]?\\d+\\.\\d+),\\s*([\\-+]?\\d+\\.\\d+)\\)\\s*([+\\-]?\\d+)ft,\\s*(\\d+\\.\\d+)kts\\s*(\\d+)[!\\s]$");
+    static final Pattern timestampPattern = Pattern.compile("^(\\d\\d):(\\d\\d):(\\d\\d\\.\\d+)\\s.*?\\s(GDL90|GPS):?\\s(.*)");
+    static final Pattern gpsPattern = Pattern.compile("^\\(([\\-+]?\\d+\\.\\d+),\\s*([\\-+]?\\d+\\.\\d+)\\)\\s*([+\\-]?\\d+)ft,\\s*(\\d+)kts\\s*(\\d+)[!\\s]?$");
 
     public LogReplay(VehicleList v, File logFile) throws IOException {
         this.vehicleList = v;
@@ -35,6 +37,7 @@ public class LogReplay extends Thread {
     }
 
     public void run() {
+        var today = Instant.now().truncatedTo(ChronoUnit.DAYS);
         while (true) {
             String s;
             try {
@@ -49,11 +52,11 @@ public class LogReplay extends Thread {
             }
             Matcher m = timestampPattern.matcher(s);
             if (!m.matches()) continue;
-            if (m.groupCount() < 3)
+            if (m.groupCount() < 5)
                 continue;
-            var msgType = m.group(2);
-            var data = m.group(3);
-            if (data == null || msgType == null) continue;
+            var msgType = m.group(4);
+            var data = m.group(5);
+            if (data == null|| msgType == null) continue;
             if (msgType.equals("GPS")) {
                 Matcher g = gpsPattern.matcher(data);
                 if (!g.matches()) continue;
@@ -84,7 +87,9 @@ public class LogReplay extends Thread {
                 if (!data.contains("7e14"))
                     continue;
 
-                var timestamp = Instant.parse(m.group(1));
+                if (m.group(1) == null || m.group(2) == null || m.group(3) == null) continue;
+                var timestamp = today.plusMillis(Integer.parseInt(Objects.requireNonNull(m.group(1)))*3600000L +Integer.parseInt(Objects.requireNonNull(m.group(2)))*60000L
+                                +(long)Float.parseFloat(Objects.requireNonNull(m.group(3)))*1000);
                 var now = Instant.now();
                 byte[] raw = new byte[data.length() / 2];
                 for (int j = 0; j < data.length(); j += 2) {

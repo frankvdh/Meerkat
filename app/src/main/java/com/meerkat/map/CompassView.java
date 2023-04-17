@@ -36,7 +36,7 @@ public class CompassView extends androidx.appcompat.widget.AppCompatImageView {
         compassText.setLeft(getLeft());
         compassText.setBottom(getBottom());
         compassText.setTranslationX(135);
-        compassText.setTranslationY(135);
+        compassText.setTranslationY(125);
         compassText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
 
     }

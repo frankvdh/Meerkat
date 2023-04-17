@@ -39,8 +39,6 @@ import com.meerkat.Vehicle;
 import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
 
-import java.time.Instant;
-
 public class Background extends Drawable {
     private final Paint dangerPaint;
     private final Paint circlePaint;
@@ -50,11 +48,11 @@ public class Background extends Drawable {
     private final TextView compassText, scaleText;
 
     /**
-     * @param mapView mapView that contains this Background
+     * @param mapView     mapView that contains this Background
      * @param vehicleList vehicle list that controls zoom level
      * @param compassView compassView contained in this background
      * @param compassText textView in compassView to show orientation mode
-     * @param scaleText textView in this Background to display zoom level
+     * @param scaleText   textView in this Background to display zoom level
      */
     public Background(MapView mapView, VehicleList vehicleList, CompassView compassView, TextView compassText, TextView scaleText) {
         this.mapView = mapView;
@@ -72,19 +70,15 @@ public class Background extends Drawable {
         path.addCircle(0, 0, 4, Path.Direction.CW);
         circlePaint.setPathEffect(new PathDashPathEffect(path, 16, 0, PathDashPathEffect.Style.TRANSLATE));
         dangerPaint = new Paint();
-        dangerPaint.setColor(Color.YELLOW);
-        dangerPaint.setStrokeWidth(3);
+        dangerPaint.setColor(Color.BLACK);
         dangerPaint.setStyle(Paint.Style.STROKE);
     }
 
-    private static Instant lastDraw = Instant.ofEpochSecond(0);
     @Override
     public void draw(@NonNull Canvas canvas) {
-        Instant now = Instant.now();
-        if (Instant.now().isBefore(lastDraw.plusMillis(1000))) return;
-        lastDraw = now;
         Log.v("draw background");
         canvas.drawColor(Color.WHITE, PorterDuff.Mode.SRC);
+
         Rect bounds = getBounds();
         float xCentre = bounds.width() / 2f;
         float yCentre = bounds.height() * (100f - screenYPosPercent) / 100;
@@ -104,17 +98,6 @@ public class Background extends Drawable {
                 canvas.drawCircle(0, 0, rad, circlePaint);
             }
 
-        Vehicle nearest = vehicleList.getNearest();
-        if (nearest != null) {
-            int thickness = (int) ((nearest.distance <= dangerRadiusMetres ? dangerRadiusMetres/2 :
-                    (dangerRadiusMetres / nearest.distance)) * mapView.pixelsPerMetre);
-            Log.d("Nearest = %s %s, %d, thickness = %d", nearest.callsign, nearest.distance, dangerRadiusMetres, thickness);
-            if (thickness > 0) {
-                dangerPaint.setStrokeWidth(thickness);
-                dangerPaint.setStyle(Paint.Style.STROKE);
-                canvas.drawCircle(0, 0, dangerRadiusMetres * mapView.pixelsPerMetre, dangerPaint);
-            }
-        }
         float rot = -MapView.displayRotation();
         String compassLetter;
         if (isNaN(rot)) {
@@ -128,6 +111,16 @@ public class Background extends Drawable {
 
         //noinspection IntegerDivisionInFloatingPointContext
         scaleText.setText(distanceUnits.toString((bounds.width() / 2) / mapView.pixelsPerMetre));
+
+        Vehicle nearest = vehicleList.getNearest();
+        if (nearest == null) return;
+        int thickness = (int) (nearest.distance <= dangerRadiusMetres ? dangerRadiusMetres /2f :
+                dangerRadiusMetres * 10 / nearest.distance);
+        Log.d("Nearest = %s %s, %d, thickness = %d", nearest.callsign, nearest.distance, dangerRadiusMetres, thickness);
+        dangerPaint.setStrokeWidth(1 + thickness);
+        canvas.drawCircle(0, 0, dangerRadiusMetres * mapView.pixelsPerMetre, dangerPaint);
+
+
         Log.v("finished draw background");
     }
 
