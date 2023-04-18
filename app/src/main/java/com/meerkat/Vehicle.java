@@ -12,8 +12,10 @@
  */
 package com.meerkat;
 
+import static com.meerkat.SettingsActivity.autoZoom;
 import static com.meerkat.SettingsActivity.countryCode;
 import static com.meerkat.SettingsActivity.historySeconds;
+import static com.meerkat.SettingsActivity.ownId;
 import static com.meerkat.SettingsActivity.polynomialHistoryMilliS;
 import static com.meerkat.SettingsActivity.polynomialPredictionStepMilliS;
 import static com.meerkat.SettingsActivity.predictionMilliS;
@@ -116,7 +118,7 @@ public class Vehicle implements Comparable<Vehicle> {
     }
 
     public void update(int crc, Position point, String callsign, @NonNull Gdl90Message.Emitter emitterType) {
-        Log.d(String.format("%06x, %s, %s, %s", id, callsign, emitterType, point.toString()));
+        Log.d(String.format("Update %06x, %s, %s, %s", id, callsign, emitterType, point.toString()));
 
         synchronized (layer) {
             this.lastCrc = crc;
@@ -183,7 +185,7 @@ public class Vehicle implements Comparable<Vehicle> {
                     Log.v("Track coeffs %.1f %.3f %.5f", cSpeedTrack[1][0], cSpeedTrack[1][1], cSpeedTrack[1][2]);
                     Log.v("Alt   coeffs %.1f %.3f %.5f", cSpeedTrack[2][0], cSpeedTrack[2][1], cSpeedTrack[2][2]);
                     Position p = lastValid;
-                    for (int i = 0; i <= predicted.size()-1; i++) {
+                    for (int i = 0; i <= predicted.size() - 1; i++) {
                         long t1 = Instant.ofEpochMilli((long) cSpeedTrack[0][3]).until(now, ChronoUnit.MILLIS) + (long) i * polynomialPredictionStepMilliS;
                         var t2 = t1 * t1;
                         p.linearPredict(polynomialPredictionStepMilliS, predicted.get(i));
@@ -213,6 +215,29 @@ public class Vehicle implements Comparable<Vehicle> {
 
     public boolean isValid() {
         return lastValid != null && lastValid.isCrcValid() && lastValid.hasAccuracy();
+    }
+
+
+    public boolean checkAndMakeNearest(VehicleList vl) {
+        if (!lastValid.isAirborne() || id == ownId) return false;
+        if (vl.nearest != null) {
+            if (vl.nearest == this || distance > vl.nearest.distance) return false;
+        }
+        Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), distance, lastValid.isAirborne(), vl.nearest == null ? Float.NaN: vl.nearest.distance);
+        // Change to threat circle needed
+        vl.nearest = this;
+        return true;
+    }
+
+    public boolean checkAndMakeFurthest(VehicleList vl) {
+        if (!autoZoom || !lastValid.isAirborne() || id == ownId) return false;
+        if (vl.furthest != null) {
+            if (vl.furthest == this || distance < vl.furthest.distance) return false;
+        }
+        Log.d("Furthest: %s %.0f %s vs %.0f", callsign, distance, lastValid.isAirborne(), vl.furthest == null ? Float.NaN: vl.furthest.distance);
+        // Change to threat circle needed
+        vl.furthest = this;
+        return true;
     }
 
     @NonNull

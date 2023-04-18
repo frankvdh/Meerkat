@@ -14,9 +14,10 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,10 +25,12 @@ import java.util.regex.Pattern;
 public class LogReplay extends Thread {
     private final VehicleList vehicleList;
     private final BufferedReader logReader;
-    private Instant prev = null;
+    private Instant prevTimestamp = null;
     private Instant prevRealtime = null;
     static final Pattern timestampPattern = Pattern.compile("^(\\d\\d):(\\d\\d):(\\d\\d\\.\\d+)\\s.*?\\s(GDL90|GPS):?\\s(.*)");
-    static final Pattern gpsPattern = Pattern.compile("^\\(([\\-+]?\\d+\\.\\d+),\\s*([\\-+]?\\d+\\.\\d+)\\)\\s*([+\\-]?\\d+)ft,\\s*(\\d+)kts\\s*(\\d+)[!\\s]?$");
+    static final Pattern gpsPattern = Pattern.compile("^\\(([\\-+]?\\d+\\.\\d+),\\s*([\\-+]?\\d+\\.\\d+)\\)\\s*([+\\-]?\\d+)ft,\\s*(\\d+(?:\\.\\d+)?)kts\\s*(\\d+)[!\\s]?$");
+
+    public static Clock clock;
 
     public LogReplay(VehicleList v, File logFile) throws IOException {
         this.vehicleList = v;
@@ -54,9 +57,29 @@ public class LogReplay extends Thread {
             if (!m.matches()) continue;
             if (m.groupCount() < 5)
                 continue;
+
+            if (m.group(1) == null || m.group(2) == null || m.group(3) == null) continue;
+            clock = Clock.fixed(today.plusMillis(Integer.parseInt(Objects.requireNonNull(m.group(1))) * 3600000L +
+                    Integer.parseInt(Objects.requireNonNull(m.group(2))) * 60000L +
+                    (long) Float.parseFloat(Objects.requireNonNull(m.group(3))) * 1000), ZoneId.systemDefault());
+            var now = Instant.now();
+            var timestamp = clock.instant();
+            long delay = prevTimestamp == null ? 0 : Math.min(2000, (prevTimestamp.until(timestamp, ChronoUnit.MILLIS)) - (prevRealtime.until(now, ChronoUnit.MILLIS)));
+            prevTimestamp = timestamp;
+            prevRealtime = now;
+            delay /= simulateSpeedFactor;
+
+            if (delay > 0) {
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
             var msgType = m.group(4);
             var data = m.group(5);
-            if (data == null|| msgType == null) continue;
+            if (data == null || msgType == null) continue;
             if (msgType.equals("GPS")) {
                 Matcher g = gpsPattern.matcher(data);
                 if (!g.matches()) continue;
@@ -78,6 +101,7 @@ public class LogReplay extends Thread {
                     l.setAltitude(Units.Height.FT.toM(Double.parseDouble(alt)));
                     l.setSpeed((float) Units.Speed.KNOTS.toMps(Float.parseFloat(spd)));
                     l.setBearing(Float.parseFloat(trk));
+                    l.setTime(clock.instant().toEpochMilli());
                     Gps.setLocation(l);
                 } catch (NumberFormatException ex) {
                     // do nothing... continue
@@ -86,11 +110,6 @@ public class LogReplay extends Thread {
                 // Some datagrams contain 2 messages
                 if (!data.contains("7e14"))
                     continue;
-
-                if (m.group(1) == null || m.group(2) == null || m.group(3) == null) continue;
-                var timestamp = today.plusMillis(Integer.parseInt(Objects.requireNonNull(m.group(1)))*3600000L +Integer.parseInt(Objects.requireNonNull(m.group(2)))*60000L
-                                +(long)Float.parseFloat(Objects.requireNonNull(m.group(3)))*1000);
-                var now = Instant.now();
                 byte[] raw = new byte[data.length() / 2];
                 for (int j = 0; j < data.length(); j += 2) {
                     try {
@@ -106,19 +125,7 @@ public class LogReplay extends Thread {
                     Gdl90Message msg = Gdl90Message.getMessage(is);
                     if (!(msg instanceof Traffic t)) continue;
                     t.point.setInstant(timestamp);
-                    long delay = prev == null ? 0 : Math.min(2000, (prev.until(timestamp, ChronoUnit.MILLIS)) - (prevRealtime.until(now, ChronoUnit.MILLIS)));
-                    prev = timestamp;
-                    prevRealtime = now;
-                    delay /= simulateSpeedFactor;
-
-                    if (delay > 0) {
-                        try {
-                            Thread.sleep(delay);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    t.upsert(vehicleList, timestamp);
+                    t.upsert(vehicleList);
                 }
             }
         }

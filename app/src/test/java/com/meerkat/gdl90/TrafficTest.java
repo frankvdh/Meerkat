@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -233,7 +234,6 @@ public class TrafficTest extends TestCase {
             cosSqAlpha = 1.0 - sinAlpha * sinAlpha;
             cos2SM = (cosSqAlpha == 0) ? 0.0 : cosSigma - 2.0 * sinU1sinU2 / cosSqAlpha;
 
-            double uSquared = cosSqAlpha * aSqMinusBSqOverBSq;
             double cC = (f / 16.0) * cosSqAlpha * (4.0 + f * (4.0 - 3.0 * cosSqAlpha));
             lambda = l + (1.0 - cC) * f * sinAlpha * (sigma + cC * sinSigma * (cos2SM
                     + cC * cosSigma * (-1.0 + 2.0 * cos2SM * cos2SM)));
@@ -254,7 +254,7 @@ public class TrafficTest extends TestCase {
     MockPositionTest p1;
 
     @Test
-    public void test() {
+    public void test() throws UnsupportedEncodingException {
          altUnits = Units.Height.FT;
         SettingsActivity.speedUnits = Units.Speed.KNOTS;
         SettingsActivity.distanceUnits = Units.Distance.NM;
@@ -305,7 +305,7 @@ public class TrafficTest extends TestCase {
         }
     }
     @Test
-    public void testdeg() {
+    public void testdeg() throws UnsupportedEncodingException {
         Log.level(Log.Level.V);
         byte[] raw = {0, 0, 0};
         ByteArrayInputStream is = new ByteArrayInputStream(raw);

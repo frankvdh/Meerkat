@@ -15,6 +15,7 @@ package com.meerkat;
 import static com.meerkat.SettingsActivity.altUnits;
 import static com.meerkat.SettingsActivity.minGpsDistanceChangeMetres;
 import static com.meerkat.SettingsActivity.minGpsUpdateIntervalSeconds;
+import static com.meerkat.SettingsActivity.simulate;
 import static com.meerkat.SettingsActivity.speedUnits;
 import static java.lang.Float.NaN;
 
@@ -30,6 +31,8 @@ import android.widget.Toast;
 
 import com.meerkat.log.Log;
 import com.meerkat.map.MapView;
+
+import java.time.Instant;
 
 public class Gps extends Service implements LocationListener {
 private final MapView mapView;
@@ -84,6 +87,7 @@ private final MapView mapView;
     public static void setLocation(Location copy) {
         synchronized (location) {
             location.set(copy);
+            location.setTime(copy.getTime());
         }
     }
 
@@ -99,15 +103,19 @@ private final MapView mapView;
 
     @SuppressLint("MissingPermission")
     public void resume() {
+            if (simulate)  {
+                isEnabled = true;
+                return;
+            }
         try {
             // getting GPS status
             isEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
             if (isEnabled) {
                 // First get location from Network Provider
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minGpsUpdateIntervalSeconds * 1000L, minGpsDistanceChangeMetres, this);
-                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                if (location != null)
-                    location.set(location);
+                Location lastknown = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if (lastknown != null)
+                    location.set(lastknown);
                 Log.d("GPS Enabled: %s", location);
             }
         } catch (Exception e) {
@@ -117,7 +125,7 @@ private final MapView mapView;
 
     @Override
     public void onLocationChanged(Location location) {
-        if (SettingsActivity.simulate)
+        if (simulate)
             return;
         Log.i("GPS (%.5f, %.5f) %s, %s %3.0f%c", location.getLatitude(), location.getLongitude(),
                 altUnits.toString(location.getAltitude()), speedUnits.toString(location.getSpeed()),

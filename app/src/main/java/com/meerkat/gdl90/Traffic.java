@@ -13,12 +13,14 @@
 package com.meerkat.gdl90;
 
 import static com.meerkat.SettingsActivity.ownCallsign;
+import static com.meerkat.SettingsActivity.ownId;
 import static java.lang.Float.NaN;
 
 import android.hardware.GeomagneticField;
 
 import androidx.annotation.NonNull;
 
+import com.meerkat.SettingsActivity;
 import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
@@ -126,12 +128,16 @@ public class Traffic extends Gdl90Message {
     public Traffic(Instant time, int id, String callsign, String type, double lat, double lng, double alt, double speed, float track, float vVel) {
         this.participantAddr = id;
         this.callsign = callsign;
+        if (ownId == -1 && this.callsign.equals(ownCallsign)) {
+            ownId = id;
+            SettingsActivity.savePrefs();
+        }
+        ownShip = id == ownId;
         emitterType = Emitter.valueOf(type);
 
         point = new Position("ADS-B", lat, lng, alt < -1000 ? Float.NaN : Units.Height.FT.toM(alt),
                 (float) Units.Speed.KNOTS.toMps(speed), track,
                 (float) Units.VertSpeed.FPM.toMps(vVel), true, true, time);
-        ownShip = callsign.equals(ownCallsign);
         nac = 100;
         nic = 100;
         priority = Priority.Normal;
@@ -153,8 +159,8 @@ public class Traffic extends Gdl90Message {
         };
     }
 
-    public void upsert(VehicleList vehicleList, Instant time) {
-        vehicleList.upsert(crc, callsign, participantAddr, point, emitterType, time);
+    public void upsert(VehicleList vehicleList) {
+        vehicleList.upsert(crc, callsign, participantAddr, point, emitterType);
     }
 
     @NonNull

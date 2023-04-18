@@ -70,7 +70,7 @@ public class Background extends Drawable {
         path.addCircle(0, 0, 4, Path.Direction.CW);
         circlePaint.setPathEffect(new PathDashPathEffect(path, 16, 0, PathDashPathEffect.Style.TRANSLATE));
         dangerPaint = new Paint();
-        dangerPaint.setColor(Color.BLACK);
+        dangerPaint.setColor(Color.YELLOW);
         dangerPaint.setStyle(Paint.Style.STROKE);
     }
 
@@ -114,11 +114,15 @@ public class Background extends Drawable {
 
         Vehicle nearest = vehicleList.getNearest();
         if (nearest == null) return;
-        int thickness = (int) (nearest.distance <= dangerRadiusMetres ? dangerRadiusMetres /2f :
+        int thickness = (int) (nearest.distance <= dangerRadiusMetres ? dangerRadiusMetres / 2f :
                 dangerRadiusMetres * 10 / nearest.distance);
+        if (thickness >= dangerRadiusMetres * mapView.pixelsPerMetre)
+            thickness = (int) (dangerRadiusMetres * mapView.pixelsPerMetre);
         Log.d("Nearest = %s %s, %d, thickness = %d", nearest.callsign, nearest.distance, dangerRadiusMetres, thickness);
-        dangerPaint.setStrokeWidth(1 + thickness);
-        canvas.drawCircle(0, 0, dangerRadiusMetres * mapView.pixelsPerMetre, dangerPaint);
+        if (thickness > 0) {
+            dangerPaint.setStrokeWidth(thickness);
+            canvas.drawCircle(0, 0, dangerRadiusMetres * mapView.pixelsPerMetre, dangerPaint);
+        }
 
 
         Log.v("finished draw background");

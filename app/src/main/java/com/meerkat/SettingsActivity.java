@@ -70,6 +70,7 @@ public class SettingsActivity extends AppCompatActivity {
     public static volatile String simulateSpeedFactorString;
     public static volatile String countryCode;
     public static volatile String ownCallsign;
+    public static volatile int ownId;
     public static volatile MapView.DisplayOrientation displayOrientation;
     public static volatile boolean keepScreenOn;
     public static volatile boolean autoZoom;
@@ -147,6 +148,7 @@ public class SettingsActivity extends AppCompatActivity {
         maxZoom = (int) (Math.max(screenWidthMetres, Math.min(Units.Distance.NM.toM(50), prefs.getInt("maxZoom", (int) (Units.Distance.NM.toM(50))))));
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         ownCallsign = prefs.getString("ownCallsign", "ZKTHK").toUpperCase();
+        ownId = prefs.getInt("ownId", 0xc81552);
         try {
             displayOrientation = MapView.DisplayOrientation.valueOf(prefs.getString("displayOrientation", "TrackUp").trim());
         } catch (Exception e) {
@@ -207,6 +209,7 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putString("vertSpeedUnits", String.valueOf(vertSpeedUnits));
         edit.putString("countryCode", countryCode);
         edit.putString("ownCallsign", ownCallsign);
+        edit.putInt("ownId", ownId);
         edit.putString("displayOrientation", String.valueOf(displayOrientation));
         edit.putBoolean("keepScreenOn", keepScreenOn);
         edit.putBoolean("autoZoom", autoZoom);

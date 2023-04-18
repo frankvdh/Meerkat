@@ -147,11 +147,12 @@ public class Simulator {
         flight.position.setCrcValid(true);
         flight.position.setSpeed((float) (flight.position.getSpeed() + action.accel));
         flight.position.setTrack((flight.position.getTrack() + action.turn) % 360);
+        flight.position.setInstant(LogReplay.clock.instant());
         if (isGps)
             Gps.setLocation(flight.position);
         else {
             flight.position.moveBy(1000);
-            vehicleList.upsert(nextActionTime, flight.callsign, flight.id, flight.position, flight.emitterType,Instant.now());
+            vehicleList.upsert(nextActionTime, flight.callsign, flight.id, flight.position, flight.emitterType);
         }
     }
 
