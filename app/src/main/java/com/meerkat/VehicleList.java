@@ -12,12 +12,9 @@
  */
 package com.meerkat;
 
-import static com.meerkat.SettingsActivity.autoZoom;
-import static com.meerkat.SettingsActivity.ownId;
 import static com.meerkat.SettingsActivity.purgeSeconds;
 import static com.meerkat.SettingsActivity.simulate;
 import static java.lang.Double.isNaN;
-import static java.lang.Double.min;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.meerkat.gdl90.Gdl90Message;

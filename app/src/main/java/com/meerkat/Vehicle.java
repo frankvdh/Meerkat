@@ -223,7 +223,7 @@ public class Vehicle implements Comparable<Vehicle> {
         if (vl.nearest != null) {
             if (vl.nearest == this || distance > vl.nearest.distance) return false;
         }
-        Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), distance, lastValid.isAirborne(), vl.nearest == null ? Float.NaN: vl.nearest.distance);
+        Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), distance, lastValid.isAirborne(), vl.nearest == null ? Float.NaN : vl.nearest.distance);
         // Change to threat circle needed
         vl.nearest = this;
         return true;
@@ -235,7 +235,7 @@ public class Vehicle implements Comparable<Vehicle> {
             if (vl.furthest == this || distance < vl.furthest.distance) return false;
         }
         Log.d("Furthest: %s %.0f %s vs %.0f", callsign, distance, lastValid.isAirborne(), vl.furthest == null ? Float.NaN: vl.furthest.distance);
-        // Change to threat circle needed
+        // Change to zoom level needed
         vl.furthest = this;
         return true;
     }
