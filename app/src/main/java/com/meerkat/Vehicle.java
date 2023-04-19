@@ -30,8 +30,6 @@ import com.meerkat.map.AircraftLayer;
 import com.meerkat.map.MapView;
 import com.meerkat.measure.Position;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -132,37 +130,37 @@ public class Vehicle implements Comparable<Vehicle> {
                 addPoint(point);
             }
         }
-        var now = point.getInstant();
+        var now = point.getTime();
         // Remove aged-out history entries, and add the new point
-        final Instant maxAge = now.minus(historySeconds, ChronoUnit.SECONDS);
+        final long maxAge = now - historySeconds * 1000L;
         synchronized (layer) {
             Iterator<Position> it = history.descendingIterator();
             while (it.hasNext()) {
                 var p = it.next();
-                if (p.getInstant().isAfter(maxAge)) break;
+                if (p.getTime() > maxAge) break;
                 it.remove();
             }
         }
 
         if (showLinearPredictionTrack && lastValid != null && lastValid.hasTrack() && lastValid.hasSpeed()) {
             synchronized (layer) {
-                lastValid.linearPredict((int) (lastValid.getInstant().until(now, ChronoUnit.MILLIS)) + predictionMilliS, predictedPosition);
+                lastValid.linearPredict((int) (now - lastValid.getTime() + predictionMilliS), predictedPosition);
                 Log.d("Predict from %s to %s", lastValid, predictedPosition);
             }
         }
 
         if (showPolynomialPredictionTrack && !history.isEmpty()) {
             // Only reading history, so need to synchronize
-            PolynomialRegression prSpeedTrack = new PolynomialRegression(history.getLast().getInstant(), 3);
+            PolynomialRegression prSpeedTrack = new PolynomialRegression(history.getLast().getTime(), 3);
             // History only contains valid points, assume not turning
             float prevTrack = history.getLast().hasTrack() ? history.getLast().getTrack() : 0;
-            var prevTime = history.getLast().getInstant();
+            var prevTime = history.getLast().getTime();
             synchronized (layer) {
                 Iterator<Position> it = history.descendingIterator();
                 while (it.hasNext()) {
                     var p = it.next();
-                    var time = p.getInstant();
-                    if (!p.hasTrack() || !point.hasSpeed() || time.isBefore(prevTime) || time.isBefore(lastValid.getInstant().minus(polynomialHistoryMilliS, ChronoUnit.MILLIS)))
+                    var time = p.getTime();
+                    if (!p.hasTrack() || !point.hasSpeed() || time < prevTime || time < lastValid.getTime() - polynomialHistoryMilliS)
                         continue;
                     var speed = p.getSpeed();
                     var track = p.getTrack();
@@ -186,7 +184,7 @@ public class Vehicle implements Comparable<Vehicle> {
                     Log.v("Alt   coeffs %.1f %.3f %.5f", cSpeedTrack[2][0], cSpeedTrack[2][1], cSpeedTrack[2][2]);
                     Position p = lastValid;
                     for (int i = 0; i <= predicted.size() - 1; i++) {
-                        long t1 = Instant.ofEpochMilli((long) cSpeedTrack[0][3]).until(now, ChronoUnit.MILLIS) + (long) i * polynomialPredictionStepMilliS;
+                        var t1 = (long) cSpeedTrack[0][3] - now + (long) i * polynomialPredictionStepMilliS;
                         var t2 = t1 * t1;
                         p.linearPredict(polynomialPredictionStepMilliS, predicted.get(i));
                         p = predicted.get(i);

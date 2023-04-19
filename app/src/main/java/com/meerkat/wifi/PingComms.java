@@ -290,7 +290,7 @@ public class PingComms extends Service {
                     if (message instanceof Traffic traffic1) {
                         if (traffic1.callsign.equals("********") || traffic1.point.getLatitude() == 0 && traffic1.point.getLongitude() == 0)
                             continue;
-                        traffic1.point.setInstant(Instant.now());
+                        traffic1.point.setTime(Instant.now().toEpochMilli());
                         traffic1.upsert(vehicleList);
                     }
                 }

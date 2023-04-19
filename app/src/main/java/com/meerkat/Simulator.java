@@ -25,8 +25,8 @@ import java.util.concurrent.ScheduledFuture;
 
 public class Simulator {
 
-    private static final Position initialPos = new Position("gps", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0,
-            Units.Height.FT.toM(5000f), Units.Speed.KNOTS.toMps(100d), 350f, Units.VertSpeed.FPM.toMps(0f), true, true, Instant.now());
+    private static final Position initialPos = new Position("Sim", -(40 + 4 / 60.0 + 9 / 3600.0), 175 + 22 / 60.0 + 42 / 3600.0,
+            Units.Height.FT.toM(5000f), Units.Speed.KNOTS.toMps(100d), 350f, Units.VertSpeed.FPM.toMps(0f), true, true, Instant.now().toEpochMilli());
     private static VehicleList vehicleList;
 
     private int nextActionTime;
@@ -147,7 +147,7 @@ public class Simulator {
         flight.position.setCrcValid(true);
         flight.position.setSpeed((float) (flight.position.getSpeed() + action.accel));
         flight.position.setTrack((flight.position.getTrack() + action.turn) % 360);
-        flight.position.setInstant(LogReplay.clock.instant());
+        flight.position.setTime(LogReplay.clock.millis());
         if (isGps)
             Gps.setLocation(flight.position);
         else {

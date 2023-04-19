@@ -137,6 +137,14 @@
 
         <androidx.preference.SwitchPreferenceCompat
             androidx:defaultValue="true"
+            androidx:key="preferAdsbPosition"
+            androidx:persistent="true"
+            androidx:summaryOff="Use the phone's internal GPS for ownShip location and movement"
+            androidx:summaryOn="Use the ownShip location and movement information received from ADS-B"
+            androidx:title="Own Ship location preference" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="true"
             androidx:key="autoZoom"
             androidx:persistent="true"
             androidx:summaryOff="Manual zoom"
@@ -173,6 +181,13 @@
             androidx:key="ownCallsign"
             androidx:persistent="true"
             androidx:title="Your callsign"
+            androidx:useSimpleSummaryProvider="true" />
+        <androidx.preference.EditTextPreference
+            androidx:defaultValue=""
+            androidx:dialogMessage="Your own ADS-B id."
+            androidx:key="ownId"
+            androidx:persistent="true"
+            androidx:title="Your ADS-B in hexadecimal. Set to 0 to automatically detect and save"
             androidx:useSimpleSummaryProvider="true" />
     </androidx.preference.PreferenceCategory>
     <androidx.preference.PreferenceCategory

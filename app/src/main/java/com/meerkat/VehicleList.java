@@ -12,6 +12,8 @@
  */
 package com.meerkat;
 
+import static com.meerkat.SettingsActivity.ownId;
+import static com.meerkat.SettingsActivity.preferAdsbPosition;
 import static com.meerkat.SettingsActivity.purgeSeconds;
 import static com.meerkat.SettingsActivity.simulate;
 import static java.lang.Double.isNaN;
@@ -23,7 +25,6 @@ import com.meerkat.map.MapView;
 import com.meerkat.measure.Position;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -36,8 +37,8 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
 
     private void purge() {
         if (this.isEmpty()) return;
-        Instant purgeTime = (simulate ? LogReplay.clock.instant() : Instant.now()).minus(purgeSeconds, ChronoUnit.SECONDS);
-        Log.i("Purge before %s", purgeTime.toString());
+        long purgeTime = (simulate ? LogReplay.clock.millis() : Instant.now().toEpochMilli()) - purgeSeconds * 1000L;
+        Log.i("Purge before %s", Instant.ofEpochMilli(purgeTime).toString());
         var backgroundChanged = false;
         synchronized (this) {
             Iterator<HashMap.Entry<Integer, Vehicle>> iterator = this.entrySet().iterator();
@@ -46,7 +47,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
                 Vehicle v = entry.getValue();
                 synchronized (v) {
                     if (v.lastValid == null) continue;
-                    if (v.lastValid.getInstant().isBefore(purgeTime)) {
+                    if (v.lastValid.getTime() < purgeTime) {
                         iterator.remove();
                         Log.i("Purged %s", v.callsign);
                         v.layer.setVisible(false, false);
@@ -78,6 +79,8 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
             put(participantAddr, v);
         }
         if (isNaN(v.distance) || v.lastValid == null) return;
+        if (preferAdsbPosition && participantAddr == ownId)
+            Gps.setLocation(point);
         // NB side-effect to store nearest & furthest -- both must be executed
         var backgroundChanged = v.checkAndMakeNearest(this);
         backgroundChanged |= v.checkAndMakeFurthest(this);

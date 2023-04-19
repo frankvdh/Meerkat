@@ -49,6 +49,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     // The minimum time between updates in milliseconds
     public static volatile int minGpsUpdateIntervalSeconds; // 10 seconds
+    public static volatile boolean preferAdsbPosition;
     /*
      * Time smoothing constant for low-pass filter 0 ≤ α ≤ 1 ; a smaller value basically means more smoothing
      * See: http://en.wikipedia.org/wiki/Low-pass_filter#Discrete-time_realization
@@ -148,7 +149,7 @@ public class SettingsActivity extends AppCompatActivity {
         maxZoom = (int) (Math.max(screenWidthMetres, Math.min(Units.Distance.NM.toM(50), prefs.getInt("maxZoom", (int) (Units.Distance.NM.toM(50))))));
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         ownCallsign = prefs.getString("ownCallsign", "ZKTHK").toUpperCase();
-        ownId = prefs.getInt("ownId", 0xc81552);
+        ownId = prefs.getInt("ownId", 0);
         try {
             displayOrientation = MapView.DisplayOrientation.valueOf(prefs.getString("displayOrientation", "TrackUp").trim());
         } catch (Exception e) {
@@ -159,6 +160,7 @@ public class SettingsActivity extends AppCompatActivity {
         autoZoom = prefs.getBoolean("autoZoom", true);
         minGpsDistanceChangeMetres = prefs.getInt("minGpsDistanceChangeMetres", 10);
         minGpsUpdateIntervalSeconds = prefs.getInt("minGpsUpdateIntervalSeconds", 1);
+        preferAdsbPosition = prefs.getBoolean("preferAdsbPosition", true);
         toolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("toolbarDelaySecs", 3))) * 1000;
         initToolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("initToolbarDelaySecs", 10))) * 1000;
         simulate = prefs.getBoolean("simulate", false);
@@ -169,10 +171,10 @@ public class SettingsActivity extends AppCompatActivity {
             Log.e("NumberFormatException: %s (%s)", ex.getMessage(), simulateSpeedFactorString);
             simulateSpeedFactor = 10;
         }
-        simulate = true;
-        simulateSpeedFactor = 1;
         if (saveNeeded) savePrefs();
-        autoZoom = false;
+//        simulate = true;
+//        simulateSpeedFactor = 5;
+//        autoZoom = false;
         Log.log(logLevel, "Settings loaded");
     }
 
@@ -217,6 +219,7 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putInt("initToolbarDelaySecs", initToolbarDelayMilliS / 1000);
         edit.putInt("minGpsDistanceChangeMetres", minGpsDistanceChangeMetres);
         edit.putInt("minGpsUpdateIntervalSeconds", minGpsUpdateIntervalSeconds);
+        edit.putBoolean("preferAdsbPosition", preferAdsbPosition);
         edit.putBoolean("simulate", simulate);
         edit.putString("simulateSpeedFactorString", String.format(Locale.ENGLISH, "%.2f", simulateSpeedFactor));
         edit.apply();

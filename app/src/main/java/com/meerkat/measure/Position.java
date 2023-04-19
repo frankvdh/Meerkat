@@ -12,7 +12,9 @@
  */
 package com.meerkat.measure;
 
-import static com.meerkat.SettingsActivity.*;
+import static com.meerkat.SettingsActivity.altUnits;
+import static com.meerkat.SettingsActivity.speedUnits;
+import static com.meerkat.SettingsActivity.vertSpeedUnits;
 import static java.lang.Double.NaN;
 import static java.lang.Double.isNaN;
 import static java.lang.Math.PI;
@@ -28,14 +30,10 @@ import androidx.annotation.NonNull;
 
 import com.meerkat.Gps;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-
 public class Position extends Location {
     double vVel;
     private boolean crcValid;
     private boolean airborne;
-    private Instant time;
 
     /**
      * A Position contains the position and motion components of a Vehicle at a specific Instant
@@ -52,9 +50,9 @@ public class Position extends Location {
         super(provider);
     }
 
-    public Position(String provider, double lat, double lon, double alt, double speed, double track, double vVel, boolean crcValid, boolean airborne, Instant time) {
+    public Position(String provider, double lat, double lon, double alt, double speed, double track, double vVel, boolean crcValid, boolean airborne, long time) {
         super(provider);
-        setInstant(time);
+        setTime(time);
         if (!isNaN(lat)) setLatitude(lat);
         if (!isNaN(lon)) setLongitude(lon);
         if (!isNaN(lat) && !isNaN(lon))
@@ -73,26 +71,12 @@ public class Position extends Location {
         this.airborne = airborne;
     }
 
-    public Position(String provider, double lat, double lon, double alt, Instant time) {
-        this(provider, lat, lon, alt, Float.NaN, Float.NaN, Float.NaN, true, true, time);
-    }
-
-    @SuppressWarnings("CopyConstructorMissesField")
     public Position(Position position) {
         super(position.getProvider());
         set(position);
     }
 
-    public void setInstant(Instant i) {
-        super.setTime(i.toEpochMilli());
-        time = i;
-    }
-
-    public Instant getInstant() {
-        return time;
-    }
-
-    public void setAirborne(boolean airborne) {
+     public void setAirborne(boolean airborne) {
         this.airborne = airborne;
     }
 
@@ -139,7 +123,7 @@ public class Position extends Location {
         if (isNaN(altDifference)) removeAltitude();
         else setAltitude(from.getAltitude() + altDifference);
 
-        setInstant(from.getInstant().plus(elapsedMilliS, ChronoUnit.MILLIS));
+        setTime(from.getTime() + elapsedMilliS);
         setAirborne(from.airborne);
         setCrcValid(from.crcValid);
     }
@@ -154,7 +138,6 @@ public class Position extends Location {
         super.set(p);
         this.crcValid = p.crcValid;
         this.airborne = p.airborne;
-        setInstant(p.time);
         setVVel(p.vVel);
     }
 

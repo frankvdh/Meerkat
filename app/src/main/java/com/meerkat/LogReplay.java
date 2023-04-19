@@ -2,8 +2,6 @@ package com.meerkat;
 
 import static com.meerkat.SettingsActivity.simulateSpeedFactor;
 
-import android.location.Location;
-
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.gdl90.Traffic;
 import com.meerkat.log.Log;
@@ -25,8 +23,8 @@ import java.util.regex.Pattern;
 public class LogReplay extends Thread {
     private final VehicleList vehicleList;
     private final BufferedReader logReader;
-    private Instant prevTimestamp = null;
-    private Instant prevRealtime = null;
+    private long prevTimestamp = 0;
+    private long prevRealtime = 0;
     static final Pattern timestampPattern = Pattern.compile("^(\\d\\d):(\\d\\d):(\\d\\d\\.\\d+)\\s.*?\\s(GDL90|GPS):?\\s(.*)");
     static final Pattern gpsPattern = Pattern.compile("^\\(([\\-+]?\\d+\\.\\d+),\\s*([\\-+]?\\d+\\.\\d+)\\)\\s*([+\\-]?\\d+)ft,\\s*(\\d+(?:\\.\\d+)?)kts\\s*(\\d+)[!\\s]?$");
 
@@ -62,9 +60,9 @@ public class LogReplay extends Thread {
             clock = Clock.fixed(today.plusMillis(Integer.parseInt(Objects.requireNonNull(m.group(1))) * 3600000L +
                     Integer.parseInt(Objects.requireNonNull(m.group(2))) * 60000L +
                     (long) Float.parseFloat(Objects.requireNonNull(m.group(3))) * 1000), ZoneId.systemDefault());
-            var now = Instant.now();
-            var timestamp = clock.instant();
-            long delay = prevTimestamp == null ? 0 : Math.min(2000, (prevTimestamp.until(timestamp, ChronoUnit.MILLIS)) - (prevRealtime.until(now, ChronoUnit.MILLIS)));
+            var now = Instant.now().toEpochMilli();
+            var timestamp = clock.millis();
+            long delay = prevTimestamp == 0 ? 0 : Math.min(2000, (timestamp - prevTimestamp) - (now - prevRealtime));
             prevTimestamp = timestamp;
             prevRealtime = now;
             delay /= simulateSpeedFactor;
@@ -95,14 +93,10 @@ public class LogReplay extends Thread {
                 var trk = g.group(5);
                 if (trk == null) continue;
                 try {
-                    Location l = new Location("log");
-                    l.setLatitude(Double.parseDouble(lat));
-                    l.setLongitude(Double.parseDouble(lon));
-                    l.setAltitude(Units.Height.FT.toM(Double.parseDouble(alt)));
-                    l.setSpeed((float) Units.Speed.KNOTS.toMps(Float.parseFloat(spd)));
-                    l.setBearing(Float.parseFloat(trk));
-                    l.setTime(clock.instant().toEpochMilli());
-                    Gps.setLocation(l);
+                    Gps.setLocation("GPS", Double.parseDouble(lat), Double.parseDouble(lon),
+                            Units.Height.FT.toM(Double.parseDouble(alt)),
+                            (float) Units.Speed.KNOTS.toMps(Float.parseFloat(spd)), Float.parseFloat(trk),
+                            clock.instant().toEpochMilli());
                 } catch (NumberFormatException ex) {
                     // do nothing... continue
                 }
@@ -124,7 +118,7 @@ public class LogReplay extends Thread {
                     if ((byte) is.read() != 0x7e) continue;
                     Gdl90Message msg = Gdl90Message.getMessage(is);
                     if (!(msg instanceof Traffic t)) continue;
-                    t.point.setInstant(timestamp);
+                    t.point.setTime(timestamp);
                     t.upsert(vehicleList);
                 }
             }

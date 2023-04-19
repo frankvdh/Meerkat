@@ -15,6 +15,7 @@ package com.meerkat;
 import static com.meerkat.SettingsActivity.altUnits;
 import static com.meerkat.SettingsActivity.minGpsDistanceChangeMetres;
 import static com.meerkat.SettingsActivity.minGpsUpdateIntervalSeconds;
+import static com.meerkat.SettingsActivity.preferAdsbPosition;
 import static com.meerkat.SettingsActivity.simulate;
 import static com.meerkat.SettingsActivity.speedUnits;
 import static java.lang.Float.NaN;
@@ -35,7 +36,7 @@ import com.meerkat.map.MapView;
 import java.time.Instant;
 
 public class Gps extends Service implements LocationListener {
-private final MapView mapView;
+    private static MapView _mapView;
     public static volatile boolean isEnabled;
 
     private static final Location location = new Location("gps");
@@ -44,7 +45,7 @@ private final MapView mapView;
     private final LocationManager locationManager;
 
     public Gps(Context context, MapView mapView) {
-        this.mapView = mapView;
+        _mapView = mapView;
         this.locationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
         resume();
     }
@@ -77,18 +78,37 @@ private final MapView mapView;
         }
     }
 
-    public static void getLatLonAlt(Location copy) {
+    public static void getLatLonAltTime(Location copy) {
         synchronized (location) {
             copy.set(location);
         }
     }
 
     // For simulator
-    public static void setLocation(Location copy) {
+    public static void setLocation(Location newLocation) {
         synchronized (location) {
-            location.set(copy);
-            location.setTime(copy.getTime());
+            location.set(newLocation);
         }
+        Compass.updateGeomagneticField();
+        _mapView.refresh(null);
+    }
+
+    // For simulator & ADS-B derived location
+    public static void setLocation(String provider, double lat, double lon, double alt, float speed, float trk, long millis) {
+        synchronized (location) {
+            location.setProvider(provider);
+            location.setLatitude(lat);
+            location.setLongitude(lon);
+            location.setAltitude(alt);
+            location.setSpeed(speed);
+            location.setBearing(trk);
+            location.setTime(millis);
+        }
+        Log.i("%s (%.5f, %.5f) %s, %s %3.0f%c", location.getProvider(), location.getLatitude(), location.getLongitude(),
+                altUnits.toString(location.getAltitude()), speedUnits.toString(location.getSpeed()),
+                location.getBearing(), location.hasBearing() ? ' ' : '!');
+        Compass.updateGeomagneticField();
+        _mapView.refresh(null);
     }
 
     /**
@@ -103,10 +123,10 @@ private final MapView mapView;
 
     @SuppressLint("MissingPermission")
     public void resume() {
-            if (simulate)  {
-                isEnabled = true;
-                return;
-            }
+        if (simulate) {
+            isEnabled = true;
+            return;
+        }
         try {
             // getting GPS status
             isEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -127,14 +147,11 @@ private final MapView mapView;
     public void onLocationChanged(Location location) {
         if (simulate)
             return;
-        Log.i("GPS (%.5f, %.5f) %s, %s %3.0f%c", location.getLatitude(), location.getLongitude(),
-                altUnits.toString(location.getAltitude()), speedUnits.toString(location.getSpeed()),
-                location.getBearing(), location.hasBearing() ? ' ' : '!');
-        synchronized (Gps.location) {
-            Gps.location.set(location);
-        }
-        Compass.updateGeomagneticField();
-        mapView.refresh(null);
+        // Only use phone GPS if it is preferred or if it's been too long since an ADS-B
+        // own ship Traffic message has updated it
+        if (preferAdsbPosition && location.getTime() + minGpsUpdateIntervalSeconds * 1000L > Instant.now().toEpochMilli())
+            return;
+        setLocation("GPS", location.getLatitude(), location.getLongitude(), location.getAltitude(), location.getSpeed(), location.getBearing(), location.getTime());
     }
 
     @Override

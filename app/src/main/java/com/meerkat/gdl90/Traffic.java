@@ -125,10 +125,10 @@ public class Traffic extends Gdl90Message {
         Log.v(point.toString());
     }
 
-    public Traffic(Instant time, int id, String callsign, String type, double lat, double lng, double alt, double speed, float track, float vVel) {
+    public Traffic(long time, int id, String callsign, String type, double lat, double lng, double alt, double speed, float track, float vVel) {
         this.participantAddr = id;
         this.callsign = callsign;
-        if (ownId == -1 && this.callsign.equals(ownCallsign)) {
+        if (ownId == 0 && this.callsign.equals(ownCallsign)) {
             ownId = id;
             SettingsActivity.savePrefs();
         }
