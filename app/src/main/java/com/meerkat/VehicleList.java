@@ -12,6 +12,7 @@
  */
 package com.meerkat;
 
+import static com.meerkat.SettingsActivity.autoZoom;
 import static com.meerkat.SettingsActivity.ownId;
 import static com.meerkat.SettingsActivity.preferAdsbPosition;
 import static com.meerkat.SettingsActivity.purgeSeconds;
@@ -38,25 +39,24 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
     private void purge() {
         if (this.isEmpty()) return;
         long purgeTime = (simulate ? LogReplay.clock.millis() : Instant.now().toEpochMilli()) - purgeSeconds * 1000L;
-        Log.i("Purge before %s", Instant.ofEpochMilli(purgeTime).toString());
+        Log.i("Purge all last updated before %s", Instant.ofEpochMilli(purgeTime).toString());
         var backgroundChanged = false;
         synchronized (this) {
             Iterator<HashMap.Entry<Integer, Vehicle>> iterator = this.entrySet().iterator();
             while (iterator.hasNext()) {
                 HashMap.Entry<Integer, Vehicle> entry = iterator.next();
                 Vehicle v = entry.getValue();
-                synchronized (v) {
-                    if (v.position == null) continue;
-                    if (v.position.getTime() < purgeTime) {
+                synchronized (v.lock) {
+                    if (v.lastUpdate < purgeTime) {
                         iterator.remove();
                         Log.i("Purged %s", v.callsign);
                         v.layer.setVisible(false, false);
                         mapView.layers.invalidateDrawable(v.layer);
-                        continue;
                     }
+                    if (v.position == null) continue;
                     // NB side-effect to store nearest & furthest -- both must be executed
-                    backgroundChanged |= v.checkAndMakeNearest(this);
-                    backgroundChanged |= v.checkAndMakeFurthest(this);
+                    backgroundChanged |= checkAndMakeNearest(v);
+                    backgroundChanged |= checkAndMakeFurthest(v);
                 }
             }
         }
@@ -67,6 +67,40 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         super();
         this.mapView = mapView;
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::purge, purgeSeconds, purgeSeconds, SECONDS);
+    }
+
+    private boolean checkAndMakeNearest(Vehicle v) {
+        if (nearest != null) {
+            if (nearest == v) {
+                if (v.id == ownId && ownId != 0) {
+                    // If ownShip has erroneously been identified as nearest (e.g. a message
+                    // with a valid id & position but no callsign was received,
+                    // then a message with callsign & id is received),
+                    // remove ownShip from nearest, so that the actual nearest aircraft will update
+                    nearest = null;
+                }
+                // This is nearest and has received an update, so assume relative positions have changed
+                Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), v.distance, v.position.isAirborne(), nearest == null ? Float.NaN : nearest.distance);
+                return true;
+            }
+            return false;
+        }
+        if (v.id == ownId && ownId != 0) return false;
+        Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), v.distance, v.position.isAirborne(), nearest == null ? Float.NaN : nearest.distance);
+        // Change to threat circle needed
+        nearest = v;
+        return true;
+    }
+
+    private boolean checkAndMakeFurthest(Vehicle v) {
+        if (!autoZoom || !v.position.isAirborne() || v.id == ownId) return false;
+        if (furthest != null) {
+            if (furthest == v || v.distance < furthest.distance) return false;
+        }
+        Log.d("Furthest: %s %.0f %s vs %.0f", v.callsign, v.distance, v.position.isAirborne(), furthest == null ? Float.NaN : furthest.distance);
+        // Change to zoom level needed
+        furthest = v;
+        return true;
     }
 
     public void upsert(int crc, String callsign, int participantAddr, Position point, Gdl90Message.Emitter emitterType) {
@@ -83,8 +117,8 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         if (preferAdsbPosition && participantAddr == ownId)
             Gps.setLocation(point);
         // NB side-effect to store nearest & furthest -- both must be executed
-        var backgroundChanged = v.checkAndMakeNearest(this);
-        backgroundChanged |= v.checkAndMakeFurthest(this);
+        var backgroundChanged = checkAndMakeNearest(v);
+        backgroundChanged |= checkAndMakeFurthest(v);
         mapView.refresh(backgroundChanged ? null : v.layer);
     }
 

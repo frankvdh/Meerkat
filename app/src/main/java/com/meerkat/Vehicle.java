@@ -12,10 +12,8 @@
  */
 package com.meerkat;
 
-import static com.meerkat.SettingsActivity.autoZoom;
 import static com.meerkat.SettingsActivity.countryCode;
 import static com.meerkat.SettingsActivity.historySeconds;
-import static com.meerkat.SettingsActivity.ownId;
 import static com.meerkat.SettingsActivity.polynomialHistoryMilliS;
 import static com.meerkat.SettingsActivity.polynomialPredictionStepMilliS;
 import static com.meerkat.SettingsActivity.predictionMilliS;
@@ -49,6 +47,7 @@ public class Vehicle implements Comparable<Vehicle> {
     public float distance;
     public final AircraftLayer layer;
     int lastCrc;
+    public final Object lock = new Object();
 
     public Vehicle(int crc, int id, String callsign, Position point, @NonNull Gdl90Message.Emitter emitterType, @NonNull MapView mapView) {
         this.lastCrc = crc;
@@ -216,41 +215,6 @@ public class Vehicle implements Comparable<Vehicle> {
 
     public boolean isValid() {
         return position != null && position.isCrcValid() && position.hasAccuracy();
-    }
-
-
-    public boolean checkAndMakeNearest(VehicleList vl) {
-        if (vl.nearest != null) {
-            if (vl.nearest == this) {
-                if (this.id == ownId && ownId != 0) {
-                    // If ownShip has erroneously been identified as nearest (e.g. a message
-                    // with a valid id & position but no callsign was received,
-                    // then a message with callsign & id is received),
-                    // remove ownShip from nearest, so that the actual nearest aircraft will update
-                    vl.nearest = null;
-                }
-                // This is nearest and has received an update, so assume relative positions have changed
-                Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), distance, position.isAirborne(), vl.nearest == null ? Float.NaN : vl.nearest.distance);
-                return true;
-            }
-            return false;
-        }
-        if (this.id == ownId && ownId != 0) return false;
-        Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), distance, position.isAirborne(), vl.nearest == null ? Float.NaN : vl.nearest.distance);
-        // Change to threat circle needed
-        vl.nearest = this;
-        return true;
-    }
-
-    public boolean checkAndMakeFurthest(VehicleList vl) {
-        if (!autoZoom || !position.isAirborne() || id == ownId) return false;
-        if (vl.furthest != null) {
-            if (vl.furthest == this || distance < vl.furthest.distance) return false;
-        }
-        Log.d("Furthest: %s %.0f %s vs %.0f", callsign, distance, position.isAirborne(), vl.furthest == null ? Float.NaN : vl.furthest.distance);
-        // Change to zoom level needed
-        vl.furthest = this;
-        return true;
     }
 
     @NonNull
