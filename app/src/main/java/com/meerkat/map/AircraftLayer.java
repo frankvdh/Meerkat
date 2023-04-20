@@ -16,6 +16,7 @@ import static com.meerkat.SettingsActivity.altUnits;
 import static com.meerkat.SettingsActivity.gradientMaximumDiff;
 import static com.meerkat.SettingsActivity.gradientMinimumDiff;
 import static com.meerkat.SettingsActivity.historySeconds;
+import static com.meerkat.SettingsActivity.ownId;
 import static com.meerkat.SettingsActivity.showLinearPredictionTrack;
 import static com.meerkat.SettingsActivity.showPolynomialPredictionTrack;
 import static java.lang.Double.isNaN;
@@ -138,9 +139,9 @@ public class AircraftLayer extends Drawable {
         boolean isAirborne;
         Gdl90Message.Emitter emitter;
         Position currentPos;
-        if (!this.isVisible() || vehicle.lastValid == null) return;
+        if (!this.isVisible() || vehicle.position == null) return;
         synchronized (this) {
-            currentPos = new Position(vehicle.lastValid);
+            currentPos = new Position(vehicle.position);
             emitter = vehicle.emitterType;
             Log.v("draw %06x %s %s %s", vehicle.id, vehicle.callsign, emitter, currentPos);
             track = currentPos.getTrack();
@@ -151,7 +152,7 @@ public class AircraftLayer extends Drawable {
             // Draw the icon if part of it is visible
             var bmpWidth = emitter.bitmap.getWidth();
             var bmpHeight = emitter.bitmap.getHeight();
-            bounds.set(aircraftPoint.x-bmpWidth/2,aircraftPoint.y-bmpHeight/2,aircraftPoint.x+bmpWidth/2, aircraftPoint.y+bmpHeight/2);
+            bounds.set(aircraftPoint.x - bmpWidth / 2, aircraftPoint.y - bmpHeight / 2, aircraftPoint.x + bmpWidth / 2, aircraftPoint.y + bmpHeight / 2);
             double altDiff = currentPos.getAltitude() - Gps.getAltitude();
             var displayAngle = MapView.displayRotation();
             if (bounds.right > clipBounds.left && bounds.left < clipBounds.right && bounds.bottom > clipBounds.top && bounds.top < clipBounds.bottom) {
@@ -159,20 +160,23 @@ public class AircraftLayer extends Drawable {
                         positionMatrix(emitter.bitmap.getWidth() / 2, emitter.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
                                 (isNaN(track) ? 0 : track) - (isNaN(displayAngle) ? 0 : displayAngle)), null);
                 int lineHeight = (int) (textPaint.getTextSize() + 1);
-                String[] text = {vehicle.getLabel(), isNaN(altDiff) ? "" : altUnits.toString(altDiff)};
+                // Display absolute altitude next to ownShip, callsign & relative altitude next to others
+                String text = (vehicle.id == ownId) ?
+                        altUnits.toString(currentPos.getAltitude()) :
+                        vehicle.getLabel() + (isNaN(altDiff) ? "" : ('\n' + altUnits.toString(altDiff)));
                 drawText(canvas, aircraftPoint, lineHeight, text, clipBounds, bmpWidth);
             }
             if (showLinearPredictionTrack && vehicle.predictedPosition != null) {
                 Log.v("%s predict %b %f %f %f", vehicle.callsign, vehicle.predictedPosition.hasAltitude(), vehicle.predictedPosition.getAltitude(), Gps.getAltitude(), vehicle.predictedPosition.heightAboveGps());
                 synchronized (vehicle.predictedPosition) {
                     if (vehicle.predictedPosition.hasAccuracy()) {
-                        line(canvas, aircraftPoint, vehicle.predictedPosition, predictEffect[vehicle.predictedPosition.hasAltitude() && ! Double.isNaN(Gps.getAltitude()) ? 0 : 1]);
+                        line(canvas, aircraftPoint, vehicle.predictedPosition, predictEffect[vehicle.predictedPosition.hasAltitude() && !Double.isNaN(Gps.getAltitude()) ? 0 : 1]);
                     }
                 }
             }
 
             if (showPolynomialPredictionTrack && vehicle.predicted.get(0).hasAccuracy()) {
-                polyLine(canvas, aircraftPoint, vehicle.predicted, predictEffect[! Double.isNaN(Gps.getAltitude()) ? 0 : 1]);
+                polyLine(canvas, aircraftPoint, vehicle.predicted, predictEffect[!Double.isNaN(Gps.getAltitude()) ? 0 : 1]);
             }
 
             if (historySeconds > 0) {
@@ -192,10 +196,11 @@ public class AircraftLayer extends Drawable {
         return matrix;
     }
 
-    private void drawText(Canvas canvas, final Point aircraftPos, int textHeight, String[] text, Rect clipBounds, int bmpWidth) {
-        Log.v("drawText: " + text[0] + ", " + text[1]);
-        // Assume first line of text is always the longest
-        float textWidth = textPaint.measureText(text[0]);
+    private void drawText(Canvas canvas, final Point aircraftPos, int textHeight, String text, Rect clipBounds, int bmpWidth) {
+        var textLines = text.split("\\n");
+        Log.v("drawText: " + String.join(", ",textLines));
+        float textWidth = textPaint.measureText(textLines[0]);
+        if (textLines.length > 1) textWidth = Math.max(textWidth, textPaint.measureText(textLines[1]));
         if (aircraftPos.x + bmpWidth / 2f + textWidth <= clipBounds.left) return;
         if (aircraftPos.x - bmpWidth / 2f - textWidth >= clipBounds.right) return;
         if (aircraftPos.y + textHeight <= clipBounds.top) return;
@@ -219,9 +224,9 @@ public class AircraftLayer extends Drawable {
         if (y < clipBounds.top + textHeight) y = clipBounds.top + textHeight;
         else if (y >= clipBounds.bottom - textHeight)
             y = clipBounds.bottom - textHeight - 1;
-        canvas.drawText(text[0], x, y, textPaint);
-        if (text[1] != null && !text[1].isEmpty())
-            canvas.drawText(text[1], x, y + textHeight, textPaint);
+        canvas.drawText(textLines[0], x, y, textPaint);
+        if (textLines.length > 1)
+            canvas.drawText(textLines[1], x, y + textHeight, textPaint);
     }
 
     @Override

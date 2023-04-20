@@ -99,6 +99,10 @@ public class Traffic extends Gdl90Message {
         float track = getByte() * 360.0f / 256;
         emitterType = emitterLookup[getByte()];
         callsign = getString(8).trim();
+        if (ownId == 0 && callsign.equals(ownCallsign)) {
+            ownId = participantAddr;
+            SettingsActivity.savePrefs();
+        }
         b = getByte();
         int p = b >> 4;
         priority = priorityLookup[p < Priority.values().length ? p : Priority.values().length - 1];
@@ -123,28 +127,6 @@ public class Traffic extends Gdl90Message {
         point.setCrcValid(crcValid);
         point.setAirborne(airborne);
         Log.v(point.toString());
-    }
-
-    public Traffic(long time, int id, String callsign, String type, double lat, double lng, double alt, double speed, float track, float vVel) {
-        this.participantAddr = id;
-        this.callsign = callsign;
-        if (ownId == 0 && this.callsign.equals(ownCallsign)) {
-            ownId = id;
-            SettingsActivity.savePrefs();
-        }
-        ownShip = id == ownId;
-        emitterType = Emitter.valueOf(type);
-
-        point = new Position("ADS-B", lat, lng, alt < -1000 ? Float.NaN : Units.Height.FT.toM(alt),
-                (float) Units.Speed.KNOTS.toMps(speed), track,
-                (float) Units.VertSpeed.FPM.toMps(vVel), true, true, time);
-        nac = 100;
-        nic = 100;
-        priority = Priority.Normal;
-        alertStatus = 0;
-        extrapolated = false;
-        addrType = AddrType.ICAO_ADSB;
-        airborne = true;
     }
 
     private float trueTrack(float track, TrackType trackType, double lat, double lon, int alt) {

@@ -114,6 +114,8 @@ public class Background extends Drawable {
 
         Vehicle nearest = vehicleList.getNearest();
         if (nearest == null) return;
+        if (nearest.callsign.contains("ZKTHK"))
+            Log.i("hit");
         int thickness = (int) (nearest.distance <= dangerRadiusMetres ? dangerRadiusMetres / 2f :
                 dangerRadiusMetres * 10 / nearest.distance);
         if (thickness >= dangerRadiusMetres * mapView.pixelsPerMetre)

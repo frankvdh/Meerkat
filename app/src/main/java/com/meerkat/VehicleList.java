@@ -46,8 +46,8 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
                 HashMap.Entry<Integer, Vehicle> entry = iterator.next();
                 Vehicle v = entry.getValue();
                 synchronized (v) {
-                    if (v.lastValid == null) continue;
-                    if (v.lastValid.getTime() < purgeTime) {
+                    if (v.position == null) continue;
+                    if (v.position.getTime() < purgeTime) {
                         iterator.remove();
                         Log.i("Purged %s", v.callsign);
                         v.layer.setVisible(false, false);
@@ -72,13 +72,14 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
     public void upsert(int crc, String callsign, int participantAddr, Position point, Gdl90Message.Emitter emitterType) {
         Vehicle v = get(participantAddr);
         if (v != null) {
-            if (v.lastCrc != crc)
-                v.update(crc, point, callsign, emitterType);
+            // Ping often sends the same message several times... throw away the duplicates
+            if (v.lastCrc == crc) return;
+            v.update(crc, point, callsign, emitterType);
         } else {
             v = new Vehicle(crc, participantAddr, callsign, point, emitterType, mapView);
             put(participantAddr, v);
         }
-        if (isNaN(v.distance) || v.lastValid == null) return;
+        if (isNaN(v.distance) || v.position == null) return;
         if (preferAdsbPosition && participantAddr == ownId)
             Gps.setLocation(point);
         // NB side-effect to store nearest & furthest -- both must be executed

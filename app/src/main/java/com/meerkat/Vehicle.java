@@ -43,7 +43,8 @@ public class Vehicle implements Comparable<Vehicle> {
     public final ArrayList<Position> predicted;
     public @NonNull
     Gdl90Message.Emitter emitterType;
-    public Position lastValid;
+    public Position position;
+    public long lastUpdate;
     public final Position predictedPosition;
     public float distance;
     public final AircraftLayer layer;
@@ -51,6 +52,7 @@ public class Vehicle implements Comparable<Vehicle> {
 
     public Vehicle(int crc, int id, String callsign, Position point, @NonNull Gdl90Message.Emitter emitterType, @NonNull MapView mapView) {
         this.lastCrc = crc;
+        this.lastUpdate = point.getTime();
         this.id = id;
         this.mapView = mapView;
         this.callsign = callsign;
@@ -73,7 +75,7 @@ public class Vehicle implements Comparable<Vehicle> {
                 Log.d("Predict from %s to %s", point.toString(), predictedPosition);
             }
         } else {
-            lastValid = null;
+            position = null;
             distance = Float.NaN;
             predictedPosition.removeAccuracy();
         }
@@ -123,16 +125,17 @@ public class Vehicle implements Comparable<Vehicle> {
             if (emitterType != Gdl90Message.Emitter.Unknown) {
                 this.emitterType = emitterType;
             }
-            if (callsign != null && !callsign.equals(this.callsign))
+            if (callsign != null && !callsign.equals(this.callsign)) {
                 this.callsign = callsign;
+            }
 
             if (point.hasAccuracy()) {
                 addPoint(point);
             }
         }
-        var now = point.getTime();
+        lastUpdate = point.getTime();
         // Remove aged-out history entries, and add the new point
-        final long maxAge = now - historySeconds * 1000L;
+        final long maxAge = lastUpdate - historySeconds * 1000L;
         synchronized (layer) {
             Iterator<Position> it = history.descendingIterator();
             while (it.hasNext()) {
@@ -142,10 +145,10 @@ public class Vehicle implements Comparable<Vehicle> {
             }
         }
 
-        if (showLinearPredictionTrack && lastValid != null && lastValid.hasTrack() && lastValid.hasSpeed()) {
+        if (showLinearPredictionTrack && position != null && position.hasTrack() && position.hasSpeed()) {
             synchronized (layer) {
-                lastValid.linearPredict((int) (now - lastValid.getTime() + predictionMilliS), predictedPosition);
-                Log.d("Predict from %s to %s", lastValid, predictedPosition);
+                position.linearPredict((int) (lastUpdate - position.getTime() + predictionMilliS), predictedPosition);
+                Log.d("Predict from %s to %s", position, predictedPosition);
             }
         }
 
@@ -160,7 +163,7 @@ public class Vehicle implements Comparable<Vehicle> {
                 while (it.hasNext()) {
                     var p = it.next();
                     var time = p.getTime();
-                    if (!p.hasTrack() || !point.hasSpeed() || time < prevTime || time < lastValid.getTime() - polynomialHistoryMilliS)
+                    if (!p.hasTrack() || !point.hasSpeed() || time < prevTime || time < position.getTime() - polynomialHistoryMilliS)
                         continue;
                     var speed = p.getSpeed();
                     var track = p.getTrack();
@@ -182,9 +185,9 @@ public class Vehicle implements Comparable<Vehicle> {
                     Log.v("Speed coeffs %.1f %.3f %.5f", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2]);
                     Log.v("Track coeffs %.1f %.3f %.5f", cSpeedTrack[1][0], cSpeedTrack[1][1], cSpeedTrack[1][2]);
                     Log.v("Alt   coeffs %.1f %.3f %.5f", cSpeedTrack[2][0], cSpeedTrack[2][1], cSpeedTrack[2][2]);
-                    Position p = lastValid;
+                    Position p = position;
                     for (int i = 0; i <= predicted.size() - 1; i++) {
-                        var t1 = (long) cSpeedTrack[0][3] - now + (long) i * polynomialPredictionStepMilliS;
+                        var t1 = (long) cSpeedTrack[0][3] - lastUpdate + (long) i * polynomialPredictionStepMilliS;
                         var t2 = t1 * t1;
                         p.linearPredict(polynomialPredictionStepMilliS, predicted.get(i));
                         p = predicted.get(i);
@@ -206,33 +209,45 @@ public class Vehicle implements Comparable<Vehicle> {
     }
 
     private void addPoint(Position point) {
-        lastValid = point;
+        position = point;
         distance = Gps.distanceTo(point); // metres
         history.addFirst(point);
     }
 
     public boolean isValid() {
-        return lastValid != null && lastValid.isCrcValid() && lastValid.hasAccuracy();
+        return position != null && position.isCrcValid() && position.hasAccuracy();
     }
 
 
     public boolean checkAndMakeNearest(VehicleList vl) {
-        if (!lastValid.isAirborne() || id == ownId) return false;
         if (vl.nearest != null) {
-            if (vl.nearest == this || distance > vl.nearest.distance) return false;
+            if (vl.nearest == this) {
+                if (this.id == ownId && ownId != 0) {
+                    // If ownShip has erroneously been identified as nearest (e.g. a message
+                    // with a valid id & position but no callsign was received,
+                    // then a message with callsign & id is received),
+                    // remove ownShip from nearest, so that the actual nearest aircraft will update
+                    vl.nearest = null;
+                }
+                // This is nearest and has received an update, so assume relative positions have changed
+                Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), distance, position.isAirborne(), vl.nearest == null ? Float.NaN : vl.nearest.distance);
+                return true;
+            }
+            return false;
         }
-        Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), distance, lastValid.isAirborne(), vl.nearest == null ? Float.NaN : vl.nearest.distance);
+        if (this.id == ownId && ownId != 0) return false;
+        Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), distance, position.isAirborne(), vl.nearest == null ? Float.NaN : vl.nearest.distance);
         // Change to threat circle needed
         vl.nearest = this;
         return true;
     }
 
     public boolean checkAndMakeFurthest(VehicleList vl) {
-        if (!autoZoom || !lastValid.isAirborne() || id == ownId) return false;
+        if (!autoZoom || !position.isAirborne() || id == ownId) return false;
         if (vl.furthest != null) {
             if (vl.furthest == this || distance < vl.furthest.distance) return false;
         }
-        Log.d("Furthest: %s %.0f %s vs %.0f", callsign, distance, lastValid.isAirborne(), vl.furthest == null ? Float.NaN: vl.furthest.distance);
+        Log.d("Furthest: %s %.0f %s vs %.0f", callsign, distance, position.isAirborne(), vl.furthest == null ? Float.NaN : vl.furthest.distance);
         // Change to zoom level needed
         vl.furthest = this;
         return true;
@@ -240,7 +255,7 @@ public class Vehicle implements Comparable<Vehicle> {
 
     @NonNull
     public String toString() {
-        return String.format(Locale.ENGLISH, "%06x %-8s %c %s", id, callsign, isValid() ? ' ' : '!', lastValid);
+        return String.format(Locale.ENGLISH, "%06x %-8s %c %s", id, callsign, isValid() ? ' ' : '!', position);
     }
 
     @Override

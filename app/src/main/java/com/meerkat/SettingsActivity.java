@@ -149,7 +149,13 @@ public class SettingsActivity extends AppCompatActivity {
         maxZoom = (int) (Math.max(screenWidthMetres, Math.min(Units.Distance.NM.toM(50), prefs.getInt("maxZoom", (int) (Units.Distance.NM.toM(50))))));
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         ownCallsign = prefs.getString("ownCallsign", "ZKTHK").toUpperCase();
-        ownId = prefs.getInt("ownId", 0);
+        try {
+        ownId = Integer.parseInt(prefs.getString("ownId", "0"), 16);
+        } catch (Exception e) {
+            ownId = 0;
+            saveNeeded = true;
+        }
+
         try {
             displayOrientation = MapView.DisplayOrientation.valueOf(prefs.getString("displayOrientation", "TrackUp").trim());
         } catch (Exception e) {
@@ -171,10 +177,11 @@ public class SettingsActivity extends AppCompatActivity {
             Log.e("NumberFormatException: %s (%s)", ex.getMessage(), simulateSpeedFactorString);
             simulateSpeedFactor = 10;
         }
-        if (saveNeeded) savePrefs();
 //        simulate = true;
 //        simulateSpeedFactor = 5;
 //        autoZoom = false;
+//        saveNeeded = true;
+        if (saveNeeded) savePrefs();
         Log.log(logLevel, "Settings loaded");
     }
 
@@ -211,7 +218,7 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putString("vertSpeedUnits", String.valueOf(vertSpeedUnits));
         edit.putString("countryCode", countryCode);
         edit.putString("ownCallsign", ownCallsign);
-        edit.putInt("ownId", ownId);
+        edit.putString("ownId", Integer.toHexString(ownId));
         edit.putString("displayOrientation", String.valueOf(displayOrientation));
         edit.putBoolean("keepScreenOn", keepScreenOn);
         edit.putBoolean("autoZoom", autoZoom);

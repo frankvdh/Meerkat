@@ -174,12 +174,12 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
      * @return pixels per metre
      */
     private float updateScaleFactor(Rect bounds, Vehicle furthest) {
-        if (furthest == null || furthest.lastValid == null) return defaultPixelsPerMetre;
+        if (furthest == null || furthest.position == null) return defaultPixelsPerMetre;
         if (furthest.distance < minZoom) return maxPixelsPerMetre;
         if (furthest.distance > maxZoom) return minPixelsPerMetre;
 
         Point furthestPoint = new Point(0, 0);
-        extend(furthestPoint, furthest.lastValid);
+        extend(furthestPoint, furthest.position);
         if (showLinearPredictionTrack)
             extend(furthestPoint, furthest.predictedPosition);
         if (showPolynomialPredictionTrack)

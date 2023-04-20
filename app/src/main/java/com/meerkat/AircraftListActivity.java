@@ -89,12 +89,12 @@ public class AircraftListActivity extends AppCompatActivity {
 
                 synchronized (v) {
                     distance = v.distance;
-                    if (v.lastValid != null) {
-                        bearing = String.format(Locale.getDefault(), "%03d", (int) (Gps.bearingTo(v.lastValid) + 360) % 360);
-                        track = Float.isNaN(v.lastValid.getTrack()) ? "---" : String.format(Locale.getDefault(), "%03.0f", v.lastValid.getTrack());
-                        speed = v.lastValid.getSpeed();
-                        vVel = v.lastValid.getVVel();
-                        alt = v.lastValid.getAltitude();
+                    if (v.position != null) {
+                        bearing = String.format(Locale.getDefault(), "%03d", (int) (Gps.bearingTo(v.position) + 360) % 360);
+                        track = Float.isNaN(v.position.getTrack()) ? "---" : String.format(Locale.getDefault(), "%03.0f", v.position.getTrack());
+                        speed = v.position.getSpeed();
+                        vVel = v.position.getVVel();
+                        alt = v.position.getAltitude();
                     }
                 }
                 if (i < tableAircraft.getChildCount()) {
