@@ -98,7 +98,7 @@ public class Background extends Drawable {
                 canvas.drawCircle(0, 0, rad, circlePaint);
             }
 
-        float rot = -MapView.displayRotation();
+        float rot = -mapView.displayRotation();
         String compassLetter;
         if (isNaN(rot)) {
             rot = 0;

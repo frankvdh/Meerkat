@@ -47,6 +47,7 @@ public class PolynomialRegressionTest {
         double[] coeff = pr.getCoefficients()[0];
         Assert.assertArrayEquals(new double[]{147.1, 0, 0, now + data[0].l}, coeff, 0.1);
     }
+
     @Test
     public void test2() {
         var data = new Data[]{
@@ -131,7 +132,7 @@ public class PolynomialRegressionTest {
         var data = new Data[]{
                 new Data(400000, 18), new Data(400010, 17), new Data(400020, 16), new Data(400030, 15),
                 new Data(400040, 14), new Data(400050, 13), new Data(400060, 12), new Data(400070, 11),
-                new Data(400080, 10), new Data(400090,  9), new Data(400100, 8),
+                new Data(400080, 10), new Data(400090, 9), new Data(400100, 8),
         };
 
         var now = Instant.now().toEpochMilli();
@@ -142,9 +143,120 @@ public class PolynomialRegressionTest {
         var coeff = pr.getCoefficients()[0];
         Assert.assertArrayEquals(new double[]{18, -0.1, 0, now + data[0].l}, coeff, 0.01);
     }
+
+
+    @Test
+    public void testTrack() {
+        var data = new Data[]{
+                new Data(400000, 310), new Data(401000, 289), new Data(402000, 284), new Data(403000, 284),
+                new Data(404000, 201), new Data(405000, 198), new Data(406000, 191), new Data(407000, 142),
+                new Data(408000, 142)
+        };
+
+        var now = Instant.now().toEpochMilli();
+        PolynomialRegression pr = new PolynomialRegression(now + data[0].l, 1);
+        for (Data d : data)
+            pr.add(now + d.l, d.f);
+
+        var coeff = pr.getCoefficients()[0];
+        Assert.assertArrayEquals(new double[]{316, -0.02, -3e-7, now + data[0].l}, coeff, 0.5);
+    }
+
+    @Test
+    public void testTrack1() {
+        var data = new Data[]{
+                new Data(400000, 310), new Data(401000, 289), new Data(402000, 284), new Data(403000, 284),
+                new Data(404000, 201), new Data(405000, 198), new Data(406000, 191), new Data(407000, 142),
+                new Data(408000, 142)
+        };
+
+        var now = Instant.now().toEpochMilli();
+        PolynomialRegression pr = new PolynomialRegression(now + data[0].l, 1);
+        var prevTrack = data[0].f + 90;
+        for (Data d : data) {
+            var track = d.f + 90;
+            while (track < prevTrack - 180) track += 360;
+            while (track > prevTrack + 180) track -= 360;
+            pr.add(now + d.l, (d.f + 90) % 360);
+            prevTrack = track;
+        }
+        var coeff = pr.getCoefficients()[0];
+        Assert.assertArrayEquals(new double[]{316 + 90, -0.02, -3e-7, now + data[0].l}, coeff, 0.5);
+    }
+
+    @Test
+    public void testTrack2() {
+        var data = new Data[]{
+                new Data(400000, 310), new Data(401000, 289), new Data(402000, 284), new Data(403000, 284),
+                new Data(404000, 201), new Data(405000, 198), new Data(406000, 191), new Data(407000, 142),
+                new Data(408000, 142)
+        };
+
+        var now = Instant.now().toEpochMilli();
+        PolynomialRegression pr = new PolynomialRegression(now + data[0].l, 1);
+        var prevTrack = data[0].f - 120;
+        for (Data d : data) {
+            var track = d.f - 120;
+            while (track < prevTrack - 180) track += 360;
+            while (track > prevTrack + 180) track -= 360;
+            pr.add(now + d.l, (d.f - 120) % 360);
+            prevTrack = track;
+        }
+        var coeff = pr.getCoefficients()[0];
+        Assert.assertArrayEquals(new double[]{316 + 90, -0.02, -3e-7, now + data[0].l}, coeff, 0.5);
+    }
+
+    @Test
+    public void testTrack3() {
+        var data = new Data[]{
+                new Data(-5000, 432), new Data(-4000, 412), new Data(-3000, 409), new Data(-2000, 398),
+                new Data(-1000, 394), new Data(0, 388)};
+
+        var now = Instant.now().toEpochMilli();
+        PolynomialRegression pr = new PolynomialRegression(now + data[0].l, 1);
+        var prevTrack = data[0].f - 120;
+        for (Data d : data) {
+            var track = d.f - 120;
+            while (track < prevTrack - 180) track += 360;
+            while (track > prevTrack + 180) track -= 360;
+            pr.add(now + d.l, (d.f - 120) % 360);
+            prevTrack = track;
+        }
+        var coeff = pr.getCoefficients()[0];
+        Assert.assertArrayEquals(new double[]{310, -0.01, 1e-6, now + data[0].l}, coeff, 0.5);
+    }
+
+    @Test
+    public void testTrack4() {
+        var data = new Data[]{
+                new Data(0, 72), new Data(1000, 52), new Data(2000, 49), new Data(3000, 38),
+                new Data(4000, 34), new Data(5000, 28)
+        };
+
+        PolynomialRegression pr = new PolynomialRegression(data[0].l + 1000, 1);
+        var prevTrack = data[0].f;
+        for (Data d : data) {
+            var track = d.f;
+            while (track < prevTrack - 180) track += 360;
+            while (track > prevTrack + 180) track -= 360;
+            pr.add(d.l + 1000, track);
+            prevTrack = track;
+        }
+        var coeff = pr.getCoefficients()[0];
+        Assert.assertArrayEquals(new double[]{69.7857, -0.01403, 1.17857e-6, data[0].l + 1000}, coeff, 0.001);
+//        Assert.assertArrayEquals(new double[]{72, -.02855, 8.5e-6, data[0].l}, coeff, 0.001);
+        float[] newTrack = new float[6];
+        for (int i = 0; i <= 5; i++) {
+            var t1 = (long) coeff[3] + data.length * 1000 + (long) i * 1000;
+            var t2 = t1 * t1;
+            newTrack[i] = (float) (coeff[0] + coeff[1] * t1 + coeff[2] * t2);
+        }
+        Assert.assertArrayEquals(new float[]{29f, 33f, 39f, 47f, 58f, 71f}, newTrack, 0.5F);
+    }
+
     public static class Data {
-       public final long l;
-      public  final float f;
+        public final long l;
+        public final float f;
 
         Data(long l, float f) {
             this.l = l;

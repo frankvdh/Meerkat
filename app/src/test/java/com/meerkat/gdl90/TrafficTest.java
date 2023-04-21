@@ -18,7 +18,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
-import java.time.Instant;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TrafficTest extends TestCase {
@@ -42,7 +41,7 @@ public class TrafficTest extends TestCase {
     class MockPositionTest extends Position {
         double alt, latitude, longitude;
         float speed, track;
-        Instant time;
+        long time;
         String provider;
         public MockPositionTest(String provider){
             super(provider);
@@ -97,7 +96,7 @@ public class TrafficTest extends TestCase {
         }
         //User direct access will not cause a problem when do assertEquals()
         @Override
-        public void setInstant(Instant t){
+        public void setTime(long t){
             time = t;
         }
         public double distanceTo(MockPositionTest p) {
@@ -197,7 +196,6 @@ public class TrafficTest extends TestCase {
         double a = 6378137.0; // WGS84 major axis
         double b = 6356752.3142; // WGS84 semi-major axis
         double f = (a - b) / a;
-        double aSqMinusBSqOverBSq = (a * a - b * b) / (b * b);
 
         double l = lon2 - lon1;
         double u1 = Math.atan((1.0 - f) * Math.tan(lat1));

@@ -177,10 +177,12 @@ public class SettingsActivity extends AppCompatActivity {
             Log.e("NumberFormatException: %s (%s)", ex.getMessage(), simulateSpeedFactorString);
             simulateSpeedFactor = 10;
         }
-//        simulate = true;
-//        simulateSpeedFactor = 5;
-//        autoZoom = false;
-//        saveNeeded = true;
+ /*
+        simulate = true;
+        simulateSpeedFactor = 10;
+        autoZoom = false;
+        saveNeeded = true;
+  */
         if (saveNeeded) savePrefs();
         Log.log(logLevel, "Settings loaded");
     }

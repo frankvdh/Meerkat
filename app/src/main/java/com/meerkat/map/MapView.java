@@ -37,6 +37,7 @@ import android.graphics.drawable.Icon;
 import android.graphics.drawable.LayerDrawable;
 import android.util.AttributeSet;
 import android.view.ScaleGestureDetector;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 
@@ -93,21 +94,23 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         return context.getResources().getDisplayMetrics().heightPixels;
     }
 
-    static float displayRotation() {
+    float displayRotation() {
         // Do not allow return of NaN from direction sensors... this causes cos() & sin() to
         // both return 0.
-        var rot = 0f;
+        float rot;
         if (displayOrientation == DisplayOrientation.HeadingUp) {
             rot = Compass.degTrue();
-        }
-        if (displayOrientation == DisplayOrientation.TrackUp) {
+            if (!Float.isNaN(rot)) return rot;
+            Log.e("Heading mode failed");
+            Toast.makeText(getContext(), "Heading information lost", Toast.LENGTH_LONG).show();
+        } else if (displayOrientation == DisplayOrientation.TrackUp) {
             rot = Gps.getTrack();
+            if (!Float.isNaN(rot)) return rot;
+            Log.e("Track mode failed");
+            Toast.makeText(getContext(), "Tracking information lost", Toast.LENGTH_LONG).show();
         }
-        if (Float.isNaN(rot)) {
-            displayOrientation = DisplayOrientation.NorthUp;
-            rot = 0;
-        }
-        return rot;
+        // Default if both the above fail
+        return 0;
     }
 
     static private Bitmap loadIcon(Context context, int iconId) {
@@ -151,7 +154,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
             // Scale the image with pinch zoom value.
             double scalefactor = detector.getScaleFactor();
             if (scalefactor == 1.0) return false;
-            pixelsPerMetre *=  scalefactor;
+            pixelsPerMetre *= scalefactor;
 //            Log.i("Scale factor = %f", scalefactor);
             if (pixelsPerMetre < minPixelsPerMetre)
                 pixelsPerMetre = minPixelsPerMetre;
@@ -212,8 +215,10 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     private double previousFurthest;
     private Instant nextZoomAllowed = Instant.EPOCH;
 
-    /** Adjust the screen zoom factor to show the furthest away aircraft and it's predicted positions
-     * @param bounds Bounds of the Background (i.e. the visible map) where 0,0 is the ownship position
+    /**
+     * Adjust the screen zoom factor to show the furthest away aircraft and it's predicted positions
+     *
+     * @param bounds   Bounds of the Background (i.e. the visible map) where 0,0 is the ownship position
      * @param furthest Vehicle whose position is furthest from the ownship position
      */
     void adjustScaleFactor(Rect bounds, Vehicle furthest) {

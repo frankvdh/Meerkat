@@ -48,18 +48,68 @@ public class LogReplay extends Thread {
                 return;
             }
             if (s == null) {
-                Log.i("Traffic EOF");
-                return;
-            }
-            Matcher m = timestampPattern.matcher(s);
-            if (!m.matches()) continue;
-            if (m.groupCount() < 5)
-                continue;
+                Log.i("Log file EOF: VehicleList = %d", vehicleList.size());
+                if (vehicleList.isEmpty()) break;
+                clock = Clock.fixed(Instant.ofEpochMilli(clock.millis() + 1000), ZoneId.systemDefault());
+            } else {
+                Matcher m = timestampPattern.matcher(s);
+                if (!m.matches()) continue;
+                if (m.groupCount() < 5)
+                    continue;
 
-            if (m.group(1) == null || m.group(2) == null || m.group(3) == null) continue;
-            clock = Clock.fixed(today.plusMillis(Integer.parseInt(Objects.requireNonNull(m.group(1))) * 3600000L +
-                    Integer.parseInt(Objects.requireNonNull(m.group(2))) * 60000L +
-                    (long) Float.parseFloat(Objects.requireNonNull(m.group(3))) * 1000), ZoneId.systemDefault());
+                if (m.group(1) == null || m.group(2) == null || m.group(3) == null) continue;
+                clock = Clock.fixed(today.plusMillis(Integer.parseInt(Objects.requireNonNull(m.group(1))) * 3600000L +
+                        Integer.parseInt(Objects.requireNonNull(m.group(2))) * 60000L +
+                        (long) Float.parseFloat(Objects.requireNonNull(m.group(3))) * 1000), ZoneId.systemDefault());
+                var msgType = m.group(4);
+                var data = m.group(5);
+                if (data == null || msgType == null) continue;
+                if (msgType.equals("GPS")) {
+                    Matcher g = gpsPattern.matcher(data);
+                    if (!g.matches()) continue;
+                    if (g.groupCount() < 5) continue;
+                    var lat = g.group(1);
+                    if (lat == null) continue;
+                    var lon = g.group(2);
+                    if (lon == null) continue;
+                    var alt = g.group(3);
+                    if (alt == null) continue;
+                    var spd = g.group(4);
+                    if (spd == null) continue;
+                    var trk = g.group(5);
+                    if (trk == null) continue;
+                    try {
+                        Gps.setLocation("GPS", Double.parseDouble(lat), Double.parseDouble(lon),
+                                Units.Height.FT.toM(Double.parseDouble(alt)),
+                                (float) Units.Speed.KNOTS.toMps(Float.parseFloat(spd)), Float.parseFloat(trk),
+                                clock.instant().toEpochMilli());
+                    } catch (NumberFormatException ex) {
+                        // do nothing... continue
+                    }
+                } else if (msgType.equals("GDL90")) {
+                    // Some datagrams contain 2 messages
+                    if (!data.contains("7e14"))
+                        continue;
+                    byte[] raw = new byte[data.length() / 2];
+                    for (int j = 0; j < data.length(); j += 2) {
+                        try {
+                            raw[j / 2] = (byte) Integer.parseInt(data.substring(j, j + 2), 16);
+                        } catch (StringIndexOutOfBoundsException | NumberFormatException ex) {
+                            Log.e("Invalid raw message log entry: %s", data);
+                            break;
+                        }
+                    }
+                    ByteArrayInputStream is = new ByteArrayInputStream(raw);
+                    while (is.available() > 0) {
+                        if ((byte) is.read() != 0x7e) continue;
+                        Gdl90Message msg = Gdl90Message.getMessage(is);
+                        if (!(msg instanceof Traffic t)) continue;
+                        t.point.setTime(clock.millis());
+                        t.upsert(vehicleList);
+                    }
+                }
+            }
+
             var now = Instant.now().toEpochMilli();
             var timestamp = clock.millis();
             long delay = prevTimestamp == 0 ? 0 : Math.min(2000, (timestamp - prevTimestamp) - (now - prevRealtime));
@@ -74,55 +124,8 @@ public class LogReplay extends Thread {
                     e.printStackTrace();
                 }
             }
-
-            var msgType = m.group(4);
-            var data = m.group(5);
-            if (data == null || msgType == null) continue;
-            if (msgType.equals("GPS")) {
-                Matcher g = gpsPattern.matcher(data);
-                if (!g.matches()) continue;
-                if (g.groupCount() < 5) continue;
-                var lat = g.group(1);
-                if (lat == null) continue;
-                var lon = g.group(2);
-                if (lon == null) continue;
-                var alt = g.group(3);
-                if (alt == null) continue;
-                var spd = g.group(4);
-                if (spd == null) continue;
-                var trk = g.group(5);
-                if (trk == null) continue;
-                try {
-                    Gps.setLocation("GPS", Double.parseDouble(lat), Double.parseDouble(lon),
-                            Units.Height.FT.toM(Double.parseDouble(alt)),
-                            (float) Units.Speed.KNOTS.toMps(Float.parseFloat(spd)), Float.parseFloat(trk),
-                            clock.instant().toEpochMilli());
-                } catch (NumberFormatException ex) {
-                    // do nothing... continue
-                }
-            } else if (msgType.equals("GDL90")) {
-                // Some datagrams contain 2 messages
-                if (!data.contains("7e14"))
-                    continue;
-                byte[] raw = new byte[data.length() / 2];
-                for (int j = 0; j < data.length(); j += 2) {
-                    try {
-                        raw[j / 2] = (byte) Integer.parseInt(data.substring(j, j + 2), 16);
-                    } catch (StringIndexOutOfBoundsException | NumberFormatException ex) {
-                        Log.e("Invalid raw message log entry: %s", data);
-                        break;
-                    }
-                }
-                ByteArrayInputStream is = new ByteArrayInputStream(raw);
-                while (is.available() > 0) {
-                    if ((byte) is.read() != 0x7e) continue;
-                    Gdl90Message msg = Gdl90Message.getMessage(is);
-                    if (!(msg instanceof Traffic t)) continue;
-                    t.point.setTime(timestamp);
-                    t.upsert(vehicleList);
-                }
-            }
         }
+        Log.i("Replay finished");
     }
 }
 

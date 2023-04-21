@@ -49,7 +49,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
                 synchronized (v.lock) {
                     if (v.lastUpdate < purgeTime) {
                         iterator.remove();
-                        Log.i("Purged %s", v.callsign);
+                        Log.i("Purged %s", v.callsign.isBlank() ? v.id: v.callsign);
                         v.layer.setVisible(false, false);
                         mapView.layers.invalidateDrawable(v.layer);
                     }
@@ -80,13 +80,13 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
                     nearest = null;
                 }
                 // This is nearest and has received an update, so assume relative positions have changed
-                Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), v.distance, v.position.isAirborne(), nearest == null ? Float.NaN : nearest.distance);
+                Log.d("Nearest: %s %.0f %s vs %.0f", v.toString(), v.distance, v.position == null ? "null" : v.position.isAirborne(), nearest == null ? Float.NaN : nearest.distance);
                 return true;
             }
             return false;
         }
         if (v.id == ownId && ownId != 0) return false;
-        Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), v.distance, v.position.isAirborne(), nearest == null ? Float.NaN : nearest.distance);
+        Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), v.distance, v.position == null ? "null" : v.position.isAirborne(), nearest == null ? Float.NaN : nearest.distance);
         // Change to threat circle needed
         nearest = v;
         return true;
@@ -97,7 +97,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         if (furthest != null) {
             if (furthest == v || v.distance < furthest.distance) return false;
         }
-        Log.d("Furthest: %s %.0f %s vs %.0f", v.callsign, v.distance, v.position.isAirborne(), furthest == null ? Float.NaN : furthest.distance);
+        Log.d("Furthest: %s %.0f %s vs %.0f", v.callsign, v.distance, v.position == null ? "null" : v.position.isAirborne(), furthest == null ? Float.NaN : furthest.distance);
         // Change to zoom level needed
         furthest = v;
         return true;

@@ -154,7 +154,7 @@ public class AircraftLayer extends Drawable {
             var bmpHeight = emitter.bitmap.getHeight();
             bounds.set(aircraftPoint.x - bmpWidth / 2, aircraftPoint.y - bmpHeight / 2, aircraftPoint.x + bmpWidth / 2, aircraftPoint.y + bmpHeight / 2);
             double altDiff = currentPos.getAltitude() - Gps.getAltitude();
-            var displayAngle = MapView.displayRotation();
+            var displayAngle = mapView.displayRotation();
             if (bounds.right > clipBounds.left && bounds.left < clipBounds.right && bounds.bottom > clipBounds.top && bounds.top < clipBounds.bottom) {
                 canvas.drawBitmap(replaceColor(emitter.bitmap, altColour(altDiff, isAirborne)),
                         positionMatrix(emitter.bitmap.getWidth() / 2, emitter.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
@@ -162,7 +162,7 @@ public class AircraftLayer extends Drawable {
                 int lineHeight = (int) (textPaint.getTextSize() + 1);
                 // Display absolute altitude next to ownShip, callsign & relative altitude next to others
                 String text = (vehicle.id == ownId) ?
-                        altUnits.toString(currentPos.getAltitude()) :
+                        altUnits.toString("%,.0f%s", currentPos.getAltitude()) :
                         vehicle.getLabel() + (isNaN(altDiff) ? "" : ('\n' + altUnits.toString(altDiff)));
                 drawText(canvas, aircraftPoint, lineHeight, text, clipBounds, bmpWidth);
             }

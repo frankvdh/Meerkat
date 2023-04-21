@@ -64,7 +64,7 @@ public class Vehicle implements Comparable<Vehicle> {
         predictedPosition = new Position("predicted");
         predicted = new ArrayList<>(predictionMilliS / polynomialPredictionStepMilliS + 1);
         if (showPolynomialPredictionTrack) {
-            for (int i = 0; i <= predictionMilliS / polynomialPredictionStepMilliS; i++)
+            for (int i = 0; i <= predictionMilliS; i += polynomialPredictionStepMilliS)
                 predicted.add(new Position("predicted"));
         }
         if (point.hasAccuracy()) {
@@ -132,6 +132,10 @@ public class Vehicle implements Comparable<Vehicle> {
                 addPoint(point);
             }
         }
+
+        // Assume that an aircraft does not turn while stopped
+        if (position != null && !point.hasTrack()) point.setTrack(position.getTrack());
+
         lastUpdate = point.getTime();
         // Remove aged-out history entries, and add the new point
         final long maxAge = lastUpdate - historySeconds * 1000L;
@@ -154,52 +158,55 @@ public class Vehicle implements Comparable<Vehicle> {
         if (showPolynomialPredictionTrack && !history.isEmpty()) {
             // Only reading history, so need to synchronize
             PolynomialRegression prSpeedTrack = new PolynomialRegression(history.getLast().getTime(), 3);
-            // History only contains valid points, assume not turning
-            float prevTrack = history.getLast().hasTrack() ? history.getLast().getTrack() : 0;
-            var prevTime = history.getLast().getTime();
-            synchronized (layer) {
+            // History only contains valid points, which all have a track value
+            float prevTrack = Float.NaN;
+             long prevTime = -1;
+            synchronized (lock) {
                 Iterator<Position> it = history.descendingIterator();
                 while (it.hasNext()) {
                     var p = it.next();
                     var time = p.getTime();
-                    if (!p.hasTrack() || !point.hasSpeed() || time < prevTime || time < position.getTime() - polynomialHistoryMilliS)
+                    if (!point.hasSpeed() || time <= prevTime) continue;
+                    if (time < position.getTime() - polynomialHistoryMilliS) {
+                        prevTrack = p.getTrack();
                         continue;
+                    }
                     var speed = p.getSpeed();
                     var track = p.getTrack();
-                    if (!p.hasTrack() || !p.hasAltitude() || speed == 0 || Float.isNaN(speed))
+                    if (!p.hasAltitude() || speed == 0 || Float.isNaN(speed))
                         continue;
                     // Unwind modulo arithmetic so that turns in the same direction keep incrementing, even though the result is > 360 or < 0
-                    var turn = Float.isNaN(prevTrack) ? 0 : track - prevTrack;
-                    while (turn > 180) turn -= 360;
-                    while (turn < -180) turn += 180;
-                    Log.v("Add %d %5.0f %5.0f %5.0f", time, speed, prevTrack + turn, p.getAltitude());
-                    prSpeedTrack.add(time, speed, prevTrack + turn, (float) p.getAltitude());
+                    while (track < prevTrack - 180) track += 360;
+                    while (track > prevTrack + 180) track -= 360;
+                    Log.v("Add %d %5.0f %5.0f %5.0f", time - position.getTime(), speed, track, p.getAltitude());
+                    prSpeedTrack.add(time, speed, track, (float) p.getAltitude());
                     prevTrack = track;
                     prevTime = time;
                 }
             }
             double[][] cSpeedTrack = prSpeedTrack.getCoefficients();
-            synchronized (layer) {
+            synchronized (lock) {
                 if (cSpeedTrack != null) {
-                    Log.v("Speed coeffs %.1f %.3f %.5f", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2]);
+                    Log.v("Speed coeffs %.1f %.3f %.5f %d", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2], (long)cSpeedTrack[0][3] - lastUpdate);
                     Log.v("Track coeffs %.1f %.3f %.5f", cSpeedTrack[1][0], cSpeedTrack[1][1], cSpeedTrack[1][2]);
                     Log.v("Alt   coeffs %.1f %.3f %.5f", cSpeedTrack[2][0], cSpeedTrack[2][1], cSpeedTrack[2][2]);
                     Position p = position;
                     for (int i = 0; i <= predicted.size() - 1; i++) {
-                        var t1 = (long) cSpeedTrack[0][3] - lastUpdate + (long) i * polynomialPredictionStepMilliS;
-                        var t2 = t1 * t1;
-                        p.linearPredict(polynomialPredictionStepMilliS, predicted.get(i));
-                        p = predicted.get(i);
                         var speed = p.getSpeed();
                         var track = p.getTrack();
                         var alt = p.getAltitude();
+                        var t1 = lastUpdate - (long) cSpeedTrack[0][3] + (long) i * polynomialPredictionStepMilliS;
+                        var t2 = t1 * t1;
+                        p.linearPredict(polynomialPredictionStepMilliS, predicted.get(i));
+                        p = predicted.get(i);
                         var newSpeed = (float) (cSpeedTrack[0][0] + cSpeedTrack[0][1] * t1 + cSpeedTrack[0][2] * t2);
                         var newTrack = (float) (cSpeedTrack[1][0] + cSpeedTrack[1][1] * t1 + cSpeedTrack[1][2] * t2);
                         var newAlt = (float) (cSpeedTrack[2][0] + cSpeedTrack[2][1] * t1 + cSpeedTrack[2][2] * t2);
-                        p.setAltitude(Double.isNaN(alt) ? newAlt : Float.isNaN(newAlt) ? alt : 0.9f * alt + 0.1f * newAlt);
-                        p.setSpeed(Float.isNaN(speed) ? newSpeed : Float.isNaN(newSpeed) ? speed : 0.9f * speed + 0.1f * newSpeed);
-                        p.setTrack((Float.isNaN(track) ? newTrack : Float.isNaN(newTrack) ? track : 0.9f * track + 0.1f * newTrack) % 360);
-                        Log.v("%s Predict Speed %.1f Track %.1f Alt %.1f %s", callsign, speed, track, alt, p);
+                        p.setAltitude(Double.isNaN(alt) ? newAlt : Float.isNaN(newAlt) ? alt : 0.5f * alt + 0.5f * newAlt);
+                        p.setSpeed(Float.isNaN(speed) ? newSpeed : Float.isNaN(newSpeed) ? speed : 0.75f * speed + 0.25f * newSpeed);
+                        p.setTrack((Float.isNaN(newTrack) ? track : Float.isNaN(track) ? newTrack : 0.999f * track + 0.001f * newTrack) % 360);
+                        p.setTime(position.getTime() + (long) i * polynomialPredictionStepMilliS);
+                        Log.i("%s Predict Speed %.1f Track %.1f Alt %.1f %s", callsign, speed, track, alt, p);
                     }
                 }
             }
