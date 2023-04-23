@@ -38,13 +38,17 @@ public class Units {
     @SuppressWarnings("SameParameterValue")
     private String toString(String format, double value) {
         if (isNaN(value)) return "----";
-        value /= factor;
-        return String.format(format, value, label);
+        return String.format(format, value / factor, label);
     }
 
     private double toStandard(double value) {
         if (isNaN(value)) return Double.NaN;
         return value * factor;
+    }
+
+    private double fromStandard(double value) {
+        if (isNaN(value)) return Double.NaN;
+        return value / factor;
     }
 
     @SuppressWarnings("unused")
@@ -66,6 +70,9 @@ public class Units {
         public double toMps(double value) {
             return units.toStandard(value);
         }
+        public double fromMps(double value) {
+            return units.fromStandard(value);
+        }
     }
 
     @SuppressWarnings("unused")
@@ -86,6 +93,9 @@ public class Units {
         public double toMps(float value) {
             return units.toStandard(value);
         }
+        public double fromMps(float value) {
+            return units.fromStandard(value);
+        }
     }
 
     @SuppressWarnings("unused")
@@ -101,6 +111,10 @@ public class Units {
 
         public double toM(double value) {
             return units.toStandard(value);
+        }
+
+        public double fromM(double value) {
+            return units.fromStandard(value);
         }
 
         public String toString(double value) {
@@ -126,6 +140,10 @@ public class Units {
 
         public double toM(float value) {
             return units.toStandard(value);
+        }
+
+        public double fromM(double value) {
+            return units.fromStandard(value);
         }
 
         public String toString(double value) {

@@ -62,7 +62,14 @@ public class PolynomialRegression {
     }
 
     public double[][] getCoefficients() {
-        if (N < 1) return null;
+        if (N == 0) return null;
+        double[][] result = new double[numSeries][];
+        if (N == 1) {
+            for (int i = 0; i < numSeries; i++) {
+                result[i] = new double[]{ySum[i] , 0, 0, initialX};
+            }
+            return result;
+        }
         double xm = xSum / N;
         double x2m = x2Sum / N;
         double sxxN = (x2Sum - xSum * xm);
@@ -70,16 +77,15 @@ public class PolynomialRegression {
         double sx2x2N = (x4Sum - x2Sum * x2m);
         double div1 = sxxN * sx2x2N - sxx2N * sxx2N;
         double div2 = sxxN * sx2x2N - sxx2N * sxx2N;
-        if (div1 == 0 || div2 == 0)
+        if (div1 == 0 || N > 2 && div2 == 0)
             return null;
 
-        double[][] result = new double[numSeries][];
         for (int i = 0; i < numSeries; i++) {
             double ym = ySum[i] / N;
             double sxyN = (xySum[i] - xSum * ym);
             double sx2yN = (x2ySum[i] - x2m * ySum[i]);
             double coefficient1 = (sxyN * sx2x2N - sx2yN * sxx2N) / div1;
-            double coefficient2 = (sx2yN * sxxN - sxyN * sxx2N) / div2;
+            double coefficient2 = N == 2 ? 0 : (sx2yN * sxxN - sxyN * sxx2N) / div2;
             result[i] = new double[]{ym - coefficient1 * xm - coefficient2 * x2m, coefficient1, coefficient2, initialX};
         }
         return result;

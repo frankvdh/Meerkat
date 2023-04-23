@@ -27,6 +27,7 @@ import com.meerkat.log.Log;
 import com.meerkat.map.AircraftLayer;
 import com.meerkat.map.MapView;
 import com.meerkat.measure.Position;
+import com.meerkat.measure.Units;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -48,6 +49,10 @@ public class Vehicle implements Comparable<Vehicle> {
     public final AircraftLayer layer;
     int lastCrc;
     public final Object lock = new Object();
+    final float MAX_TURN_RATE = 360f / 60;
+    final float MAX_CLIMB_RATE = 3000f * Units.VertSpeed.FPM.units.factor / 60;
+    final float MAX_DIVE_RATE = 3000f * Units.VertSpeed.FPM.units.factor /60;
+    final float MAX_SPEED = 300f * Units.Speed.KNOTS.units.factor;
 
     public Vehicle(int crc, int id, String callsign, Position point, @NonNull Gdl90Message.Emitter emitterType, @NonNull MapView mapView) {
         this.lastCrc = crc;
@@ -71,7 +76,7 @@ public class Vehicle implements Comparable<Vehicle> {
             addPoint(point);
             if (showLinearPredictionTrack) {
                 point.linearPredict(predictionMilliS, predictedPosition);
-                Log.d("Predict from %s to %s", point.toString(), predictedPosition);
+                Log.v("Predict from %s to %s", point.toString(), predictedPosition);
             }
         } else {
             position = null;
@@ -83,7 +88,13 @@ public class Vehicle implements Comparable<Vehicle> {
     // If an invisible layer exists, re-use it. Otherwise create a new layer for this vehicle
     AircraftLayer findLayer(Vehicle v) {
         AircraftLayer result = (AircraftLayer) mapView.layers.findDrawableByLayerId(v.id);
-        if (result != null) return result;
+        if (result != null) {
+            // If a vehicle has returned after being purged but before its layer has been
+            // reused, its layer will now be invisible
+            if (!result.isVisible())
+                result.setVisible(true, true);
+            return result;
+        }
         for (int i = 1; i < mapView.layers.getNumberOfLayers(); i++) {
             AircraftLayer d = (AircraftLayer) mapView.layers.getDrawable(i);
             if (!d.isVisible()) {
@@ -117,7 +128,7 @@ public class Vehicle implements Comparable<Vehicle> {
     }
 
     public void update(int crc, Position point, String callsign, @NonNull Gdl90Message.Emitter emitterType) {
-        Log.d(String.format("Update %06x, %s, %s, %s", id, callsign, emitterType, point.toString()));
+        Log.v(String.format("Update %06x, %s, %s, %s", id, callsign, emitterType, point.toString()));
 
         synchronized (layer) {
             this.lastCrc = crc;
@@ -151,7 +162,7 @@ public class Vehicle implements Comparable<Vehicle> {
         if (showLinearPredictionTrack && position != null && position.hasTrack() && position.hasSpeed()) {
             synchronized (layer) {
                 position.linearPredict((int) (lastUpdate - position.getTime() + predictionMilliS), predictedPosition);
-                Log.d("Predict from %s to %s", position, predictedPosition);
+                Log.v("Predict from %s to %s", position, predictedPosition);
             }
         }
 
@@ -160,7 +171,7 @@ public class Vehicle implements Comparable<Vehicle> {
             PolynomialRegression prSpeedTrack = new PolynomialRegression(history.getLast().getTime(), 3);
             // History only contains valid points, which all have a track value
             float prevTrack = Float.NaN;
-             long prevTime = -1;
+            long prevTime = -1;
             synchronized (lock) {
                 Iterator<Position> it = history.descendingIterator();
                 while (it.hasNext()) {
@@ -187,14 +198,14 @@ public class Vehicle implements Comparable<Vehicle> {
             double[][] cSpeedTrack = prSpeedTrack.getCoefficients();
             synchronized (lock) {
                 if (cSpeedTrack != null) {
-                    Log.v("Speed coeffs %.1f %.3f %.5f %d", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2], (long)cSpeedTrack[0][3] - lastUpdate);
+                    Log.v("Speed coeffs %.1f %.3f %.5f %d", cSpeedTrack[0][0], cSpeedTrack[0][1], cSpeedTrack[0][2], (long) cSpeedTrack[0][3] - lastUpdate);
                     Log.v("Track coeffs %.1f %.3f %.5f", cSpeedTrack[1][0], cSpeedTrack[1][1], cSpeedTrack[1][2]);
                     Log.v("Alt   coeffs %.1f %.3f %.5f", cSpeedTrack[2][0], cSpeedTrack[2][1], cSpeedTrack[2][2]);
                     Position p = position;
                     for (int i = 0; i <= predicted.size() - 1; i++) {
                         var speed = p.getSpeed();
                         var track = p.getTrack();
-                        var alt = p.getAltitude();
+                        var alt = (float) p.getAltitude();
                         var t1 = lastUpdate - (long) cSpeedTrack[0][3] + (long) i * polynomialPredictionStepMilliS;
                         var t2 = t1 * t1;
                         p.linearPredict(polynomialPredictionStepMilliS, predicted.get(i));
@@ -202,11 +213,15 @@ public class Vehicle implements Comparable<Vehicle> {
                         var newSpeed = (float) (cSpeedTrack[0][0] + cSpeedTrack[0][1] * t1 + cSpeedTrack[0][2] * t2);
                         var newTrack = (float) (cSpeedTrack[1][0] + cSpeedTrack[1][1] * t1 + cSpeedTrack[1][2] * t2);
                         var newAlt = (float) (cSpeedTrack[2][0] + cSpeedTrack[2][1] * t1 + cSpeedTrack[2][2] * t2);
-                        p.setAltitude(Double.isNaN(alt) ? newAlt : Float.isNaN(newAlt) ? alt : 0.5f * alt + 0.5f * newAlt);
-                        p.setSpeed(Float.isNaN(speed) ? newSpeed : Float.isNaN(newSpeed) ? speed : 0.75f * speed + 0.25f * newSpeed);
-                        p.setTrack((Float.isNaN(newTrack) ? track : Float.isNaN(track) ? newTrack : 0.999f * track + 0.001f * newTrack) % 360);
+                        newTrack = Math.min(Math.max(newTrack, track - MAX_TURN_RATE * polynomialPredictionStepMilliS / 1000f), track + MAX_TURN_RATE * polynomialPredictionStepMilliS / 1000f);
+                        newAlt = (float) Math.min(Math.max(newAlt, alt - MAX_DIVE_RATE * polynomialPredictionStepMilliS / 1000f), alt + MAX_CLIMB_RATE * polynomialPredictionStepMilliS / 1000f);
+                        // Limit speed changes to +/-10%
+                        newSpeed = Math.min(Math.max(newSpeed, speed * .9f), Math.min(MAX_SPEED, speed * 1.1f));
+                        p.setAltitude(Float.isNaN(newAlt) ? alt : Float.isNaN(alt) ? newAlt : 0.5f * alt + 0.5f * newAlt);
+                        p.setSpeed(Float.isNaN(newSpeed) ? speed : Float.isNaN(speed) ? newSpeed : 0.5f * speed + 0.5f * newSpeed);
+                        p.setTrack((Float.isNaN(newTrack) ? track : Float.isNaN(track) ? newTrack : 0.9f * track + 0.1f * newTrack) % 360);
                         p.setTime(position.getTime() + (long) i * polynomialPredictionStepMilliS);
-                        Log.i("%s Predict Speed %.1f Track %.1f Alt %.1f %s", callsign, speed, track, alt, p);
+                        Log.v("%s Predict Speed %.1f Track %.1f Alt %.1f %s", callsign, newSpeed, newTrack, alt, p);
                     }
                 }
             }

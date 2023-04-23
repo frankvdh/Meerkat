@@ -35,6 +35,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.meerkat.Gps;
 import com.meerkat.Vehicle;
 import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
@@ -111,17 +112,15 @@ public class Background extends Drawable {
 
         //noinspection IntegerDivisionInFloatingPointContext
         scaleText.setText(distanceUnits.toString((bounds.width() / 2) / mapView.pixelsPerMetre));
-
         Vehicle nearest = vehicleList.getNearest();
         if (nearest == null) return;
-        if (nearest.callsign.contains("ZKTHK"))
-            Log.i("hit");
         int thickness = (int) (nearest.distance <= dangerRadiusMetres ? dangerRadiusMetres / 2f :
                 dangerRadiusMetres * 10 / nearest.distance);
         if (thickness >= dangerRadiusMetres * mapView.pixelsPerMetre)
             thickness = (int) (dangerRadiusMetres * mapView.pixelsPerMetre);
-        Log.d("Nearest = %s %s, %d, thickness = %d", nearest.callsign, nearest.distance, dangerRadiusMetres, thickness);
+        Log.v("Nearest = %s %s, %d, thickness = %d", nearest.callsign, nearest.distance, dangerRadiusMetres, thickness);
         if (thickness > 0) {
+            dangerPaint.setColor(AircraftLayer.altColour(nearest.position.getAltitude() - Gps.getAltitude(), true));
             dangerPaint.setStrokeWidth(thickness);
             canvas.drawCircle(0, 0, dangerRadiusMetres * mapView.pixelsPerMetre, dangerPaint);
         }

@@ -104,7 +104,7 @@ public class AircraftLayer extends Drawable {
         return result;
     }
 
-    private int altColour(double altDifference, boolean airborne) {
+    public static int altColour(double altDifference, boolean airborne) {
         if (!airborne) return Color.BLACK;
         if (isNaN(altDifference)) return Color.RED;
         double magnitude = abs(altDifference);

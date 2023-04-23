@@ -17,8 +17,8 @@ import static com.meerkat.SettingsActivity.ownId;
 import static com.meerkat.SettingsActivity.preferAdsbPosition;
 import static com.meerkat.SettingsActivity.purgeSeconds;
 import static com.meerkat.SettingsActivity.simulate;
+import static com.meerkat.SettingsActivity.simulateSpeedFactor;
 import static java.lang.Double.isNaN;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
@@ -30,43 +30,55 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class VehicleList extends HashMap<Integer, Vehicle> {
     private final MapView mapView;
     public Vehicle nearest = null;
     public Vehicle furthest = null;
 
-    private void purge() {
-        if (this.isEmpty()) return;
-        long purgeTime = (simulate ? LogReplay.clock.millis() : Instant.now().toEpochMilli()) - purgeSeconds * 1000L;
-        Log.i("Purge all last updated before %s", Instant.ofEpochMilli(purgeTime).toString());
-        var backgroundChanged = false;
-        synchronized (this) {
-            Iterator<HashMap.Entry<Integer, Vehicle>> iterator = this.entrySet().iterator();
-            while (iterator.hasNext()) {
-                HashMap.Entry<Integer, Vehicle> entry = iterator.next();
-                Vehicle v = entry.getValue();
-                synchronized (v.lock) {
-                    if (v.lastUpdate < purgeTime) {
-                        iterator.remove();
-                        Log.i("Purged %s", v.callsign.isBlank() ? v.id: v.callsign);
-                        v.layer.setVisible(false, false);
-                        mapView.layers.invalidateDrawable(v.layer);
+     private void purge() {
+        try {
+            if (this.isEmpty()) return;
+            long purgeTime = (simulate ? LogReplay.clock.millis() : Instant.now().toEpochMilli()) - purgeSeconds * 1000L;
+            Log.i("Locking vehicleList to purge all last updated before %s", Instant.ofEpochMilli(purgeTime).toString());
+            var backgroundChanged = false;
+            synchronized (this) {
+                Iterator<HashMap.Entry<Integer, Vehicle>> iterator = this.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    HashMap.Entry<Integer, Vehicle> entry = iterator.next();
+                    Vehicle v = entry.getValue();
+                    Log.v("Waiting for %s", v.toString());
+                    synchronized (v.lock) {
+                        if (v.lastUpdate < purgeTime) {
+                            iterator.remove();
+                            Log.i("Purged %s", v.toString());
+                            v.layer.setVisible(false, false);
+                            mapView.layers.invalidateDrawable(v.layer);
+                            continue;
+                        }
+                        if (v.position != null) {
+                            // NB side-effect to store nearest & furthest -- both must be executed
+                            backgroundChanged |= checkAndMakeNearest(v);
+                            backgroundChanged |= checkAndMakeFurthest(v);
+                        }
+                        Log.v("Exited %s", v.toString());
                     }
-                    if (v.position == null) continue;
-                    // NB side-effect to store nearest & furthest -- both must be executed
-                    backgroundChanged |= checkAndMakeNearest(v);
-                    backgroundChanged |= checkAndMakeFurthest(v);
                 }
             }
+            Log.i("Purge complete");
+            if (backgroundChanged) mapView.refresh(null);
+        } catch (Exception ex) {
+            Log.e("Exception in VehicleList purge %s", ex.getMessage());
         }
-        if (backgroundChanged) mapView.refresh(null);
     }
 
     public VehicleList(MapView mapView) {
         super();
         this.mapView = mapView;
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::purge, purgeSeconds, purgeSeconds, SECONDS);
+        var interval = simulate ? Math.round(purgeSeconds * 1000f / simulateSpeedFactor) : purgeSeconds * 1000;
+        Log.i("Purge at %d millisecond intervals", interval);
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::purge, interval, interval, TimeUnit.MILLISECONDS);
     }
 
     private boolean checkAndMakeNearest(Vehicle v) {
@@ -80,13 +92,13 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
                     nearest = null;
                 }
                 // This is nearest and has received an update, so assume relative positions have changed
-                Log.d("Nearest: %s %.0f %s vs %.0f", v.toString(), v.distance, v.position == null ? "null" : v.position.isAirborne(), nearest == null ? Float.NaN : nearest.distance);
+                Log.v("Nearest: %s %.0f %s vs %.0f", v.toString(), v.distance, v.position == null ? "null" : v.position.isAirborne(), nearest == null ? Float.NaN : nearest.distance);
                 return true;
             }
             return false;
         }
         if (v.id == ownId && ownId != 0) return false;
-        Log.d("Nearest: %s %.0f %s vs %.0f", this.toString(), v.distance, v.position == null ? "null" : v.position.isAirborne(), nearest == null ? Float.NaN : nearest.distance);
+        Log.v("Nearest: %s %.0f %s vs %.0f", this.toString(), v.distance, v.position == null ? "null" : v.position.isAirborne(), nearest == null ? Float.NaN : nearest.distance);
         // Change to threat circle needed
         nearest = v;
         return true;
@@ -97,7 +109,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         if (furthest != null) {
             if (furthest == v || v.distance < furthest.distance) return false;
         }
-        Log.d("Furthest: %s %.0f %s vs %.0f", v.callsign, v.distance, v.position == null ? "null" : v.position.isAirborne(), furthest == null ? Float.NaN : furthest.distance);
+        Log.v("Furthest: %s %.0f %s vs %.0f", v.callsign, v.distance, v.position == null ? "null" : v.position.isAirborne(), furthest == null ? Float.NaN : furthest.distance);
         // Change to zoom level needed
         furthest = v;
         return true;
@@ -111,7 +123,9 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
             v.update(crc, point, callsign, emitterType);
         } else {
             v = new Vehicle(crc, participantAddr, callsign, point, emitterType, mapView);
-            put(participantAddr, v);
+            synchronized (this) {
+                put(participantAddr, v);
+            }
         }
         if (isNaN(v.distance) || v.position == null) return;
         if (preferAdsbPosition && participantAddr == ownId)

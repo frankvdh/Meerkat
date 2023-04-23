@@ -161,32 +161,34 @@ Alternatively, you can type your device's Wifi name into the WiFi Name text box.
 | countryCode          | Country prefix -- stripped off when the callsign is displayed. May be blank if all letters of callsigns are to be displayed. | ZK            |
 | toolbarDelaySecs     | How long the toolbar stays on the screen when "back" is pressed.                                                             | 3             |
 | initToolbarDelaySecs | How long the toolbar stays on the screen when the app is started                                                             | 10            |
-| ownCallsign          | Callsign to ignore for the purpose of alerts (currently unused)                                                              | null          |
+| ownCallsign          | Callsign to identify your own ship                                                              							  | null          |
+| ownId                | ADS-B id of your own ship. Set to 0 to autodetect based on ownCallsign                                                       | 0             |
+| preferAdsbPosition   | Whether to use your own ship's ADS-B position (if available) instead of the phone's internal GPS                             | true          |
 
-| Sensitivity Setting Name    | Usage                                                                                                      | Default value |
-|-----------------------------|------------------------------------------------------------------------------------------------------------|---------------|
-| sensorSmoothingConstant     | The sensitivity of the display to phone orientation change (1 - 99). Larger values make it more responsive | 20            |
-| minGpsDistanceChangeMetres  | Minimum Gps distance between updates in metres                                        	                   | 10            |
-| minGpsUpdateIntervalSeconds | Minimum Gps update interval in seconds                                                                     | 10            |
+| Sensitivity Setting Name        | Usage                                                                                                      | Default value |
+|---------------------------------|------------------------------------------------------------------------------------------------------------|---------------|
+| sensorSmoothingConstant         | The sensitivity of the display to phone orientation change (1 - 99). Larger values make it more responsive | 20            |
+| minGpsDistanceChangeMetres      | Minimum Gps distance between updates in metres                                        	                   | 10            |
+| minGpsUpdateIntervalSeconds     | Minimum Gps update interval in seconds                                                                     | 10            |
 
-| History Settings                | Usage                                                                                                                        | Default value |
-|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
-| historySeconds                  | How many seconds of history track to display for each aircraft.                                                              | 60            |
-| purgeSeconds                    | How many seconds to wait before an aircraft is removed from the display                                                      | 60            |
+| History Settings                | Usage                                                                                                                           | Default value |
+|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------|---------------|
+| historySeconds                  | How many seconds of history track to display for each aircraft.                                                                 | 60            |
+| purgeSeconds                    | How many seconds to wait before an aircraft is removed from the display                                                         | 60            |
 
-| Linear prediction Settings      | Usage                                                                                                                        | Default value |
-|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
-| showLinearPredictionTrack       | Whether to display the "linear" predicted track for each aircraft on the screen. This assumes that the aircraft              |               |
-|                                 | will continue at the same speed, rate of climb, and track for the next 60 seconds                                            | true          |
-| predictionSeconds               | How many seconds into the future to predict the track of each aircraft. Applies to both linear and polynomial                |               |
-|                                 | prediction                                                                                                                   | 60            |
+| Linear prediction Settings      | Usage                                                                                                                           | Default value |
+|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------|---------------|
+| showLinearPredictionTrack       | Whether to display the "linear" predicted track for each aircraft on the screen. This assumes that the aircraft                 |               |
+|                                 | will continue at the same speed, rate of climb, and track for the next 60 seconds                                               | true          |
+| predictionSeconds               | How many seconds into the future to predict the track of each aircraft. Applies to both linear and polynomial                   |               |
+|                                 | prediction                                                                                                                      | 60            |
 
-| Polynomial prediction Settings  | Usage                                                                                                                        | Default value |
-|---------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------|
-| showPolynomialPredictionTrack   | Whether to display the "polynomial" predicted track for each aircraft on the screen. This predicts                           |               |
-|                                 | accelerating, turning, climbing path for the next 60 seconds                                                                 | true          |
-| polynomialPredictionStepSeconds | How many seconds each step of the polynomial prediction is                                                                   | 6             |
-| polynomialHistorySeconds        | How many seconds history should be used by the polynomial predictor. Too large or small a value will seen poor predictions   | 10            |
+| Polynomial prediction Settings  | Usage                                                                                                                           | Default value |
+|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------|---------------|
+| showPolynomialPredictionTrack   | Whether to display the "polynomial" predicted track for each aircraft on the screen. This predicts                              |               |
+|                                 | accelerating, turning, climbing path for the next 60 seconds                                                                    | true          |
+| polynomialPredictionStepSeconds | How many seconds each step of the polynomial prediction is                                                                      | 6             |
+| polynomialHistoryMillis         | How many milliseconds history should be used by the polynomial predictor. Too large or small a value will seen poor predictions | 2500            |
 
 Debugging settings
 ------------------
@@ -230,7 +232,6 @@ TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :) slowly :(
 * Revise UI to not use menu
-* Allow to use Ownship ADSB position instead of Phone GPS position
 * Allow screen to be used vertically in heading mode
 * Indicate Mode-C traffic presence
 * Audio / Haptic alerts of collision threats

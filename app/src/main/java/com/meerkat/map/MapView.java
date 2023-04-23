@@ -94,23 +94,26 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         return context.getResources().getDisplayMetrics().heightPixels;
     }
 
+    private static DisplayOrientation currentMode = null;
+
     float displayRotation() {
-        // Do not allow return of NaN from direction sensors... this causes cos() & sin() to
-        // both return 0.
-        float rot;
+        // Do not allow return of NaN from direction sensors... this causes cos() & sin() to both return 0.
+        float rot = 0;
+        DisplayOrientation newMode = DisplayOrientation.NorthUp;
         if (displayOrientation == DisplayOrientation.HeadingUp) {
             rot = Compass.degTrue();
-            if (!Float.isNaN(rot)) return rot;
-            Log.e("Heading mode failed");
-            Toast.makeText(getContext(), "Heading information lost", Toast.LENGTH_LONG).show();
+            if (!Float.isNaN(rot)) newMode = displayOrientation;
         } else if (displayOrientation == DisplayOrientation.TrackUp) {
             rot = Gps.getTrack();
-            if (!Float.isNaN(rot)) return rot;
-            Log.e("Track mode failed");
-            Toast.makeText(getContext(), "Tracking information lost", Toast.LENGTH_LONG).show();
+            if (!Float.isNaN(rot)) newMode = displayOrientation;
         }
-        // Default if both the above fail
-        return 0;
+        if (currentMode == newMode) return Float.isNaN(rot) ? 0 : rot;
+        Toast.makeText(getContext(),
+                (displayOrientation == DisplayOrientation.HeadingUp ? "Heading" : "Track") + " information " +
+                        (newMode == DisplayOrientation.NorthUp ? "lost" : "regained"),
+                newMode == DisplayOrientation.NorthUp? Toast.LENGTH_LONG: Toast.LENGTH_SHORT).show();
+        currentMode = newMode;
+        return rot;
     }
 
     static private Bitmap loadIcon(Context context, int iconId) {
@@ -163,6 +166,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
             refresh(null);
             return true;
         }
+
     }
 
     /**
