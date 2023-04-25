@@ -25,7 +25,6 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
@@ -33,6 +32,7 @@ import android.net.wifi.WifiManager;
 import android.net.wifi.WifiNetworkSpecifier;
 import android.os.Build;
 import android.os.IBinder;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -79,8 +79,10 @@ public class PingComms extends Service {
     @RequiresApi(api = Build.VERSION_CODES.Q)
     public boolean connectToExistingWifi(String ssId) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = cm.getActiveNetworkInfo();
-        if (activeNetworkInfo == null || !activeNetworkInfo.isConnected()) return false;
+        Network activeNetwork = cm.getActiveNetwork();
+        if (activeNetwork == null) return false;
+        NetworkCapabilities actNw = cm.getNetworkCapabilities(activeNetwork);
+        if (actNw == null || !actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) return false;
         final WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
         if (connectionInfo == null || connectionInfo.getSSID().isBlank()) return false;
@@ -179,7 +181,7 @@ public class PingComms extends Service {
         }
 
         if (thread == null) {
-            thread = new SocketThread(vehicleList);
+            thread = new SocketThread(context, vehicleList);
             try {
                 thread.start();
             } catch (IllegalThreadStateException e) {
@@ -198,13 +200,15 @@ public class PingComms extends Service {
 
     private static class SocketThread extends Thread {
         private final VehicleList vehicleList;
+        private final Context context;
         private DatagramSocket recvSocket;
         private final DatagramPacket recvDatagram;
         // For handling retries
         private final RetryOnException retryHandler;
 
-        private SocketThread(VehicleList v) {
+        private SocketThread(Context context, VehicleList v) {
             this.vehicleList = v;
+            this.context = context;
             retryHandler = new RetryOnException(10, 1000);
             byte[] recvBuffer = new byte[132];
             recvDatagram = new DatagramPacket(recvBuffer, recvBuffer.length);
@@ -227,6 +231,7 @@ public class PingComms extends Service {
                         recvSocket = null;
                     } catch (Exception fatal) {
                         Log.a("Socket create failed: %s", fatal.getMessage());
+                        Toast.makeText(context, "Failed to connect to " + wifiName, Toast.LENGTH_LONG).show();
                         throw new RuntimeException(fatal);
                     }
                 }
@@ -237,6 +242,7 @@ public class PingComms extends Service {
 
         @Override
         public void interrupt() {
+            Log.v("Interrupt");
             try {
                 interrupted = true;
                 retryHandler.disable();
@@ -257,15 +263,18 @@ public class PingComms extends Service {
                     // Blocks until a message returns on this socket from a remote host.
                     recvSocket.receive(recvDatagram);
                 } catch (IOException e) {
+                    Log.v("Interrupted");
                     if (interrupted) {
                         break;
                     }
                     try {
+                        Log.v("Retry");
                         retryHandler.exceptionOccurred();
                     } catch (Exception fatal) {
                         Log.a("Socket read IO Exception: %s", fatal.getMessage());
                         recvSocket.close();
                         recvSocket = null;
+                        Toast.makeText(context, "Wifi connection to " + wifiName + " lost", Toast.LENGTH_LONG).show();
                     }
                     continue;
                 }

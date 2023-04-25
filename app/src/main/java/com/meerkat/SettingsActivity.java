@@ -142,11 +142,11 @@ public class SettingsActivity extends AppCompatActivity {
         }
         gradientMaximumDiff = (int) altUnits.toM(Math.max(500, Math.min(5000, prefs.getInt("gradientMaximumDiff", 1000))));
         gradientMinimumDiff = (int)altUnits.toM( Math.max(100, Math.min(gradientMaximumDiff, prefs.getInt("gradientMinimumDiff", 1000))));
-        var screenWidthNm = (int) Math.max(2, Math.min(50, prefs.getInt("screenWidth", 10)));
+        var screenWidthNm = Math.max(2, Math.min(50, prefs.getInt("screenWidth", 10)));
         screenWidthMetres = (int) distanceUnits.toM(Math.max(2, Math.min(50, prefs.getInt("screenWidth", 10))));
         circleRadiusStepMetres = (int) distanceUnits.toM(Math.max(1, Math.min(screenWidthNm, prefs.getInt("circleRadiusStep", 5))));
         dangerRadiusMetres = (int) distanceUnits.toM(Math.max(1, Math.min(screenWidthNm, prefs.getInt("dangerRadius", 1))));
-        minZoom = (int) (Math.max(dangerRadiusMetres, Math.min(screenWidthMetres, prefs.getInt("minZoom", (int) (distanceUnits.toM(10))))));
+        minZoom = (Math.max(dangerRadiusMetres, Math.min(screenWidthMetres, prefs.getInt("minZoom", (int) (distanceUnits.toM(10))))));
         maxZoom = (int) (Math.max(screenWidthMetres, Math.min(distanceUnits.toM(50), prefs.getInt("maxZoom", (int) (distanceUnits.toM(50))))));
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         ownCallsign = prefs.getString("ownCallsign", "ZKTHK").toUpperCase();
@@ -179,14 +179,14 @@ public class SettingsActivity extends AppCompatActivity {
             simulateSpeedFactor = 10;
         }
 
-
-        simulate = true;
+/*
+        simulate = false;
         polynomialHistoryMilliS = 2000;
         simulateSpeedFactor = 10;
         maxZoom = (int) distanceUnits.toM(50);
         autoZoom = false;
         saveNeeded = true;
-
+*/
         if (saveNeeded) savePrefs();
         Log.log(logLevel, "Settings loaded");
     }
