@@ -66,9 +66,10 @@ public class SettingsActivity extends AppCompatActivity {
     public static volatile Units.Height altUnits;
     public static volatile Units.Speed speedUnits;
     public static volatile Units.VertSpeed vertSpeedUnits;
+    public static volatile boolean logReplay;
     public static volatile boolean simulate;
-    public static volatile float simulateSpeedFactor;
-    public static volatile String simulateSpeedFactorString;
+    public static volatile float replaySpeedFactor;
+    public static volatile String replaySpeedFactorString;
     public static volatile String countryCode;
     public static volatile String ownCallsign;
     public static volatile int ownId;
@@ -170,13 +171,14 @@ public class SettingsActivity extends AppCompatActivity {
         preferAdsbPosition = prefs.getBoolean("preferAdsbPosition", true);
         toolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("toolbarDelaySecs", 3))) * 1000;
         initToolbarDelayMilliS = Math.max(1, Math.min(20, prefs.getInt("initToolbarDelaySecs", 10))) * 1000;
+        logReplay = prefs.getBoolean("logreplay", false);
         simulate = prefs.getBoolean("simulate", false);
-        simulateSpeedFactorString = prefs.getString("simulateSpeedFactorString", "10");
+        replaySpeedFactorString = prefs.getString("replaySpeedFactor", "10");
         try {
-            simulateSpeedFactor = Math.max(0.1f, Math.min(100f, Float.parseFloat(simulateSpeedFactorString)));
+            replaySpeedFactor = Math.max(0.1f, Math.min(100f, Float.parseFloat(replaySpeedFactorString)));
         } catch (NumberFormatException ex) {
-            Log.e("NumberFormatException: %s (%s)", ex.getMessage(), simulateSpeedFactorString);
-            simulateSpeedFactor = 10;
+            Log.e("NumberFormatException: %s (%s)", ex.getMessage(), replaySpeedFactorString);
+            replaySpeedFactor = 10;
         }
 
 /*
@@ -233,8 +235,9 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putInt("minGpsDistanceChangeMetres", minGpsDistanceChangeMetres);
         edit.putInt("minGpsUpdateIntervalSeconds", minGpsUpdateIntervalSeconds);
         edit.putBoolean("preferAdsbPosition", preferAdsbPosition);
+        edit.putBoolean("logreplay", logReplay);
         edit.putBoolean("simulate", simulate);
-        edit.putString("simulateSpeedFactorString", String.format(Locale.ENGLISH, "%.2f", simulateSpeedFactor));
+        edit.putString("replaySpeedFactor", String.format(Locale.ENGLISH, "%.2f", replaySpeedFactor));
         edit.apply();
         Log.log(logLevel, "Settings saved");
     }
@@ -243,7 +246,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        simulateSpeedFactorString = String.format(Locale.ENGLISH, "%.2f", simulateSpeedFactor);
+        replaySpeedFactorString = String.format(Locale.ENGLISH, "%.2f", replaySpeedFactor);
         setContentView(R.layout.settings_activity);
         if (savedInstanceState == null) {
             getSupportFragmentManager()
@@ -291,7 +294,7 @@ public class SettingsActivity extends AppCompatActivity {
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.preferences, rootKey);
             makeNumber("port", port);
-            makeNumber("simulateSpeedFactorString", simulateSpeedFactor);
+            makeNumber("simulateSpeedFactorString", replaySpeedFactor);
             setRange("scrYPos", 5, 25, 95, 5);
             setRange("scrWidth", 1, 1, 50, 1,  distanceUnits.units.factor);
             setRange("minZoom", 1, screenWidthMetres, 10, 1,  distanceUnits.units.factor);

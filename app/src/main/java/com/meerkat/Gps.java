@@ -16,6 +16,7 @@ import static com.meerkat.SettingsActivity.altUnits;
 import static com.meerkat.SettingsActivity.minGpsDistanceChangeMetres;
 import static com.meerkat.SettingsActivity.minGpsUpdateIntervalSeconds;
 import static com.meerkat.SettingsActivity.preferAdsbPosition;
+import static com.meerkat.SettingsActivity.logReplay;
 import static com.meerkat.SettingsActivity.simulate;
 import static com.meerkat.SettingsActivity.speedUnits;
 import static java.lang.Float.NaN;
@@ -66,7 +67,7 @@ public class Gps extends Service implements LocationListener {
 
     public static float getTrack() {
         synchronized (location) {
-            if (location.hasBearing() && location.getBearing() != 0.0)
+            if (location.hasBearing())
                 return location.getBearing();
         }
         return NaN;
@@ -123,7 +124,7 @@ public class Gps extends Service implements LocationListener {
 
     @SuppressLint("MissingPermission")
     public void resume() {
-        if (simulate) {
+        if (logReplay || simulate) {
             isEnabled = true;
             return;
         }
@@ -145,11 +146,11 @@ public class Gps extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
-        if (simulate)
+        if (logReplay || simulate)
             return;
         // Only use phone GPS if it is preferred or if it's been too long since an ADS-B
         // own ship Traffic message has updated it
-        if (preferAdsbPosition && location.getTime() + minGpsUpdateIntervalSeconds * 1000L > Instant.now().toEpochMilli())
+        if (!preferAdsbPosition || location.getTime() + minGpsUpdateIntervalSeconds * 1000L > Instant.now().toEpochMilli())
             return;
         setLocation("GPS", location.getLatitude(), location.getLongitude(), location.getAltitude(), location.getSpeed(), location.getBearing(), location.getTime());
     }

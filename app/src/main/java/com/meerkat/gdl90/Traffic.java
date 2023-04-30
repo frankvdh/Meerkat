@@ -12,14 +12,17 @@
  */
 package com.meerkat.gdl90;
 
+import static com.meerkat.SettingsActivity.minGpsUpdateIntervalSeconds;
 import static com.meerkat.SettingsActivity.ownCallsign;
 import static com.meerkat.SettingsActivity.ownId;
+import static com.meerkat.SettingsActivity.preferAdsbPosition;
 import static java.lang.Float.NaN;
 
 import android.hardware.GeomagneticField;
 
 import androidx.annotation.NonNull;
 
+import com.meerkat.Gps;
 import com.meerkat.SettingsActivity;
 import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
@@ -127,6 +130,10 @@ public class Traffic extends Gdl90Message {
         point.setCrcValid(crcValid);
         point.setAirborne(airborne);
         Log.v(point.toString());
+        // Use this position if it is preferred or if it's been too long since a GPS message has updated it
+        if (preferAdsbPosition || point.getTime() + minGpsUpdateIntervalSeconds * 1000L > Instant.now().toEpochMilli())
+            Gps.setLocation(point);
+
     }
 
     private float trueTrack(float track, TrackType trackType, double lat, double lon, int alt) {

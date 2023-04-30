@@ -16,8 +16,9 @@ import static com.meerkat.SettingsActivity.autoZoom;
 import static com.meerkat.SettingsActivity.ownId;
 import static com.meerkat.SettingsActivity.preferAdsbPosition;
 import static com.meerkat.SettingsActivity.purgeSeconds;
+import static com.meerkat.SettingsActivity.logReplay;
+import static com.meerkat.SettingsActivity.replaySpeedFactor;
 import static com.meerkat.SettingsActivity.simulate;
-import static com.meerkat.SettingsActivity.simulateSpeedFactor;
 import static java.lang.Double.isNaN;
 
 import com.meerkat.gdl90.Gdl90Message;
@@ -40,7 +41,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
      private void purge() {
         try {
             if (this.isEmpty()) return;
-            long purgeTime = (simulate ? LogReplay.clock.millis() : Instant.now().toEpochMilli()) - purgeSeconds * 1000L;
+            long purgeTime = (logReplay || simulate ? LogReplay.clock.millis() : Instant.now().toEpochMilli()) - purgeSeconds * 1000L;
             Log.i("Locking vehicleList to purge all last updated before %s", Instant.ofEpochMilli(purgeTime).toString());
             var backgroundChanged = false;
             synchronized (this) {
@@ -76,7 +77,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
     public VehicleList(MapView mapView) {
         super();
         this.mapView = mapView;
-        var interval = simulate ? Math.round(purgeSeconds * 1000f / simulateSpeedFactor) : purgeSeconds * 1000;
+        var interval = logReplay || simulate ? Math.round(purgeSeconds * 1000f / replaySpeedFactor) : purgeSeconds * 1000;
         Log.i("Purge at %d millisecond intervals", interval);
         Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::purge, interval, interval, TimeUnit.MILLISECONDS);
     }

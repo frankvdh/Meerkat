@@ -118,7 +118,7 @@ public class Background extends Drawable {
                 dangerRadiusMetres * 10 / nearest.distance);
         if (thickness >= dangerRadiusMetres * mapView.pixelsPerMetre)
             thickness = (int) (dangerRadiusMetres * mapView.pixelsPerMetre);
-        Log.v("Nearest = %s %s, %d, thickness = %d", nearest.callsign, nearest.distance, dangerRadiusMetres, thickness);
+        Log.v("Nearest = %s %.0f, %d, thickness = %d", nearest.callsign, nearest.distance, dangerRadiusMetres, thickness);
         if (thickness > 0) {
             dangerPaint.setColor(AircraftLayer.altColour(nearest.position.getAltitude() - Gps.getAltitude(), true));
             dangerPaint.setStrokeWidth(thickness);

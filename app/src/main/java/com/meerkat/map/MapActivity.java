@@ -17,6 +17,7 @@ import static com.meerkat.SettingsActivity.appendLogFile;
 import static com.meerkat.SettingsActivity.fileLog;
 import static com.meerkat.SettingsActivity.initToolbarDelayMilliS;
 import static com.meerkat.SettingsActivity.loadPrefs;
+import static com.meerkat.SettingsActivity.logReplay;
 import static com.meerkat.SettingsActivity.port;
 import static com.meerkat.SettingsActivity.simulate;
 import static com.meerkat.SettingsActivity.wifiName;
@@ -50,6 +51,7 @@ import com.meerkat.Gps;
 import com.meerkat.LogReplay;
 import com.meerkat.R;
 import com.meerkat.SettingsActivity;
+import com.meerkat.Simulator;
 import com.meerkat.VehicleList;
 import com.meerkat.databinding.ActivityMapBinding;
 import com.meerkat.log.Log;
@@ -57,7 +59,6 @@ import com.meerkat.log.LogActivity;
 import com.meerkat.wifi.PingComms;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -83,7 +84,7 @@ public class MapActivity extends AppCompatActivity {
             File logFile = new File(this.getExternalFilesDir(null), "meerkat.log");
             Log.useFileWriter(logFile, appendLogFile);
         }
-        Log.i("Starting in %s mode", simulate ? "Simulation" : "Live");
+        Log.i("Starting in %s mode", simulate ? "Simulation" : logReplay ? "Log Replay" : "Live");
 
         ActivityMapBinding binding = ActivityMapBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -184,11 +185,19 @@ public class MapActivity extends AppCompatActivity {
             Background background = new Background(binding.mapView, vehicleList, binding.compassView, binding.compassText, binding.scaleText);
             binding.mapView.layers.addLayer(background);
 
-            if (simulate) {
+            if (logReplay) {
                 try {
                     new LogReplay(vehicleList, new File(this.getExternalFilesDir(null), "meerkat.save.log")).start();
-                } catch (IOException e) {
-                    Log.e("Log replay file error: %s", "meerkat.save.log");
+                } catch (Exception e) {
+                    Log.e("Log replay exception: %s", e.getMessage());
+                }
+                return;
+            }
+            if (simulate) {
+                try {
+                    Simulator.startAll(vehicleList);
+                } catch (Exception e) {
+                    Log.e("Simulator exception: %s", e.getMessage());
                 }
                 return;
             }
@@ -204,7 +213,7 @@ public class MapActivity extends AppCompatActivity {
         if (compass != null)
             compass.resume();
 
-        if (!simulate) {
+        if (!(logReplay || simulate)) {
             Log.i("Connecting: %s", wifiName, port);
             if (wifiName == null) {
                 this.startActivity(new Intent(this, SettingsActivity.class));

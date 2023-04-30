@@ -1,6 +1,6 @@
 package com.meerkat;
 
-import static com.meerkat.SettingsActivity.simulateSpeedFactor;
+import static com.meerkat.SettingsActivity.replaySpeedFactor;
 
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.gdl90.Traffic;
@@ -115,7 +115,7 @@ public class LogReplay extends Thread {
             long delay = prevTimestamp == 0 ? 0 : Math.min(2000, (timestamp - prevTimestamp) - (now - prevRealtime));
             prevTimestamp = timestamp;
             prevRealtime = now;
-            delay /= simulateSpeedFactor;
+            delay /= replaySpeedFactor;
 
             if (delay > 0) {
                 try {

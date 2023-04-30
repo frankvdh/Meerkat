@@ -337,18 +337,27 @@
 
         <androidx.preference.SwitchPreferenceCompat
             androidx:defaultValue="false"
+            androidx:key="replay"
+            androidx:persistent="true"
+            androidx:summaryOff="Live mode"
+            androidx:summaryOn="Play back from logs"
+            androidx:title="Replay Logged Messages" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="false"
             androidx:key="simulate"
             androidx:persistent="true"
-            androidx:summaryOff="Live data"
-            androidx:summaryOn="Play back logged data"
-            androidx:title="Replay Logged Messages" />
+            androidx:summaryOff="Live mode"
+            androidx:summaryOn="Simulate gged data"
+            androidx:title="Play simulation data" />
+
         androidx:layout="@layout/wifi_preference_layout" />
 
         <androidx.preference.EditTextPreference
             androidx:defaultValue="10"
-            androidx:key="simulateSpeedFactorString"
+            androidx:key="replaySpeedFactor"
             androidx:persistent="true"
-            androidx:title="Simulated Playback speed"
+            androidx:title="Replay Playback speed"
             androidx:useSimpleSummaryProvider="true" />
     </androidx.preference.PreferenceCategory>
 
