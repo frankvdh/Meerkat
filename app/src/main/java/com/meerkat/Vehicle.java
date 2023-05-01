@@ -22,10 +22,10 @@ import static com.meerkat.SettingsActivity.showPolynomialPredictionTrack;
 
 import androidx.annotation.NonNull;
 
-import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
 import com.meerkat.map.AircraftLayer;
 import com.meerkat.map.MapView;
+import com.meerkat.map.VehicleIcon;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
 
@@ -41,7 +41,7 @@ public class Vehicle implements Comparable<Vehicle> {
     public final LinkedList<Position> history;
     public final ArrayList<Position> predicted;
     public @NonNull
-    Gdl90Message.Emitter emitterType;
+    VehicleIcon.Emitter emitterType;
     public Position position;
     public long lastUpdate;
     public final Position predictedPosition;
@@ -54,7 +54,7 @@ public class Vehicle implements Comparable<Vehicle> {
     final float MAX_DIVE_RATE = 3000f * Units.VertSpeed.FPM.units.factor /60;
     final float MAX_SPEED = 300f * Units.Speed.KNOTS.units.factor;
 
-    public Vehicle(int crc, int id, String callsign, Position point, @NonNull Gdl90Message.Emitter emitterType, @NonNull MapView mapView) {
+    public Vehicle(int crc, int id, String callsign, Position point, @NonNull VehicleIcon.Emitter emitterType, @NonNull MapView mapView) {
         this.lastCrc = crc;
         this.lastUpdate = point.getTime();
         this.id = id;
@@ -127,12 +127,12 @@ public class Vehicle implements Comparable<Vehicle> {
         return callsign + valChar;
     }
 
-    public void update(int crc, Position point, String callsign, @NonNull Gdl90Message.Emitter emitterType) {
+    public void update(int crc, Position point, String callsign, @NonNull VehicleIcon.Emitter emitterType) {
         Log.v(String.format("Update %06x, %s, %s, %s", id, callsign, emitterType, point.toString()));
 
         synchronized (layer) {
             this.lastCrc = crc;
-            if (emitterType != Gdl90Message.Emitter.Unknown) {
+            if (emitterType != VehicleIcon.Emitter.Unknown) {
                 this.emitterType = emitterType;
             }
             if (callsign != null && !callsign.equals(this.callsign)) {

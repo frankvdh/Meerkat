@@ -44,7 +44,6 @@ import androidx.annotation.Nullable;
 import com.meerkat.Compass;
 import com.meerkat.Gps;
 import com.meerkat.Vehicle;
-import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
 
@@ -75,7 +74,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         maxPixelsPerMetre = (float) getWidth(getContext()) / (float) min(minZoom, dangerRadiusMetres);
         minPixelsPerMetre = (float) getWidth(getContext()) / (float) max(screenWidthMetres, maxZoom);
         pixelsPerMetre = defaultPixelsPerMetre;
-        for (var emitterType : Gdl90Message.Emitter.values()) {
+        for (var emitterType : VehicleIcon.Emitter.values()) {
             emitterType.bitmap = loadIcon(getContext(), emitterType.iconId);
         }
         layers = new LayerDrawable(new Drawable[]{});
@@ -97,23 +96,63 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     private static DisplayOrientation currentMode = null;
 
     float displayRotation() {
-        // Do not allow return of NaN from direction sensors... this causes cos() & sin() to both return 0.
-        float rot = 0;
-        DisplayOrientation newMode = DisplayOrientation.NorthUp;
+        // Do not return of NaN from direction sensors... this causes cos() & sin() to both return 0.
+        float rot;
         if (displayOrientation == DisplayOrientation.HeadingUp) {
             rot = Compass.degTrue();
-            if (!Float.isNaN(rot)) newMode = displayOrientation;
-        } else if (displayOrientation == DisplayOrientation.TrackUp) {
+            if (!Float.isNaN(rot)) {
+                if (currentMode != displayOrientation) {
+                    currentMode = displayOrientation;
+                    Toast.makeText(getContext(), "Heading information regained", Toast.LENGTH_SHORT).show();
+                }
+                return rot;
+            }
             rot = Gps.getTrack();
-            if (!Float.isNaN(rot)) newMode = displayOrientation;
+            if (!Float.isNaN(rot)) {
+                if (currentMode == DisplayOrientation.HeadingUp) {
+                    Toast.makeText(getContext(), "Heading lost, Tracking", Toast.LENGTH_LONG).show();
+                } else if (currentMode == DisplayOrientation.NorthUp) {
+                    Toast.makeText(getContext(), "Tracking recovered", Toast.LENGTH_SHORT).show();
+                }
+                currentMode = DisplayOrientation.TrackUp;
+                return rot;
+            }
+            if (currentMode != DisplayOrientation.NorthUp) {
+                Toast.makeText(getContext(), (currentMode == DisplayOrientation.HeadingUp ? "Heading" : "Tracking") + " lost", Toast.LENGTH_LONG).show();
+                currentMode = DisplayOrientation.NorthUp;
+            }
+            return 0;
         }
-        if (currentMode == newMode) return Float.isNaN(rot) ? 0 : rot;
-        Toast.makeText(getContext(),
-                (displayOrientation == DisplayOrientation.HeadingUp ? "Heading" : "Track") + " information " +
-                        (newMode == DisplayOrientation.NorthUp ? "lost" : "regained"),
-                newMode == DisplayOrientation.NorthUp? Toast.LENGTH_LONG: Toast.LENGTH_SHORT).show();
-        currentMode = newMode;
-        return rot;
+
+        if (displayOrientation == DisplayOrientation.TrackUp) {
+            rot = Gps.getTrack();
+            if (!Float.isNaN(rot)) {
+                if (currentMode != DisplayOrientation.TrackUp) {
+                    Toast.makeText(getContext(), "Tracking recovered", Toast.LENGTH_SHORT).show();
+                    currentMode = DisplayOrientation.TrackUp;
+                }
+                return rot;
+            }
+            rot = Compass.degTrue();
+            if (!Float.isNaN(rot)) {
+                if (currentMode != DisplayOrientation.HeadingUp) {
+                    Toast.makeText(getContext(), currentMode == DisplayOrientation.NorthUp ? "Heading recovered" : "Tracking lost", Toast.LENGTH_SHORT).show();
+                    currentMode = DisplayOrientation.HeadingUp;
+                }
+                return rot;
+            }
+            if (currentMode != DisplayOrientation.NorthUp) {
+                Toast.makeText(getContext(), (currentMode == DisplayOrientation.HeadingUp ? "Heading" : "Tracking") + " lost", Toast.LENGTH_LONG).show();
+                currentMode = DisplayOrientation.NorthUp;
+            }
+            return 0;
+        }
+        // displayOrientation == DisplayOrientation.TrackUp
+        if (currentMode != DisplayOrientation.NorthUp) {
+            Log.e("North Up selected, but currently %s", currentMode == DisplayOrientation.HeadingUp ? "Heading" : "Tracking");
+            currentMode = DisplayOrientation.NorthUp;
+        }
+         return 0;
     }
 
     static private Bitmap loadIcon(Context context, int iconId) {
@@ -123,7 +162,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
             return bitmapDrawable.getBitmap();
         }
         if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
-            return ((BitmapDrawable) Icon.createWithResource(context, Gdl90Message.Emitter.Unknown.iconId).loadDrawable(context)).getBitmap();
+            return ((BitmapDrawable) Icon.createWithResource(context, VehicleIcon.Emitter.Unknown.iconId).loadDrawable(context)).getBitmap();
         }
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);

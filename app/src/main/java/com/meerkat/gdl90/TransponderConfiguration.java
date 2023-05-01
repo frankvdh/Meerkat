@@ -16,6 +16,8 @@ import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
 
+import com.meerkat.map.VehicleIcon;
+
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -32,7 +34,7 @@ public class TransponderConfiguration extends Gdl90Message {
     private final int antOfsLon;
     private final String callsign;
     private final float stallSpeed;
-    private final Emitter emitterType;
+    private final VehicleIcon.Emitter emitterType;
     private final int baudRate;
     private long validityMask;
     private boolean baro100ftResolution;

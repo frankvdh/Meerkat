@@ -13,17 +13,17 @@
 package com.meerkat;
 
 import static com.meerkat.SettingsActivity.autoZoom;
+import static com.meerkat.SettingsActivity.logReplay;
 import static com.meerkat.SettingsActivity.ownId;
 import static com.meerkat.SettingsActivity.preferAdsbPosition;
 import static com.meerkat.SettingsActivity.purgeSeconds;
-import static com.meerkat.SettingsActivity.logReplay;
 import static com.meerkat.SettingsActivity.replaySpeedFactor;
 import static com.meerkat.SettingsActivity.simulate;
 import static java.lang.Double.isNaN;
 
-import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
 import com.meerkat.map.MapView;
+import com.meerkat.map.VehicleIcon;
 import com.meerkat.measure.Position;
 
 import java.time.Instant;
@@ -116,7 +116,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         return true;
     }
 
-    public void upsert(int crc, String callsign, int participantAddr, Position point, Gdl90Message.Emitter emitterType) {
+    public void upsert(int crc, String callsign, int participantAddr, Position point, VehicleIcon.Emitter emitterType) {
         Vehicle v = get(participantAddr);
         if (v != null) {
             // Ping often sends the same message several times... throw away the duplicates

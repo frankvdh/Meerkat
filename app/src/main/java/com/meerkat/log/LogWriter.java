@@ -15,7 +15,6 @@ package com.meerkat.log;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -42,9 +41,9 @@ class FileLogWriter implements LogWriter {
         this.file = file;
         this.append = append;
         try {
-        bw = new BufferedWriter(new FileWriter(file, append));
-        bw.write(String.format("\r\n\r\n%s %s/%s %s\r\n", Instant.now().toString(), "FileLogWriter", Log.Level.A, "Log restarted"));
-        } catch (IOException e) {
+            bw = new BufferedWriter(new FileWriter(file, append));
+            bw.write(String.format("\r\n\r\n%s %s/%s %s\r\n", Instant.now().toString(), "FileLogWriter", Log.Level.A, "Log restarted"));
+        } catch (Exception e) {
             bw = null;
             android.util.Log.e("FileLogWriter", "Log File create failed: " + e.getMessage());
         }
@@ -57,7 +56,7 @@ class FileLogWriter implements LogWriter {
             synchronized (this) {
                 bw.write(String.format("%s %s/%s %s\r\n", formatter.format(Instant.now()), tag, level, msg));
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             bw = null;
             android.util.Log.e(tag, "File Log write (" + level + ", " + msg + ") failed: " + e.getMessage());
         }
@@ -68,8 +67,8 @@ class FileLogWriter implements LogWriter {
         try {
             bw.flush();
             bw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            android.util.Log.e("FileLogWriter", "File Log close failed: " + e.getMessage());
         }
         bw = null;
     }

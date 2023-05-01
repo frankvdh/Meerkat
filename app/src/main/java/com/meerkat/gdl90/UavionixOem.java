@@ -14,6 +14,8 @@ package com.meerkat.gdl90;
 
 import androidx.annotation.NonNull;
 
+import com.meerkat.map.VehicleIcon;
+
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Locale;
@@ -25,7 +27,7 @@ public class UavionixOem extends Gdl90Message {
     private byte msgVersion;
     private double lowTrimSlope, lowTrimYIntercept, highTrimSlope, highTrimYIntercept, lowPointAlt, midPointAlt, highPointAlt;
     private int icao;
-    private Emitter emitterType;
+    private VehicleIcon.Emitter emitterType;
     private String callsign;
     private float stallSpeed;
     private AircraftLengthWeight avLw;

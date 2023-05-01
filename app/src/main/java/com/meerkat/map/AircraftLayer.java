@@ -42,7 +42,6 @@ import androidx.annotation.Nullable;
 
 import com.meerkat.Gps;
 import com.meerkat.Vehicle;
-import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
 
@@ -137,7 +136,7 @@ public class AircraftLayer extends Drawable {
     public void draw(@NonNull Canvas canvas) {
         float track;
         boolean isAirborne;
-        Gdl90Message.Emitter emitter;
+        VehicleIcon.Emitter emitter;
         Position currentPos;
         if (!this.isVisible() || vehicle.position == null) return;
         synchronized (this) {
@@ -155,10 +154,11 @@ public class AircraftLayer extends Drawable {
             bounds.set(aircraftPoint.x - bmpWidth / 2, aircraftPoint.y - bmpHeight / 2, aircraftPoint.x + bmpWidth / 2, aircraftPoint.y + bmpHeight / 2);
             double altDiff = currentPos.getAltitude() - Gps.getAltitude();
             var displayAngle = mapView.displayRotation();
+            var iconAngle = !emitter.canRotate || isNaN(track) || isNaN(displayAngle) ? 0 : track - displayAngle;
             if (bounds.right > clipBounds.left && bounds.left < clipBounds.right && bounds.bottom > clipBounds.top && bounds.top < clipBounds.bottom) {
                 canvas.drawBitmap(replaceColor(emitter.bitmap, altColour(altDiff, isAirborne)),
                         positionMatrix(emitter.bitmap.getWidth() / 2, emitter.bitmap.getHeight() / 2, aircraftPoint.x, aircraftPoint.y,
-                                (isNaN(track) ? 0 : track) - (isNaN(displayAngle) ? 0 : displayAngle)), null);
+                                iconAngle), null);
                 int lineHeight = (int) (textPaint.getTextSize() + 1);
                 // Display absolute altitude next to ownShip, callsign & relative altitude next to others
                 String text = (vehicle.id == ownId) ?

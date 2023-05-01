@@ -14,8 +14,8 @@ package com.meerkat;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.log.Log;
+import com.meerkat.map.VehicleIcon;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
 
@@ -39,7 +39,7 @@ public class Simulator {
     ScheduledFuture<?> thread;
 
     private static final Flight ownShip =
-            new Flight("ownship", Gdl90Message.Emitter.Light, 0, 0, 0,
+            new Flight("ownship", VehicleIcon.Emitter.Light, 0, 0, 0,
                     100f, 20, true,
                     new Action[]{
                             new Action(0, 0, 0, 6, false),
@@ -50,7 +50,7 @@ public class Simulator {
                     });
 
     private static final Simulator[] traffic = {
-            new Simulator(new Flight("test", Gdl90Message.Emitter.Light, (float) Units.Distance.NM.toM(5), 0, 0f,
+            new Simulator(new Flight("test", VehicleIcon.Emitter.Light, (float) Units.Distance.NM.toM(5), 0, 0f,
                     100f, 0, false,
                     new Action[]{
                             new Action(0, 0, 0, 6, false),
@@ -60,19 +60,19 @@ public class Simulator {
                             new Action(0, -360, -10000, 120, true),
                     }), 5, false),
 
-            new Simulator(new Flight("ZK-HVY", Gdl90Message.Emitter.Heavy, (float) Units.Distance.NM.toM(20), 225, (float) Units.Height.FT.toM(40000d),
+            new Simulator(new Flight("ZK-HVY", VehicleIcon.Emitter.Heavy, (float) Units.Distance.NM.toM(20), 225, (float) Units.Height.FT.toM(40000d),
                     500f, 20, true,
                     new Action[]{
                             new Action(0, 0, 0, 300, true),
                     }), 10, false),
 
-            new Simulator(new Flight("ANZ123", Gdl90Message.Emitter.Small, (float) Units.Distance.NM.toM(10), 215, (float) Units.Height.FT.toM(20000f),
+            new Simulator(new Flight("ANZ123", VehicleIcon.Emitter.Small, (float) Units.Distance.NM.toM(10), 215, (float) Units.Height.FT.toM(20000f),
                     250, 20, true,
                     new Action[]{
                             new Action(0, 0, 0, 300, true),
                     }), 10, false),
 
-            new Simulator(new Flight("ZK-GLI", Gdl90Message.Emitter.Glider, (float) Units.Distance.NM.toM(15), 15, (float) Units.Height.FT.toM(5000f),
+            new Simulator(new Flight("ZK-GLI", VehicleIcon.Emitter.Glider, (float) Units.Distance.NM.toM(15), 15, (float) Units.Height.FT.toM(5000f),
                     100f, 180, true,
                     new Action[]{
                             new Action(0, -1080, -9000, 300, true),
@@ -80,7 +80,7 @@ public class Simulator {
                             new Action(0, 0, 0, 60, false),
                     }), 5, false),
 
-            new Simulator(new Flight("ZK-HEL", Gdl90Message.Emitter.Rotor, (float) Units.Distance.NM.toM(15), -15, 0,
+            new Simulator(new Flight("ZK-HEL", VehicleIcon.Emitter.Rotor, (float) Units.Distance.NM.toM(15), -15, 0,
                     0, 180, true,
                     new Action[]{
                             new Action(0, 0, 1500, 100, true),
@@ -88,21 +88,21 @@ public class Simulator {
                             new Action(0, 0, 0, 60, true),
                     }), 15, false),
 
-            new Simulator(new Flight("UAV", Gdl90Message.Emitter.UAV, (float) Units.Distance.NM.toM(15), -30, 0,
+            new Simulator(new Flight("UAV", VehicleIcon.Emitter.UAV, (float) Units.Distance.NM.toM(15), -30, 0,
                     0, 0, true,
                     new Action[]{
                             new Action(10, 0, 500, 10, true),
                             new Action(0, 0, -500, 10, true),
                     }), 5, false),
 
-            new Simulator(new Flight("UAV", Gdl90Message.Emitter.UAV, (float) Units.Distance.NM.toM(15), -30, 0,
+            new Simulator(new Flight("UAV", VehicleIcon.Emitter.UAV, (float) Units.Distance.NM.toM(15), -30, 0,
                     0, 0, true,
                     new Action[]{
                             new Action(10, 0, 500, 10, true),
                             new Action(0, 0, -500, 10, true),
                     }), 120, false),
 
-            new Simulator(new Flight("UAW", Gdl90Message.Emitter.UAV, (float) Units.Distance.NM.toM(16), -30, 0,
+            new Simulator(new Flight("UAW", VehicleIcon.Emitter.UAV, (float) Units.Distance.NM.toM(16), -30, 0,
                     0, 0, true,
                     new Action[]{
                             new Action(10, 0, 500, 100, true),
@@ -160,11 +160,11 @@ public class Simulator {
         final Position position;
         final int id;
         final String callsign;
-        final Gdl90Message.Emitter emitterType;
+        final VehicleIcon.Emitter emitterType;
         final Action[] actions;
         static int idNum = 0;
 
-        Flight(String callsign, Gdl90Message.Emitter emitterType, float distance, float bearing, float altDifference, float speedKnots, float track, boolean airborne, Action[] actions) {
+        Flight(String callsign, VehicleIcon.Emitter emitterType, float distance, float bearing, float altDifference, float speedKnots, float track, boolean airborne, Action[] actions) {
             this.id = idNum++;
             this.callsign = callsign;
             this.emitterType = emitterType;

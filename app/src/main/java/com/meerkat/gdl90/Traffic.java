@@ -26,6 +26,7 @@ import com.meerkat.Gps;
 import com.meerkat.SettingsActivity;
 import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
+import com.meerkat.map.VehicleIcon;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
 
@@ -35,7 +36,7 @@ import java.time.Instant;
 import java.util.Locale;
 
 public class Traffic extends Gdl90Message {
-    public final Emitter emitterType;
+    public final VehicleIcon.Emitter emitterType;
     private final boolean ownShip;
     private final int alertStatus;
     private final AddrType addrType;
@@ -131,7 +132,7 @@ public class Traffic extends Gdl90Message {
         point.setAirborne(airborne);
         Log.v(point.toString());
         // Use this position if it is preferred or if it's been too long since a GPS message has updated it
-        if (preferAdsbPosition || point.getTime() + minGpsUpdateIntervalSeconds * 1000L > Instant.now().toEpochMilli())
+        if (ownId == participantAddr && (preferAdsbPosition || point.getTime() + minGpsUpdateIntervalSeconds * 1000L > Instant.now().toEpochMilli()))
             Gps.setLocation(point);
 
     }

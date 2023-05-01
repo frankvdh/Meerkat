@@ -34,10 +34,8 @@ import static com.meerkat.gdl90.Gdl90Message.LateralGpsOfs.RIGHT_0M;
 import static com.meerkat.gdl90.Gdl90Message.LateralGpsOfs.RIGHT_2M;
 import static com.meerkat.gdl90.Gdl90Message.LateralGpsOfs.RIGHT_4M;
 import static com.meerkat.gdl90.Gdl90Message.LateralGpsOfs.RIGHT_6M;
+import static com.meerkat.map.VehicleIcon.Emitter;
 
-import android.graphics.Bitmap;
-
-import com.meerkat.R;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
 
@@ -49,35 +47,6 @@ public class Gdl90Message {
     int crc;
     private final ByteArrayInputStream is;
     protected boolean crcValid;
-
-    public enum Emitter {
-        Unknown(R.drawable.ic_ufo),
-        Light(R.drawable.ic_plane),
-        Small(R.drawable.ic_dash8),
-        Large(R.drawable.ic_737),
-        VLarge(R.drawable.ic_787),
-        Heavy(R.drawable.ic_c17),
-        Aerobatic(R.drawable.ic_plane),
-        Rotor(R.drawable.ic_helicopter),
-        Unused(R.drawable.ic_ufo),
-        Glider(R.drawable.ic_glider),
-        Balloon(R.drawable.ic_balloon),
-        Skydiver(R.drawable.ic_parachute),
-        Ultralight(R.drawable.ic_plane),
-        UAV(R.drawable.ic_uav),
-        Spacecraft(R.drawable.ic_rocket),
-        Emergency_Vehicle(R.drawable.ic_ambulance),
-        Service_Vehicle(R.drawable.ic_pickup),
-        Point_Obstacle(R.drawable.ic_flag),
-        Cluster_Obstacle(R.drawable.ic_flag),
-        Line_Obstacle(R.drawable.ic_flag);
-        final public int iconId;
-        public Bitmap bitmap;
-
-        Emitter(int iconId) {
-            this.iconId = iconId;
-        }
-    }
 
     public enum Priority {Normal, Gen_Emerg, Med_Emerg, Min_Fuel, No_Comms, Hijack, Downed, Reserved}
 

@@ -18,7 +18,6 @@ import static com.meerkat.SettingsActivity.dangerRadiusMetres;
 import static com.meerkat.SettingsActivity.displayOrientation;
 import static com.meerkat.SettingsActivity.distanceUnits;
 import static com.meerkat.SettingsActivity.screenYPosPercent;
-import static java.lang.Float.isNaN;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -99,13 +98,14 @@ public class Background extends Drawable {
                 canvas.drawCircle(0, 0, rad, circlePaint);
             }
 
+        var prevMode = displayOrientation;
         float rot = -mapView.displayRotation();
-        String compassLetter;
-        if (isNaN(rot)) {
-            rot = 0;
-            compassLetter = "!";
+        String compassLetter = displayOrientation.toString().substring(0, 1);
+        if (prevMode == displayOrientation) {
+            compassText.setTextColor(Color.BLACK);
         } else {
-            compassLetter = displayOrientation.toString().substring(0, 1);
+            compassLetter += "/" + prevMode;
+            compassText.setTextColor(Color.RED);
         }
         compassView.setRotation(rot);
         compassText.setText(compassLetter);

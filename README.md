@@ -208,8 +208,9 @@ Setting the [simulate] setting to "true" results in the app processing a series 
 | logLevel            | Amount of detail to write to logs... Assert, Error, Warning, Info, Debug, Verbose                                                               | I             |
 | logRawMessages      | Whether to write the raw messages, as received from the device, to the logs                                                                     | false         |
 | logDecodedMessages  | Whether to write the decoded messages, as interpreted by the GDL90 parser, to the logs                                                          | false         |
-| simulate            | Play back logged data in /storage/sdcard0/Android/data/com.meerkat/files/meerkat.save.log instead of real traffic. No Wifi connection is made.  | false         |
-| simulateSpeedFactor | Speed at which simulated traffic is played back                                                                                                 | 10            |
+| simulate            | Simulate traffic and movement using predefined data instead of real traffic. No Wifi connection is made.                                        | false         |
+| logReplay           | Play back logged data in /storage/sdcard0/Android/data/com.meerkat/files/meerkat.save.log instead of real traffic. No Wifi connection is made.  | false         |
+| replaySpeedFactor   | Speed at which logged events are played back                                                                                                    | 10            |
 
 
 Contributing & Licensing
