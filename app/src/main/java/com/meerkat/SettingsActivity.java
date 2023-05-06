@@ -142,7 +142,7 @@ public class SettingsActivity extends AppCompatActivity {
             saveNeeded = true;
         }
         gradientMaximumDiff = (int) altUnits.toM(Math.max(500, Math.min(5000, prefs.getInt("gradientMaximumDiff", 1000))));
-        gradientMinimumDiff = (int)altUnits.toM( Math.max(100, Math.min(gradientMaximumDiff, prefs.getInt("gradientMinimumDiff", 1000))));
+        gradientMinimumDiff = (int) altUnits.toM(Math.max(100, Math.min(gradientMaximumDiff, prefs.getInt("gradientMinimumDiff", 1000))));
         var screenWidthNm = Math.max(2, Math.min(50, prefs.getInt("screenWidth", 10)));
         screenWidthMetres = (int) distanceUnits.toM(Math.max(2, Math.min(50, prefs.getInt("screenWidth", 10))));
         circleRadiusStepMetres = (int) distanceUnits.toM(Math.max(1, Math.min(screenWidthNm, prefs.getInt("circleRadiusStep", 5))));
@@ -152,7 +152,7 @@ public class SettingsActivity extends AppCompatActivity {
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         ownCallsign = prefs.getString("ownCallsign", "ZKTHK").toUpperCase();
         try {
-        ownId = Integer.parseInt(prefs.getString("ownId", "0"), 16);
+            ownId = Integer.parseInt(prefs.getString("ownId", "0"), 16);
         } catch (Exception e) {
             ownId = 0;
             saveNeeded = true;
@@ -165,7 +165,7 @@ public class SettingsActivity extends AppCompatActivity {
             saveNeeded = true;
         }
         keepScreenOn = prefs.getBoolean("keepScreenOn", true);
-        autoZoom = prefs.getBoolean("autoZoom", true);
+        autoZoom = prefs.getBoolean("autoZoom", false);
         minGpsDistanceChangeMetres = prefs.getInt("minGpsDistanceChangeMetres", 10);
         minGpsUpdateIntervalSeconds = prefs.getInt("minGpsUpdateIntervalSeconds", 1);
         preferAdsbPosition = prefs.getBoolean("preferAdsbPosition", true);
@@ -182,11 +182,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
 /*
-        simulate = false;
-        polynomialHistoryMilliS = 2000;
-        simulateSpeedFactor = 10;
-        maxZoom = (int) distanceUnits.toM(50);
-        autoZoom = false;
+        logReplay = true;
         saveNeeded = true;
 */
         if (saveNeeded) savePrefs();
@@ -296,11 +292,11 @@ public class SettingsActivity extends AppCompatActivity {
             makeNumber("port", port);
             makeNumber("simulateSpeedFactorString", replaySpeedFactor);
             setRange("scrYPos", 5, 25, 95, 5);
-            setRange("scrWidth", 1, 1, 50, 1,  distanceUnits.units.factor);
-            setRange("minZoom", 1, screenWidthMetres, 10, 1,  distanceUnits.units.factor);
-            setRange("maxZoom", screenWidthMetres, 50, 50, 1,  distanceUnits.units.factor);
-            setRange("circleStep", 1, 1, 25, 1,  distanceUnits.units.factor);
-            setRange("dangerRadius", 1, 1, screenWidthMetres, 1,  distanceUnits.units.factor);
+            setRange("scrWidth", 1, 1, 50, 1, distanceUnits.units.factor);
+            setRange("minZoom", 1, screenWidthMetres, 10, 1, distanceUnits.units.factor);
+            setRange("maxZoom", screenWidthMetres, 50, 50, 1, distanceUnits.units.factor);
+            setRange("circleStep", 1, 1, 25, 1, distanceUnits.units.factor);
+            setRange("dangerRadius", 1, 1, screenWidthMetres, 1, distanceUnits.units.factor);
             setRange("gradMaxDiff", 1000, 1000, 5000, 100, Units.Height.FT.units.factor);
             setRange("gradMinDiff", 100, 500, 2000, 100, Units.Height.FT.units.factor);
             setRange("minGpsDistMetres", 1, 10, 50, 1);
@@ -315,19 +311,19 @@ public class SettingsActivity extends AppCompatActivity {
 
         private void setRange(String key, int min, int defaultValue, int max, int inc) {
             setRange(key, min, defaultValue, max, inc, 1);
-            }
+        }
 
-            private void setRange(String key, int min, int defaultValue, int max, int inc, float factor) {
+        private void setRange(String key, int min, int defaultValue, int max, int inc, float factor) {
             SeekBarPreference seekBarPreference = findPreference(key);
 
             if (seekBarPreference == null) {
                 Log.e("Unknown Seekbar preference: %s", key);
                 return;
             }
-            seekBarPreference.setSeekBarIncrement((int) (inc/factor));
-            seekBarPreference.setMin((int) (min/factor));
-            seekBarPreference.setMax((int) (max/factor));
-            seekBarPreference.setValue((int) (defaultValue/factor));
+            seekBarPreference.setSeekBarIncrement((int) (inc / factor));
+            seekBarPreference.setMin((int) (min / factor));
+            seekBarPreference.setMax((int) (max / factor));
+            seekBarPreference.setValue((int) (defaultValue / factor));
         }
 
         private void makeNumber(@SuppressWarnings("SameParameterValue") String key, int value) {

@@ -31,14 +31,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class VehicleList extends HashMap<Integer, Vehicle> {
     private final MapView mapView;
     public Vehicle nearest = null;
     public Vehicle furthest = null;
+    private ScheduledFuture sched;
 
-     private void purge() {
+    private void purge() {
         try {
             if (this.isEmpty()) return;
             long purgeTime = (logReplay || simulate ? LogReplay.clock.millis() : Instant.now().toEpochMilli()) - purgeSeconds * 1000L;
@@ -79,7 +81,12 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         this.mapView = mapView;
         var interval = logReplay || simulate ? Math.round(purgeSeconds * 1000f / replaySpeedFactor) : purgeSeconds * 1000;
         Log.i("Purge at %d millisecond intervals", interval);
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::purge, interval, interval, TimeUnit.MILLISECONDS);
+        sched = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::purge, interval, interval, TimeUnit.MILLISECONDS);
+    }
+
+    public void stop() {
+        sched.cancel(true);
+        Log.i("VehicleList purge cancelled");
     }
 
     private boolean checkAndMakeNearest(Vehicle v) {

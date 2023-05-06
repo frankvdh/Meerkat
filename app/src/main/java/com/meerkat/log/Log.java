@@ -95,6 +95,7 @@ public final class Log {
     }
 
     public static void close() {
+        Log.i("Closing Log");
         for (LogWriter p : logWriters) {
             if (p instanceof FileLogWriter)
                 ((FileLogWriter) p).close();

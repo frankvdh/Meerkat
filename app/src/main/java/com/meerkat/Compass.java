@@ -78,6 +78,12 @@ public class Compass extends Service implements SensorEventListener {
         sensorManager.unregisterListener(this);
     }
 
+    public void stop() {
+        pause();
+        this.stopSelf();
+        Log.i("Compass stopped");
+    }
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
