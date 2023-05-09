@@ -110,8 +110,8 @@ public class Background extends Drawable {
         compassView.setRotation(rot);
         compassText.setText(compassLetter);
 
-        //noinspection IntegerDivisionInFloatingPointContext
-        scaleText.setText(distanceUnits.toString((bounds.width() / 2) / mapView.pixelsPerMetre));
+        // Arrows either side of screen width
+        scaleText.setText(String.format("\u27f8 %s  \u27f9", distanceUnits.toString(bounds.width() / mapView.pixelsPerMetre)));
         Vehicle nearest = vehicleList.getNearest();
         if (nearest == null) return;
         int thickness = (int) (nearest.distance <= dangerRadiusMetres ? dangerRadiusMetres / 2f :

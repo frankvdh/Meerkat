@@ -14,18 +14,18 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher_foreground"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MeerkatLight.NoActionBar"
+        android:theme="@style/AppTheme"
         tools:targetApi="31">
         <activity
             android:name=".log.LogActivity"
             android:exported="false"
             android:label="LogActivity"
             android:parentActivityName="com.meerkat.map.MapActivity"
-            android:theme="@style/Theme.MeerkatLight.NoActionBar">
+            android:theme="@style/Theme.MeerkatLight">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.meerkat.map.MapActivity" />
@@ -38,7 +38,7 @@
             android:exported="false"
             android:label="@string/title_activity_aircraft_list"
             android:parentActivityName="com.meerkat.map.MapActivity"
-            android:theme="@style/Theme.MeerkatLight.NoActionBar">
+            android:theme="@style/Theme.MeerkatLight">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.meerkat.map.MapActivity" />
@@ -51,7 +51,7 @@
             android:exported="false"
             android:label="@string/title_activity_wifi_scan"
             android:parentActivityName="com.meerkat.SettingsActivity"
-            android:theme="@style/Theme.MeerkatLight.NoActionBar">
+            android:theme="@style/Theme.MeerkatLight">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.meerkat.SettingsActivity" />
@@ -63,6 +63,7 @@
             android:name=".SettingsActivity"
             android:exported="false"
             android:parentActivityName="com.meerkat.map.MapActivity"
+            android:theme="@style/Theme.MeerkatLight"
             android:label="Settings">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -82,7 +83,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".wifi.PingComms"
+
+        <service
+            android:name=".wifi.PingComms"
             android:exported="false" />
     </application>
 

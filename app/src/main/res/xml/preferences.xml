@@ -83,31 +83,31 @@
             androidx:key="scrWidth"
             androidx:persistent="true"
             androidx:showSeekBarValue="true"
-            androidx:summary="Distance that the width of the screen represents in [your Distance units]"
-            androidx:title="Screen Width in [Distance Units]" />
+            androidx:summary="Distance that the width of the screen represents in [DISTANCE_UNITS]"
+            androidx:title="Screen Width in [DISTANCE_UNITS]" />
 
         <androidx.preference.SeekBarPreference
             androidx:dependency="distanceUnits"
             androidx:key="minZoom"
             androidx:persistent="true"
             androidx:showSeekBarValue="true"
-            androidx:summary="Minimum screen zoom in [your Distance units]"
-            androidx:title="Minimum Screen Width in [Distance Units]" />
+            androidx:summary="Minimum screen zoom in [DISTANCE_UNITS]"
+            androidx:title="Minimum Screen Width in [DISTANCE_UNITS]" />
 
         <androidx.preference.SeekBarPreference
             androidx:dependency="distanceUnits"
             androidx:key="maxZoom"
             androidx:persistent="true"
             androidx:showSeekBarValue="true"
-            androidx:summary="Maximum screen zoom in [your Distance units]"
-            androidx:title="Maximum Screen Width in [Distance Units]" />
+            androidx:summary="Maximum screen zoom in [DISTANCE_UNITS]"
+            androidx:title="Maximum Screen Width in [DISTANCE_UNITS]" />
 
         <androidx.preference.SeekBarPreference
             androidx:dependency="distanceUnits"
-            androidx:key="circleStep"
+            androidx:key="circleRadiusStep"
             androidx:persistent="true"
             androidx:showSeekBarValue="true"
-            androidx:summary="Distance apart of the circles on the screen in [your Distance unit]s"
+            androidx:summary="Distance apart of the circles on the screen in [DISTANCE_UNITS]"
             androidx:title="Circle Radius Step" />
 
         <androidx.preference.SeekBarPreference
@@ -115,7 +115,7 @@
             androidx:key="dangerRadius"
             androidx:persistent="true"
             androidx:showSeekBarValue="true"
-            androidx:summary="Radius of 'danger' circle on the screen in [your Distance unit]s"
+            androidx:summary="Radius of 'danger' circle on the screen in [DISTANCE_UNITS]"
             androidx:title="Danger Circle Radius" />
 
         <androidx.preference.DropDownPreference
@@ -276,11 +276,11 @@
             androidx:title="Prediction step seconds" />
 
         <androidx.preference.SeekBarPreference
-            androidx:key="polynomialHistorySecs"
+            androidx:key="polynomialHistoryMillis"
             androidx:persistent="true"
             androidx:showSeekBarValue="true"
-            androidx:summary="How many seconds of history the polynomial prediction uses to make its prediction. Large numbers for fast-manoeuvring aircraft give bad predictions."
-            androidx:title="Prediction History seconds" />
+            androidx:summary="How many milliseconds of history the polynomial prediction uses to make its prediction. Large numbers for fast-manoeuvring aircraft give bad predictions."
+            androidx:title="Prediction History milliseconds" />
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.PreferenceCategory

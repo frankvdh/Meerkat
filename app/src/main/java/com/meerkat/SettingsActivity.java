@@ -147,8 +147,8 @@ public class SettingsActivity extends AppCompatActivity {
         screenWidthMetres = (int) distanceUnits.toM(Math.max(2, Math.min(50, prefs.getInt("screenWidth", 10))));
         circleRadiusStepMetres = (int) distanceUnits.toM(Math.max(1, Math.min(screenWidthNm, prefs.getInt("circleRadiusStep", 5))));
         dangerRadiusMetres = (int) distanceUnits.toM(Math.max(1, Math.min(screenWidthNm, prefs.getInt("dangerRadius", 1))));
-        minZoom = (Math.max(dangerRadiusMetres, Math.min(screenWidthMetres, prefs.getInt("minZoom", (int) (distanceUnits.toM(10))))));
-        maxZoom = (int) (Math.max(screenWidthMetres, Math.min(distanceUnits.toM(50), prefs.getInt("maxZoom", (int) (distanceUnits.toM(50))))));
+        minZoom = (int) (Math.max(dangerRadiusMetres, distanceUnits.toM(Math.min(screenWidthMetres, prefs.getInt("minZoom", 10)))));
+        maxZoom = (int) (Math.max(screenWidthMetres, distanceUnits.toM(Math.min(50, prefs.getInt("maxZoom", 50)))));
         countryCode = prefs.getString("countryCode", "ZK").toUpperCase();
         ownCallsign = prefs.getString("ownCallsign", "ZKTHK").toUpperCase();
         try {
@@ -212,8 +212,8 @@ public class SettingsActivity extends AppCompatActivity {
         edit.putInt("screenYPosPercent", screenYPosPercent);
         edit.putInt("sensorSmoothingConstant", (int) (sensorSmoothingConstant * 100));
         edit.putInt("screenWidth", (int) distanceUnits.fromM(screenWidthMetres));
-        edit.putInt("minZoom", minZoom);
-        edit.putInt("maxZoom", maxZoom);
+        edit.putInt("minZoom", (int) distanceUnits.fromM(minZoom));
+        edit.putInt("maxZoom", (int) distanceUnits.fromM(maxZoom));
         edit.putInt("circleRadiusStep", (int) distanceUnits.fromM(circleRadiusStepMetres));
         edit.putInt("dangerRadius", (int) distanceUnits.fromM(dangerRadiusMetres));
         edit.putString("distanceUnits", String.valueOf(distanceUnits));
@@ -290,15 +290,15 @@ public class SettingsActivity extends AppCompatActivity {
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.preferences, rootKey);
             makeNumber("port", port);
-            makeNumber("simulateSpeedFactorString", replaySpeedFactor);
+            makeNumber("replaySpeedFactor", replaySpeedFactor);
             setRange("scrYPos", 5, 25, 95, 5);
-            setRange("scrWidth", 1, 1, 50, 1, distanceUnits.units.factor);
-            setRange("minZoom", 1, screenWidthMetres, 10, 1, distanceUnits.units.factor);
-            setRange("maxZoom", screenWidthMetres, 50, 50, 1, distanceUnits.units.factor);
-            setRange("circleStep", 1, 1, 25, 1, distanceUnits.units.factor);
-            setRange("dangerRadius", 1, 1, screenWidthMetres, 1, distanceUnits.units.factor);
-            setRange("gradMaxDiff", 1000, 1000, 5000, 100, Units.Height.FT.units.factor);
-            setRange("gradMinDiff", 100, 500, 2000, 100, Units.Height.FT.units.factor);
+            setRange("scrWidth", 1, 1, 50, 1);
+            setRange("minZoom", 1, (int) distanceUnits.fromM(screenWidthMetres), 10, 1);
+            setRange("maxZoom", (int) distanceUnits.fromM(screenWidthMetres), 50, 50, 1);
+            setRange("circleRadiusStep", 1, 1, 25, 1);
+            setRange("dangerRadius", 1, 1, (int) distanceUnits.fromM(screenWidthMetres), 1);
+            setRange("gradMaxDiff", 1000, 1000, 5000, 100);
+            setRange("gradMinDiff", 100, 500, 2000, 100);
             setRange("minGpsDistMetres", 1, 10, 50, 1);
             setRange("minGpsIntervalSeconds", 1, 5, 10, 1);
             setRange("historySecs", 0, 60, 300, 5);
@@ -309,21 +309,32 @@ public class SettingsActivity extends AppCompatActivity {
             setRange("sensorSmoothingConstant", 1, 20, 99, 5);
         }
 
-        private void setRange(String key, int min, int defaultValue, int max, int inc) {
-            setRange(key, min, defaultValue, max, inc, 1);
-        }
 
-        private void setRange(String key, int min, int defaultValue, int max, int inc, float factor) {
+        /**
+         * Set a SeekBar with the given values for the given setting
+         * All paramaters are in the user's units
+         *
+         * @param key          Preference string
+         * @param min          minimum value for seekBar
+         * @param defaultValue default value
+         * @param max          maximum value
+         * @param inc          increment
+         */
+        private void setRange(String key, int min, int defaultValue, int max, int inc) {
             SeekBarPreference seekBarPreference = findPreference(key);
 
             if (seekBarPreference == null) {
                 Log.e("Unknown Seekbar preference: %s", key);
                 return;
             }
-            seekBarPreference.setSeekBarIncrement((int) (inc / factor));
-            seekBarPreference.setMin((int) (min / factor));
-            seekBarPreference.setMax((int) (max / factor));
-            seekBarPreference.setValue((int) (defaultValue / factor));
+            seekBarPreference.setSeekBarIncrement(inc);
+            seekBarPreference.setMin(min);
+            seekBarPreference.setMax(max);
+            seekBarPreference.setValue(defaultValue);
+            var summary = seekBarPreference.getSummary();
+            seekBarPreference.setSummary(summary == null ? "" : summary.toString().replace("[DISTANCE_UNITS]", distanceUnits.units.label));
+            var title = seekBarPreference.getTitle();
+            seekBarPreference.setTitle(title == null ? "" : title.toString().replace("[DISTANCE_UNITS]", distanceUnits.units.label));
         }
 
         private void makeNumber(@SuppressWarnings("SameParameterValue") String key, int value) {
