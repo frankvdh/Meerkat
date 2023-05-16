@@ -60,7 +60,7 @@ public class PositionTest extends TestCase {
     }
 
     @Mock
-   static Position marton = new Position("TEST");
+    static Position marton = new Position("TEST");
     @Mock
     Position p1;
 
@@ -75,7 +75,7 @@ public class PositionTest extends TestCase {
         var trackRad = Position.latLonDegToRad(marton.getTrack());
         var latRad = Position.latLonDegToRad(marton.getLatitude());
         var lonRad = Position.latLonDegToRad(marton.getLongitude());
-        var distFraction = marton.getSpeed()*3600 / 6371000d; // earth Radius In Metres
+        var distFraction = marton.getSpeed() * 3600 / 6371000d; // earth Radius In Metres
         var cosLat = cos(latRad);
         var sinLat = sin(latRad);
         var sinDist = sin(distFraction);
@@ -88,7 +88,7 @@ public class PositionTest extends TestCase {
         var lon = Position.rad2latLonDeg(longitudeResult);
         var alt = marton.getAltitude() + 0;
         Assert.assertEquals(-36.184097, lat, .0001);
-        Assert.assertEquals( marton.getLongitude(), lon, .0001);
+        Assert.assertEquals(marton.getLongitude(), lon, .0001);
         Assert.assertEquals(marton.getAltitude(), alt, 0.1);
     }
 
@@ -96,8 +96,8 @@ public class PositionTest extends TestCase {
     public void testHeightAbove() {
         when(p1.getAltitude()).thenReturn(Units.Height.FT.toM(4000d));
         when(marton.getAltitude()).thenReturn(Units.Height.FT.toM(5000f));
-        var diff = p1.heightAboveGps();
-        Assert.assertEquals(Units.Height.FT.toM(-1000d), diff , 0.1);
+        var diff = p1.heightAboveOwnship();
+        Assert.assertEquals(Units.Height.FT.toM(-1000d), diff, 0.1);
     }
 
     @Test

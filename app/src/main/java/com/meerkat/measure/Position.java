@@ -12,9 +12,9 @@
  */
 package com.meerkat.measure;
 
-import static com.meerkat.SettingsActivity.altUnits;
-import static com.meerkat.SettingsActivity.speedUnits;
-import static com.meerkat.SettingsActivity.vertSpeedUnits;
+import static com.meerkat.ui.settings.SettingsViewModel.altUnits;
+import static com.meerkat.ui.settings.SettingsViewModel.speedUnits;
+import static com.meerkat.ui.settings.SettingsViewModel.vertSpeedUnits;
 import static java.lang.Double.NaN;
 import static java.lang.Double.isNaN;
 import static java.lang.Math.PI;
@@ -76,7 +76,7 @@ public class Position extends Location {
         set(position);
     }
 
-     public void setAirborne(boolean airborne) {
+    public void setAirborne(boolean airborne) {
         this.airborne = airborne;
     }
 
@@ -147,7 +147,7 @@ public class Position extends Location {
         dest.setRelative(this, getSpeed() * elapsedSecs, getTrack(), (float) (vVel * elapsedSecs), elapsedMillis);
     }
 
-    public double heightAboveGps() {
+    public double heightAboveOwnship() {
         return getAltitude() - Gps.getAltitude();
     }
 

@@ -12,15 +12,14 @@
  */
 package com.meerkat.map;
 
-import static com.meerkat.SettingsActivity.dangerRadiusMetres;
-import static com.meerkat.SettingsActivity.displayOrientation;
-import static com.meerkat.SettingsActivity.keepScreenOn;
-import static com.meerkat.SettingsActivity.maxZoom;
-import static com.meerkat.SettingsActivity.minZoom;
-import static com.meerkat.SettingsActivity.screenWidthMetres;
-import static com.meerkat.SettingsActivity.screenYPosPercent;
-import static com.meerkat.SettingsActivity.showLinearPredictionTrack;
-import static com.meerkat.SettingsActivity.showPolynomialPredictionTrack;
+import static com.meerkat.ui.settings.SettingsViewModel.dangerRadiusMetres;
+import static com.meerkat.ui.settings.SettingsViewModel.displayOrientation;
+import static com.meerkat.ui.settings.SettingsViewModel.maxZoom;
+import static com.meerkat.ui.settings.SettingsViewModel.minZoom;
+import static com.meerkat.ui.settings.SettingsViewModel.screenWidthMetres;
+import static com.meerkat.ui.settings.SettingsViewModel.screenYPosPercent;
+import static com.meerkat.ui.settings.SettingsViewModel.showLinearPredictionTrack;
+import static com.meerkat.ui.settings.SettingsViewModel.showPolynomialPredictionTrack;
 import static java.lang.Math.cos;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -35,6 +34,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.Icon;
 import android.graphics.drawable.LayerDrawable;
+import android.location.Location;
 import android.util.AttributeSet;
 import android.view.ScaleGestureDetector;
 import android.widget.Toast;
@@ -62,7 +62,6 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     public MapView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         Log.d("createView");
-        setKeepScreenOn(keepScreenOn);
         // Dispatch activity on touch event to the scale gesture detector.
         OnTouchListener handleTouch = (view, event) -> {
             this.performClick();
@@ -76,6 +75,9 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
         pixelsPerMetre = defaultPixelsPerMetre;
         for (var emitterType : VehicleIcon.Emitter.values()) {
             emitterType.bitmap = loadIcon(getContext(), emitterType.iconId);
+        }
+        for (var icon : GroundIcon.Icons.values()) {
+            icon.bitmap = loadIcon(getContext(), icon.iconId);
         }
         layers = new LayerDrawable(new Drawable[]{});
         setImageDrawable(layers);
@@ -152,7 +154,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
             Log.e("North Up selected, but currently %s", currentMode == DisplayOrientation.HeadingUp ? "Heading" : "Tracking");
             currentMode = DisplayOrientation.NorthUp;
         }
-         return 0;
+        return 0;
     }
 
     static private Bitmap loadIcon(Context context, int iconId) {
@@ -172,7 +174,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     }
 
     // Avoid constructing
-    public Point screenPoint(Position p) {
+    public Point screenPoint(Location p) {
         var distance = Gps.distanceTo(p);
         var bearing = Gps.bearingTo(p);
         double b = Position.bearingToRad(bearing - displayRotation());

@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
 
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -21,62 +22,19 @@
         android:theme="@style/AppTheme"
         tools:targetApi="31">
         <activity
-            android:name=".log.LogActivity"
-            android:exported="false"
-            android:label="LogActivity"
-            android:parentActivityName="com.meerkat.map.MapActivity"
-            android:theme="@style/Theme.MeerkatLight">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.meerkat.map.MapActivity" />
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
-        <activity
-            android:name=".AircraftListActivity"
-            android:exported="false"
-            android:label="@string/title_activity_aircraft_list"
-            android:parentActivityName="com.meerkat.map.MapActivity"
-            android:theme="@style/Theme.MeerkatLight">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.meerkat.map.MapActivity" />
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
-        <activity
             android:name=".wifi.WifiScanActivity"
             android:exported="false"
             android:label="@string/title_activity_wifi_scan"
-            android:parentActivityName="com.meerkat.SettingsActivity"
-            android:theme="@style/Theme.MeerkatLight">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.meerkat.SettingsActivity" />
+            android:theme="@style/AppTheme">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".SettingsActivity"
-            android:exported="false"
-            android:parentActivityName="com.meerkat.map.MapActivity"
-            android:theme="@style/Theme.MeerkatLight"
-            android:label="Settings">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.meerkat.map.MapActivity" />
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
-        <activity
-            android:name=".map.MapActivity"
+            android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="true"
-            android:theme="@style/Theme.MeerkatLight">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

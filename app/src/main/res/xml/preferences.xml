@@ -3,8 +3,7 @@
         androidx:icon="@drawable/ic_wifi"
         androidx:title="Wifi Connection">
 
-        <com.meerkat.wifi.WifiPreference
-            androidx:layout="@layout/wifi_preference_layout" />
+        <com.meerkat.wifi.WifiPreference androidx:layout="@layout/wifi_preference_layout" />
 
         <androidx.preference.EditTextPreference
             androidx:defaultValue="4000"
@@ -110,13 +109,14 @@
             androidx:summary="Distance apart of the circles on the screen in [DISTANCE_UNITS]"
             androidx:title="Circle Radius Step" />
 
-        <androidx.preference.SeekBarPreference
+        <androidx.preference.EditTextPreference
+            androidx:defaultValue="0.50"
             androidx:dependency="distanceUnits"
+            androidx:dialogMessage="Radius of 'danger' circle on the screen in [DISTANCE_UNITS]"
             androidx:key="dangerRadius"
             androidx:persistent="true"
-            androidx:showSeekBarValue="true"
-            androidx:summary="Radius of 'danger' circle on the screen in [DISTANCE_UNITS]"
-            androidx:title="Danger Circle Radius" />
+            androidx:title="Danger Circle Radius"
+            androidx:useSimpleSummaryProvider="true" />
 
         <androidx.preference.DropDownPreference
             androidx:defaultValue="HeadingUp"
@@ -134,6 +134,14 @@
             androidx:summaryOff="Allow screen to turn off while map is displayed"
             androidx:summaryOn="Keep Screen On while map is displayed"
             androidx:title="Keep Screen On" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="true"
+            androidx:key="useCupFile"
+            androidx:persistent="true"
+            androidx:summaryOff="Do not show ground locations"
+            androidx:summaryOn="Showe ground locations"
+            androidx:title="Ground Locations" />
 
         <androidx.preference.SwitchPreferenceCompat
             androidx:defaultValue="true"

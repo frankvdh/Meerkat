@@ -3,23 +3,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_home">
+    app:startDestination="@+id/navigation_map">
 
     <fragment
-        android:id="@+id/navigation_home"
+        android:id="@+id/navigation_map"
         android:name="com.meerkat.ui.map.MapFragment"
         android:label="@string/map"
         tools:layout="@layout/fragment_map" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="com.meerkat.ui.dashboard.DashboardFragment"
+        android:id="@+id/navigation_aircraftlist"
+        android:name="com.meerkat.ui.aircraftlist.AircraftListFragment"
         android:label="@string/aircraft_list"
-        tools:layout="@layout/fragment_dashboard" />
+        tools:layout="@layout/fragment_aircraftlist" />
 
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="com.meerkat.ui.notifications.NotificationsFragment"
+        android:id="@+id/navigation_log"
+        android:name="com.meerkat.ui.log.LogFragment"
         android:label="@string/log"
-        tools:layout="@layout/fragment_notifications" />
+        tools:layout="@layout/fragment_log" />
+
+    <fragment
+        android:id="@+id/navigation_settings"
+        android:name="com.meerkat.ui.settings.SettingsFragment"
+        android:label="@string/log"
+        tools:layout="@layout/fragment_settings" />
 </navigation>

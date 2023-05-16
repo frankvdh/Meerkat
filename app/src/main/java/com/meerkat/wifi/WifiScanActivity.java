@@ -12,7 +12,7 @@
  */
 package com.meerkat.wifi;
 
-import static com.meerkat.SettingsActivity.wifiName;
+import static com.meerkat.ui.settings.SettingsViewModel.wifiName;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
@@ -34,9 +34,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.Snackbar;
-import com.meerkat.SettingsActivity;
 import com.meerkat.databinding.ActivityWifiScanBinding;
 import com.meerkat.log.Log;
+import com.meerkat.ui.settings.SettingsViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -115,14 +115,14 @@ public class WifiScanActivity extends AppCompatActivity implements ApListAdapter
         Log.d("onScanResultItemClick(): ssid: %s", wifiName);
 
         // User has selected a Wifi SSID -- save it for future use
-        SettingsActivity.savePrefs();
+        SettingsViewModel.savePrefs();
         Log.i("Wifi changed to %s", wifiName);
         finish();
         // When MapActivity reloads, it will start PingComms up again with the new network
     }
 
     @SuppressLint("ClickableViewAccessibility")
- private final Button.OnTouchListener clickRescan = (view, motionEvent) -> {
+    private final Button.OnTouchListener clickRescan = (view, motionEvent) -> {
         if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
             Log.i("Click Rescan");
             myAdapter.clear();

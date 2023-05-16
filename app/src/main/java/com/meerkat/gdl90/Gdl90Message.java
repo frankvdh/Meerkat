@@ -36,6 +36,7 @@ import static com.meerkat.gdl90.Gdl90Message.LateralGpsOfs.RIGHT_4M;
 import static com.meerkat.gdl90.Gdl90Message.LateralGpsOfs.RIGHT_6M;
 import static com.meerkat.map.VehicleIcon.Emitter;
 
+import com.meerkat.MainActivity;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
 
@@ -79,7 +80,7 @@ public class Gdl90Message {
         this.messageId = messageId;
         this.is = is;
         if (is.available() < msgSize + 2) {
-             throw new UnsupportedEncodingException("Message too short: expected " + msgSize + " but received " + (is.available() - 2));
+            throw new UnsupportedEncodingException("Message too short: expected " + msgSize + " but received " + (is.available() - 2));
         }
         crc = Crc16Table[0] ^ messageId;
     }
@@ -174,6 +175,7 @@ public class Gdl90Message {
     }
 
     public static Gdl90Message getMessage(ByteArrayInputStream is) {
+        MainActivity.blinkAdsb();
         while (is.available() > 0) {
             byte messageId = (byte) is.read();
             if ((messageId & 0x80) != 0 && (messageId & 0x7f) == 0x7e) {
@@ -197,7 +199,7 @@ public class Gdl90Message {
                     case 117 -> new UavionixOem(is);
                     default -> new Invalid(messageId, is);
                 };
-            } catch(UnsupportedEncodingException ex) {
+            } catch (UnsupportedEncodingException ex) {
                 Log.e(ex.getMessage());
             }
         }

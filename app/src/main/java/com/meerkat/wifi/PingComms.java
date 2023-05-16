@@ -12,10 +12,10 @@
  */
 package com.meerkat.wifi;
 
-import static com.meerkat.SettingsActivity.logDecodedMessages;
-import static com.meerkat.SettingsActivity.logRawMessages;
-import static com.meerkat.SettingsActivity.port;
-import static com.meerkat.SettingsActivity.wifiName;
+import static com.meerkat.ui.settings.SettingsViewModel.logDecodedMessages;
+import static com.meerkat.ui.settings.SettingsViewModel.logRawMessages;
+import static com.meerkat.ui.settings.SettingsViewModel.port;
+import static com.meerkat.ui.settings.SettingsViewModel.wifiName;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -38,7 +38,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.meerkat.VehicleList;
+import com.meerkat.MainActivity;
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.gdl90.Traffic;
 import com.meerkat.log.Log;
@@ -53,13 +53,11 @@ import java.util.Arrays;
 public class PingComms extends Service {
     private SocketThread thread;
     private final Context context;
-    private final VehicleList vehicleList;
     private String currentWifiName;
     private int currentPort;
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
-    public PingComms(Context context, VehicleList v) {
-        vehicleList = v;
+    public PingComms(Context context) {
         this.context = context;
         Log.i("PingComms constructor");
         if (!connectToExistingWifi(wifiName))
@@ -181,7 +179,7 @@ public class PingComms extends Service {
         }
 
         if (thread == null) {
-            thread = new SocketThread(context, vehicleList);
+            thread = new SocketThread();
             try {
                 thread.start();
             } catch (IllegalThreadStateException e) {
@@ -199,16 +197,12 @@ public class PingComms extends Service {
     }
 
     private static class SocketThread extends Thread {
-        private final VehicleList vehicleList;
-        private final Context context;
         private DatagramSocket recvSocket;
         private final DatagramPacket recvDatagram;
         // For handling retries
         private final RetryOnException retryHandler;
 
-        private SocketThread(Context context, VehicleList v) {
-            this.vehicleList = v;
-            this.context = context;
+        private SocketThread() {
             retryHandler = new RetryOnException(10, 1000);
             byte[] recvBuffer = new byte[132];
             recvDatagram = new DatagramPacket(recvBuffer, recvBuffer.length);
@@ -231,7 +225,7 @@ public class PingComms extends Service {
                         recvSocket = null;
                     } catch (Exception fatal) {
                         Log.a("Socket create failed: %s", fatal.getMessage());
-                        Toast.makeText(context, "Failed to connect to " + wifiName, Toast.LENGTH_LONG).show();
+                        MainActivity.setAdsb(false, "Failed to connect to " + wifiName, Toast.LENGTH_LONG);
                         throw new RuntimeException(fatal);
                     }
                 }
@@ -255,6 +249,7 @@ public class PingComms extends Service {
 
         @Override
         public void run() {
+            MainActivity.setAdsb(true, "Wifi connection to " + wifiName + " started", Toast.LENGTH_SHORT);
             Log.d("receiveData");
             while (recvSocket != null) {  // Loop is exited via an interrupt which closes the socket
                 try {
@@ -274,7 +269,7 @@ public class PingComms extends Service {
                         Log.a("Socket read IO Exception: %s", fatal.getMessage());
                         recvSocket.close();
                         recvSocket = null;
-                        Toast.makeText(context, "Wifi connection to " + wifiName + " lost", Toast.LENGTH_LONG).show();
+                        MainActivity.setAdsb(false, "Wifi connection to " + wifiName + " lost", Toast.LENGTH_LONG);
                     }
                     continue;
                 }
@@ -300,7 +295,7 @@ public class PingComms extends Service {
                         if (traffic1.callsign.equals("********") || traffic1.point.getLatitude() == 0 && traffic1.point.getLongitude() == 0)
                             continue;
                         traffic1.point.setTime(Instant.now().toEpochMilli());
-                        traffic1.upsert(vehicleList);
+                        traffic1.upsert(MainActivity.vehicleList);
                     }
                 }
             }

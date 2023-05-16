@@ -1,13 +1,13 @@
 package com.meerkat.gdl90;
 
-import static com.meerkat.SettingsActivity.altUnits;
+import static com.meerkat.ui.settings.SettingsViewModel.altUnits;
 
 import android.location.Location;
 
-import com.meerkat.SettingsActivity;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
+import com.meerkat.ui.settings.SettingsViewModel;
 
 import junit.framework.TestCase;
 
@@ -26,11 +26,13 @@ public class TrafficTest extends TestCase {
     //Try my own object class.
     static class MockLocationTest extends Location {
         double alt;
-        public MockLocationTest(String provider){
+
+        public MockLocationTest(String provider) {
             super(provider);
         }
+
         @Override
-        public void setAltitude(double a){
+        public void setAltitude(double a) {
             alt = a;
         }
         //User direct access will not cause a problem when do assertEquals()
@@ -43,71 +45,87 @@ public class TrafficTest extends TestCase {
         float speed, track;
         long time;
         String provider;
-        public MockPositionTest(String provider){
+
+        public MockPositionTest(String provider) {
             super(provider);
         }
+
         @Override
-        public void setProvider(String p){
-            provider= p;
+        public void setProvider(String p) {
+            provider = p;
         }
+
         @Override
-        public String getProvider(){
+        public String getProvider() {
             return provider;
         }
+
         @Override
-        public void setLatitude(double l){
+        public void setLatitude(double l) {
             latitude = l;
         }
+
         @Override
-        public void setLongitude(double l){
+        public void setLongitude(double l) {
             longitude = l;
         }
+
         @Override
-        public double getLatitude(){
+        public double getLatitude() {
             return latitude;
         }
+
         @Override
-        public double getLongitude(){
+        public double getLongitude() {
             return longitude;
         }
+
         @Override
-        public void setSpeed(float s){
+        public void setSpeed(float s) {
             speed = s;
         }
+
         @Override
-        public void setTrack(float t){
+        public void setTrack(float t) {
             track = t;
         }
+
         @Override
-        public float getSpeed(){
+        public float getSpeed() {
             return speed;
         }
+
         @Override
-        public float getTrack(){
+        public float getTrack() {
             return track;
         }
+
         @Override
-        public void setAltitude(double a){
+        public void setAltitude(double a) {
             alt = a;
         }
+
         @Override
-        public double getAltitude(){
+        public double getAltitude() {
             return alt;
         }
+
         //User direct access will not cause a problem when do assertEquals()
         @Override
-        public void setTime(long t){
+        public void setTime(long t) {
             time = t;
         }
+
         public double distanceTo(MockPositionTest p) {
             return computeDistance(latitude, longitude, p.latitude, p.longitude);
         }
+
         public double bearingTo(MockPositionTest p) {
             return computeBearing(latitude, longitude, p.latitude, p.longitude);
         }
 
         private double computeDistance(double lat1, double lon1,
-                                                      double lat2, double lon2) {
+                                       double lat2, double lon2) {
             // Based on http://www.ngs.noaa.gov/PUBS_LIB/inverse.pdf
             // using the "Inverse Formula" (section 4)
 
@@ -183,7 +201,7 @@ public class TrafficTest extends TestCase {
     }
 
     private double computeBearing(double lat1, double lon1,
-                                                  double lat2, double lon2) {
+                                  double lat2, double lon2) {
         // Based on http://www.ngs.noaa.gov/PUBS_LIB/inverse.pdf
         // using the "Inverse Formula" (section 4)
 
@@ -253,10 +271,10 @@ public class TrafficTest extends TestCase {
 
     @Test
     public void test() throws UnsupportedEncodingException {
-         altUnits = Units.Height.FT;
-        SettingsActivity.speedUnits = Units.Speed.KNOTS;
-        SettingsActivity.distanceUnits = Units.Distance.NM;
-        SettingsActivity.vertSpeedUnits = Units.VertSpeed.FPM;
+        altUnits = Units.Height.FT;
+        SettingsViewModel.speedUnits = Units.Speed.KNOTS;
+        SettingsViewModel.distanceUnits = Units.Distance.NM;
+        SettingsViewModel.vertSpeedUnits = Units.VertSpeed.FPM;
         Log.level(Log.Level.D);
         Traffic prev = null;
         long prevTime = 0;
@@ -289,7 +307,7 @@ public class TrafficTest extends TestCase {
                 predicted.moveBy(elapsed);
                 System.out.printf("Actual    %s\n", t.point);
                 System.out.printf("Predicted %s\n", predicted);
-                System.out.printf("%5.1f @ %d\n", predicted.distanceTo((MockPositionTest) t.point), (int) predicted.bearingTo((MockPositionTest)t.point));
+                System.out.printf("%5.1f @ %d\n", predicted.distanceTo((MockPositionTest) t.point), (int) predicted.bearingTo((MockPositionTest) t.point));
             }
             prev = t;
             prevTime = time;
@@ -302,6 +320,7 @@ public class TrafficTest extends TestCase {
 //            Assert.assertEquals(altUnits.FT.toM(5200), p1.getAltitude(), 1e-5);
         }
     }
+
     @Test
     public void testdeg() throws UnsupportedEncodingException {
         Log.level(Log.Level.V);

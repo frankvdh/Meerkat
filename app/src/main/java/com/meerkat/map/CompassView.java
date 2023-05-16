@@ -12,7 +12,7 @@
  */
 package com.meerkat.map;
 
-import static com.meerkat.SettingsActivity.displayOrientation;
+import static com.meerkat.ui.settings.SettingsViewModel.displayOrientation;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -21,16 +21,16 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
+import com.meerkat.MainActivity;
+
 public class CompassView extends androidx.appcompat.widget.AppCompatImageView {
 
-    private MapView mapView;
     public CompassView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         this.setOnTouchListener((view, motionEvent) -> view.performClick());
     }
 
-    public void setMap(MapView mapView, TextView compassText) {
-        this.mapView = mapView;
+    public void locateTextPos(TextView compassText) {
         compassText.setTop(getTop());
         compassText.setRight(getRight());
         compassText.setLeft(getLeft());
@@ -44,10 +44,12 @@ public class CompassView extends androidx.appcompat.widget.AppCompatImageView {
     @Override
     public boolean performClick() {
         super.performClick();
-        if (displayOrientation == MapView.DisplayOrientation.HeadingUp) displayOrientation = MapView.DisplayOrientation.TrackUp;
-        else if (displayOrientation == MapView.DisplayOrientation.TrackUp) displayOrientation = MapView.DisplayOrientation.NorthUp;
+        if (displayOrientation == MapView.DisplayOrientation.HeadingUp)
+            displayOrientation = MapView.DisplayOrientation.TrackUp;
+        else if (displayOrientation == MapView.DisplayOrientation.TrackUp)
+            displayOrientation = MapView.DisplayOrientation.NorthUp;
         else displayOrientation = MapView.DisplayOrientation.HeadingUp;
-        mapView.refresh(null);
+        MainActivity.mapView.refresh(null);
         return true;
     }
 }

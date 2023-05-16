@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Meerkat</string>
 
     <string name="aircraft">Aircraft</string>
@@ -27,4 +27,23 @@
     <string name="v_speed">VS</string>
     <string name="rescan">Rescan</string>
     <string name="aircraft_list">Aircraft List</string>
+    <string name="mode_c" tools:ignore="ExtraTranslation">Mode C</string>
+    <string name="gps" tools:ignore="ExtraTranslation">GPS</string>
+    <string name="ping">Ping</string>
+    <string name="alert">Alert</string>
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+    <string name="hdg">Hdg</string>
 </resources>

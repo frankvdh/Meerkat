@@ -1,6 +1,6 @@
 package com.meerkat;
 
-import static com.meerkat.SettingsActivity.replaySpeedFactor;
+import static com.meerkat.ui.settings.SettingsViewModel.replaySpeedFactor;
 
 import com.meerkat.gdl90.Gdl90Message;
 import com.meerkat.gdl90.Traffic;

@@ -12,19 +12,24 @@
  */
 package com.meerkat;
 
-import static com.meerkat.SettingsActivity.autoZoom;
-import static com.meerkat.SettingsActivity.logReplay;
-import static com.meerkat.SettingsActivity.ownId;
-import static com.meerkat.SettingsActivity.preferAdsbPosition;
-import static com.meerkat.SettingsActivity.purgeSeconds;
-import static com.meerkat.SettingsActivity.replaySpeedFactor;
-import static com.meerkat.SettingsActivity.simulate;
+import static com.meerkat.ui.settings.SettingsViewModel.autoZoom;
+import static com.meerkat.ui.settings.SettingsViewModel.dangerRadiusMetres;
+import static com.meerkat.ui.settings.SettingsViewModel.logReplay;
+import static com.meerkat.ui.settings.SettingsViewModel.ownId;
+import static com.meerkat.ui.settings.SettingsViewModel.preferAdsbPosition;
+import static com.meerkat.ui.settings.SettingsViewModel.purgeSeconds;
+import static com.meerkat.ui.settings.SettingsViewModel.replaySpeedFactor;
+import static com.meerkat.ui.settings.SettingsViewModel.simulate;
+import static java.lang.Double.MAX_VALUE;
 import static java.lang.Double.isNaN;
 
+import android.graphics.Color;
+
 import com.meerkat.log.Log;
-import com.meerkat.map.MapView;
+import com.meerkat.map.AircraftLayer;
 import com.meerkat.map.VehicleIcon;
 import com.meerkat.measure.Position;
+import com.meerkat.ui.settings.SettingsViewModel;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -35,17 +40,17 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class VehicleList extends HashMap<Integer, Vehicle> {
-    private final MapView mapView;
     public Vehicle nearest = null;
     public Vehicle furthest = null;
-    private ScheduledFuture sched;
+    private final ScheduledFuture sched;
 
     private void purge() {
         try {
             if (this.isEmpty()) return;
             long purgeTime = (logReplay || simulate ? LogReplay.clock.millis() : Instant.now().toEpochMilli()) - purgeSeconds * 1000L;
             Log.i("Locking vehicleList to purge all last updated before %s", Instant.ofEpochMilli(purgeTime).toString());
-            var backgroundChanged = false;
+            var changeBackground = false;
+            var modeCAlt = MAX_VALUE;
             synchronized (this) {
                 Iterator<HashMap.Entry<Integer, Vehicle>> iterator = this.entrySet().iterator();
                 while (iterator.hasNext()) {
@@ -57,28 +62,35 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
                             iterator.remove();
                             Log.i("Purged %s", v.toString());
                             v.layer.setVisible(false, false);
-                            mapView.layers.invalidateDrawable(v.layer);
+                            MainActivity.mapView.layers.invalidateDrawable(v.layer);
                             continue;
                         }
-                        if (v.position != null) {
-                            // NB side-effect to store nearest & furthest -- both must be executed
-                            backgroundChanged |= checkAndMakeNearest(v);
-                            backgroundChanged |= checkAndMakeFurthest(v);
-                        }
+                        if (v.position != null)
+                            if (v.position.hasAccuracy()) {
+                                // NB side-effect to store nearest & furthest -- both must be executed
+                                changeBackground |= checkAndMakeNearest(v);
+                                changeBackground |= checkAndMakeFurthest(v);
+                            } else if (v.position.hasAltitude()) {
+                                if (Math.abs(v.position.heightAboveOwnship()) < Math.abs(modeCAlt))
+                                    modeCAlt = v.position.heightAboveOwnship();
+                            }
                         Log.v("Exited %s", v.toString());
                     }
                 }
             }
             Log.i("Purge complete");
-            if (backgroundChanged) mapView.refresh(null);
+            if (changeBackground) MainActivity.mapView.refresh(null);
+            // If no Mode-C traffic found, set button colour to transparent to show toolbar colour
+            MainActivity.setModeC(modeCAlt == MAX_VALUE ? Color.alpha(0) : AircraftLayer.altColour(modeCAlt, true));
+            MainActivity.setAlert(nearest.distance < dangerRadiusMetres &&
+                    Math.abs(nearest.position.heightAboveOwnship()) < SettingsViewModel.gradientMinimumDiff);
         } catch (Exception ex) {
             Log.e("Exception in VehicleList purge %s", ex.getMessage());
         }
     }
 
-    public VehicleList(MapView mapView) {
+    public VehicleList() {
         super();
-        this.mapView = mapView;
         var interval = logReplay || simulate ? Math.round(purgeSeconds * 1000f / replaySpeedFactor) : purgeSeconds * 1000;
         Log.i("Purge at %d millisecond intervals", interval);
         sched = Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::purge, interval, interval, TimeUnit.MILLISECONDS);
@@ -130,7 +142,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
             if (v.lastCrc == crc) return;
             v.update(crc, point, callsign, emitterType);
         } else {
-            v = new Vehicle(crc, participantAddr, callsign, point, emitterType, mapView);
+            v = new Vehicle(crc, participantAddr, callsign, point, emitterType);
             synchronized (this) {
                 put(participantAddr, v);
             }
@@ -141,7 +153,7 @@ public class VehicleList extends HashMap<Integer, Vehicle> {
         // NB side-effect to store nearest & furthest -- both must be executed
         var backgroundChanged = checkAndMakeNearest(v);
         backgroundChanged |= checkAndMakeFurthest(v);
-        mapView.refresh(backgroundChanged ? null : v.layer);
+        MainActivity.mapView.refresh(backgroundChanged ? null : v.layer);
     }
 
     public Collection<Vehicle> getVehicles() {

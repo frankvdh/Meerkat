@@ -7,13 +7,18 @@
         android:title="@string/map" />
 
     <item
-        android:id="@+id/navigation_dashboard"
+        android:id="@+id/navigation_aircraftlist"
         android:icon="@drawable/ic_737"
         android:title="Aircraft List" />
 
     <item
-        android:id="@+id/navigation_notifications"
+        android:id="@+id/navigation_log"
         android:icon="@drawable/ic_log"
         android:title="Log" />
+
+    <item
+        android:id="@+id/navigation_settings"
+        android:icon="@drawable/ic_wrench"
+        android:title="Settings" />
 
 </menu>

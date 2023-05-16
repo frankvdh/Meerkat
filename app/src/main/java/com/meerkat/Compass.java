@@ -20,6 +20,8 @@
  */
 package com.meerkat;
 
+import static com.meerkat.ui.settings.SettingsViewModel.sensorSmoothingConstant;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -34,7 +36,8 @@ import android.os.IBinder;
 import androidx.annotation.Nullable;
 
 import com.meerkat.log.Log;
-import com.meerkat.map.MapView;
+
+import java.time.Instant;
 
 public class Compass extends Service implements SensorEventListener {
 
@@ -47,11 +50,9 @@ public class Compass extends Service implements SensorEventListener {
     private static final float[] rotationMatrix = new float[16];
     private static final float[] orientation = new float[4];
     private static final Location GpsLocation = new Location("");
-    private final MapView mapView;
     private static float Heading;
 
-    public Compass(Context context, MapView mapView) {
-        this.mapView = mapView;
+    public Compass(Context context) {
         sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         resume();
     }
@@ -88,6 +89,8 @@ public class Compass extends Service implements SensorEventListener {
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
 
+    private static Instant lastRead = Instant.MIN;
+
     @Override
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()) {
@@ -101,13 +104,15 @@ public class Compass extends Service implements SensorEventListener {
                 return;
         }
 
+        var now = Instant.now();
         Log.v("%s %9.2f %9.2f %9.2f", event.sensor.getType() == Sensor.TYPE_ACCELEROMETER ? "Accel" : "Mag", event.values[0], event.values[1], event.values[2]);
-
+        if (!lastRead.isBefore(now.minusSeconds(1))) return;
+        lastRead = now;
         // Compute the three orientation angles based on the most recent readings from the accelerometer and magnetometer.
         // Update rotation matrix, which is needed to update orientation angles.
         if (SensorManager.getRotationMatrix(rotationMatrix, null, grav, mag)) {
             SensorManager.getOrientation(rotationMatrix, orientation);
-
+            MainActivity.blinkHdg();
             // "orientation" has azimuth (Z axis angle relative to mag north), pitch, roll
             int prevHeading = (int) Heading;
             Heading = (float) (Math.toDegrees(orientation[0]));
@@ -118,7 +123,7 @@ public class Compass extends Service implements SensorEventListener {
                     grav[0], grav[1], grav[2],
                     Heading);
             if ((int) Heading != prevHeading)
-                mapView.refresh(null);
+                MainActivity.mapView.refresh(null);
         }
     }
 
@@ -132,7 +137,7 @@ public class Compass extends Service implements SensorEventListener {
         if (event == null)
             throw new NullPointerException("event must be non-NULL");
         for (int i = 0; i < prev.length; i++) {
-            prev[i] += SettingsActivity.sensorSmoothingConstant * (event.values[i] - prev[i]);
+            prev[i] += sensorSmoothingConstant * (event.values[i] - prev[i]);
         }
     }
 

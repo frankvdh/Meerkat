@@ -12,12 +12,14 @@
  */
 package com.meerkat.map;
 
-import static com.meerkat.SettingsActivity.autoZoom;
-import static com.meerkat.SettingsActivity.circleRadiusStepMetres;
-import static com.meerkat.SettingsActivity.dangerRadiusMetres;
-import static com.meerkat.SettingsActivity.displayOrientation;
-import static com.meerkat.SettingsActivity.distanceUnits;
-import static com.meerkat.SettingsActivity.screenYPosPercent;
+import static com.meerkat.ui.settings.SettingsViewModel.autoZoom;
+import static com.meerkat.ui.settings.SettingsViewModel.circleRadiusStepMetres;
+import static com.meerkat.ui.settings.SettingsViewModel.dangerRadiusMetres;
+import static com.meerkat.ui.settings.SettingsViewModel.displayOrientation;
+import static com.meerkat.ui.settings.SettingsViewModel.distanceUnits;
+import static com.meerkat.ui.settings.SettingsViewModel.screenWidthMetres;
+import static com.meerkat.ui.settings.SettingsViewModel.screenYPosPercent;
+import static com.meerkat.ui.settings.SettingsViewModel.useCupFile;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -29,37 +31,36 @@ import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.meerkat.Gps;
+import com.meerkat.MainActivity;
 import com.meerkat.Vehicle;
-import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
 
 public class Background extends Drawable {
     private final Paint dangerPaint;
     private final Paint circlePaint;
     private final MapView mapView;
-    private final VehicleList vehicleList;
     private final CompassView compassView;
     private final TextView compassText, scaleText;
 
     /**
      * @param mapView     mapView that contains this Background
-     * @param vehicleList vehicle list that controls zoom level
      * @param compassView compassView contained in this background
      * @param compassText textView in compassView to show orientation mode
      * @param scaleText   textView in this Background to display zoom level
      */
-    public Background(MapView mapView, VehicleList vehicleList, CompassView compassView, TextView compassText, TextView scaleText) {
+    public Background(MapView mapView, CompassView compassView, TextView compassText, TextView scaleText) {
         this.mapView = mapView;
-        this.vehicleList = vehicleList;
         this.compassView = compassView;
         this.compassText = compassText;
         this.scaleText = scaleText;
+        compassView.locateTextPos(compassText);
         Paint whitePaint = new Paint();
         whitePaint.setColor(Color.WHITE);
         whitePaint.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -89,7 +90,7 @@ public class Background extends Drawable {
         canvas.drawLine(-xCentre, 0, xCentre, 0, circlePaint);
 
         if (autoZoom) {
-            mapView.adjustScaleFactor(canvas.getClipBounds(), vehicleList.getFurthest());
+            mapView.adjustScaleFactor(canvas.getClipBounds(), MainActivity.vehicleList.getFurthest());
         }
         float radiusStep = circleRadiusStepMetres * mapView.pixelsPerMetre;
         Log.v("Radius step = %f", radiusStep);
@@ -98,6 +99,16 @@ public class Background extends Drawable {
                 canvas.drawCircle(0, 0, rad, circlePaint);
             }
 
+        if (useCupFile) {
+            var gpsPos = new Location("gps");
+            Gps.getLatLonAltTime(gpsPos);
+            if (gpsPos.hasAccuracy())
+                for (var p : MainActivity.groundLocations) {
+                    var distance = Gps.distanceTo(p);
+                    if (Float.isNaN(distance) || distance > screenWidthMetres) continue;
+                    new MapIcon().drawIcon(canvas, p, GroundIcon.Icons.values()[p.style].bitmap, Float.NaN, Color.BLACK, p.code);
+                }
+        }
         var prevMode = displayOrientation;
         float rot = -mapView.displayRotation();
         String compassLetter = displayOrientation.toString().substring(0, 1);
@@ -112,7 +123,7 @@ public class Background extends Drawable {
 
         // Arrows either side of screen width
         scaleText.setText(String.format("\u27f8 %s  \u27f9", distanceUnits.toString(bounds.width() / mapView.pixelsPerMetre)));
-        Vehicle nearest = vehicleList.getNearest();
+        Vehicle nearest = MainActivity.vehicleList.getNearest();
         if (nearest == null) return;
         int thickness = (int) (nearest.distance <= dangerRadiusMetres ? dangerRadiusMetres / 2f :
                 dangerRadiusMetres * 10 / nearest.distance);
@@ -120,12 +131,10 @@ public class Background extends Drawable {
             thickness = (int) (dangerRadiusMetres * mapView.pixelsPerMetre);
         Log.v("Nearest = %s %.0f, %d, thickness = %d", nearest.callsign, nearest.distance, dangerRadiusMetres, thickness);
         if (thickness > 0) {
-            dangerPaint.setColor(AircraftLayer.altColour(nearest.position.getAltitude() - Gps.getAltitude(), true));
+            dangerPaint.setColor(Color.YELLOW);
             dangerPaint.setStrokeWidth(thickness);
             canvas.drawCircle(0, 0, dangerRadiusMetres * mapView.pixelsPerMetre, dangerPaint);
         }
-
-
         Log.v("finished draw background");
     }
 

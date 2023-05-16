@@ -35,9 +35,9 @@ public class VehicleIcon {
         Spacecraft(R.drawable.ic_rocket, false),
         Emergency_Vehicle(R.drawable.ic_ambulance, true),
         Service_Vehicle(R.drawable.ic_pickup, true),
-        Point_Obstacle(R.drawable.ic_flag, false),
-        Cluster_Obstacle(R.drawable.ic_flag, false),
-        Line_Obstacle(R.drawable.ic_flag, false);
+        Point_Obstacle(R.drawable.ic_crisis, false),
+        Cluster_Obstacle(R.drawable.ic_crisis, false),
+        Line_Obstacle(R.drawable.ic_crisis, false);
         final public int iconId;
         final public boolean canRotate;
         public Bitmap bitmap;

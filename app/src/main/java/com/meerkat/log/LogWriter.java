@@ -12,6 +12,8 @@
  */
 package com.meerkat.log;
 
+import com.meerkat.ui.log.LogViewModel;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -75,15 +77,15 @@ class FileLogWriter implements LogWriter {
 }
 
 class ViewLogWriter implements LogWriter {
-    private final LogActivity logActivity;
+    private final LogViewModel logViewModel;
 
-    public ViewLogWriter(LogActivity logActivity) {
-        this.logActivity = logActivity;
+    public ViewLogWriter(LogViewModel logViewModel) {
+        this.logViewModel = logViewModel;
     }
 
     public void append(Log.Level level, String tag, String message) {
-        if (logActivity != null && !message.isEmpty()) {
-            logActivity.append(message);
+        if (logViewModel != null && !message.isEmpty()) {
+            logViewModel.append(message);
         }
     }
 }

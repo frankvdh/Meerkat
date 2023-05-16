@@ -12,6 +12,8 @@
  */
 package com.meerkat.log;
 
+import com.meerkat.ui.log.LogViewModel;
+
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -66,8 +68,8 @@ public final class Log {
         logWriters.add(fp);
     }
 
-    public static synchronized void useViewLogWriter(LogActivity logActivity) {
-        logWriters.add(new ViewLogWriter(logActivity));
+    public static synchronized void useViewLogWriter(LogViewModel logViewModel) {
+        logWriters.add(new ViewLogWriter(logViewModel));
     }
 
     public static synchronized void v(String format, Object... args) {

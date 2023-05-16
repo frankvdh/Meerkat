@@ -1,6 +1,6 @@
 package com.meerkat.wifi;
 
-import static com.meerkat.SettingsActivity.wifiName;
+import static com.meerkat.ui.settings.SettingsViewModel.wifiName;
 
 import android.content.Context;
 import android.util.AttributeSet;

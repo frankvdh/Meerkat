@@ -12,19 +12,18 @@
  */
 package com.meerkat;
 
-import static com.meerkat.SettingsActivity.countryCode;
-import static com.meerkat.SettingsActivity.historySeconds;
-import static com.meerkat.SettingsActivity.polynomialHistoryMilliS;
-import static com.meerkat.SettingsActivity.polynomialPredictionStepMilliS;
-import static com.meerkat.SettingsActivity.predictionMilliS;
-import static com.meerkat.SettingsActivity.showLinearPredictionTrack;
-import static com.meerkat.SettingsActivity.showPolynomialPredictionTrack;
+import static com.meerkat.ui.settings.SettingsViewModel.countryCode;
+import static com.meerkat.ui.settings.SettingsViewModel.historySeconds;
+import static com.meerkat.ui.settings.SettingsViewModel.polynomialHistoryMilliS;
+import static com.meerkat.ui.settings.SettingsViewModel.polynomialPredictionStepMilliS;
+import static com.meerkat.ui.settings.SettingsViewModel.predictionMilliS;
+import static com.meerkat.ui.settings.SettingsViewModel.showLinearPredictionTrack;
+import static com.meerkat.ui.settings.SettingsViewModel.showPolynomialPredictionTrack;
 
 import androidx.annotation.NonNull;
 
 import com.meerkat.log.Log;
 import com.meerkat.map.AircraftLayer;
-import com.meerkat.map.MapView;
 import com.meerkat.map.VehicleIcon;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
@@ -36,7 +35,6 @@ import java.util.Locale;
 
 public class Vehicle implements Comparable<Vehicle> {
     public final int id;
-    private final MapView mapView;
     public String callsign;
     public final LinkedList<Position> history;
     public final ArrayList<Position> predicted;
@@ -51,14 +49,13 @@ public class Vehicle implements Comparable<Vehicle> {
     public final Object lock = new Object();
     final float MAX_TURN_RATE = 360f / 60;
     final float MAX_CLIMB_RATE = 3000f * Units.VertSpeed.FPM.units.factor / 60;
-    final float MAX_DIVE_RATE = 3000f * Units.VertSpeed.FPM.units.factor /60;
+    final float MAX_DIVE_RATE = 3000f * Units.VertSpeed.FPM.units.factor / 60;
     final float MAX_SPEED = 300f * Units.Speed.KNOTS.units.factor;
 
-    public Vehicle(int crc, int id, String callsign, Position point, @NonNull VehicleIcon.Emitter emitterType, @NonNull MapView mapView) {
+    public Vehicle(int crc, int id, String callsign, Position point, @NonNull VehicleIcon.Emitter emitterType) {
         this.lastCrc = crc;
         this.lastUpdate = point.getTime();
         this.id = id;
-        this.mapView = mapView;
         this.callsign = callsign;
         this.emitterType = emitterType;
         // History & Predicted go in opposite directions... in each case, the last entry is the furthest away from the current position of the aircraft.
@@ -79,7 +76,11 @@ public class Vehicle implements Comparable<Vehicle> {
                 Log.v("Predict from %s to %s", point.toString(), predictedPosition);
             }
         } else {
-            position = null;
+            if (!point.hasAltitude())
+                position = null;
+            else {
+                addPoint(point);
+            }
             distance = Float.NaN;
             predictedPosition.removeAccuracy();
         }
@@ -87,7 +88,7 @@ public class Vehicle implements Comparable<Vehicle> {
 
     // If an invisible layer exists, re-use it. Otherwise create a new layer for this vehicle
     AircraftLayer findLayer(Vehicle v) {
-        AircraftLayer result = (AircraftLayer) mapView.layers.findDrawableByLayerId(v.id);
+        AircraftLayer result = (AircraftLayer) MainActivity.mapView.layers.findDrawableByLayerId(v.id);
         if (result != null) {
             // If a vehicle has returned after being purged but before its layer has been
             // reused, its layer will now be invisible
@@ -95,20 +96,20 @@ public class Vehicle implements Comparable<Vehicle> {
                 result.setVisible(true, true);
             return result;
         }
-        for (int i = 1; i < mapView.layers.getNumberOfLayers(); i++) {
-            AircraftLayer d = (AircraftLayer) mapView.layers.getDrawable(i);
+        for (int i = 1; i < MainActivity.mapView.layers.getNumberOfLayers(); i++) {
+            AircraftLayer d = (AircraftLayer) MainActivity.mapView.layers.getDrawable(i);
             if (!d.isVisible()) {
-                Log.i("ReUse layer %d was %d", i, mapView.layers.getId(i));
-                synchronized (mapView.layers) {
-                    mapView.layers.setId(i, v.id);
-                    d.set(v);
+                Log.i("ReUse layer %d was %d", i, MainActivity.mapView.layers.getId(i));
+                synchronized (MainActivity.mapView.layers) {
+                    MainActivity.mapView.layers.setId(i, v.id);
+                    d.setVisible();
                     return d;
                 }
             }
         }
-        AircraftLayer d = new AircraftLayer(v, mapView);
-        synchronized (mapView.layers) {
-            mapView.layers.addLayer(d);
+        AircraftLayer d = new AircraftLayer(v);
+        synchronized (MainActivity.mapView.layers) {
+            MainActivity.mapView.layers.addLayer(d);
             return d;
         }
     }
@@ -214,7 +215,7 @@ public class Vehicle implements Comparable<Vehicle> {
                         var newTrack = (float) (cSpeedTrack[1][0] + cSpeedTrack[1][1] * t1 + cSpeedTrack[1][2] * t2);
                         var newAlt = (float) (cSpeedTrack[2][0] + cSpeedTrack[2][1] * t1 + cSpeedTrack[2][2] * t2);
                         newTrack = Math.min(Math.max(newTrack, track - MAX_TURN_RATE * polynomialPredictionStepMilliS / 1000f), track + MAX_TURN_RATE * polynomialPredictionStepMilliS / 1000f);
-                        newAlt = (float) Math.min(Math.max(newAlt, alt - MAX_DIVE_RATE * polynomialPredictionStepMilliS / 1000f), alt + MAX_CLIMB_RATE * polynomialPredictionStepMilliS / 1000f);
+                        newAlt = Math.min(Math.max(newAlt, alt - MAX_DIVE_RATE * polynomialPredictionStepMilliS / 1000f), alt + MAX_CLIMB_RATE * polynomialPredictionStepMilliS / 1000f);
                         // Limit speed changes to +/-10%
                         newSpeed = Math.min(Math.max(newSpeed, speed * .9f), Math.min(MAX_SPEED, speed * 1.1f));
                         p.setAltitude(Float.isNaN(newAlt) ? alt : Float.isNaN(alt) ? newAlt : 0.5f * alt + 0.5f * newAlt);
@@ -226,7 +227,7 @@ public class Vehicle implements Comparable<Vehicle> {
                 }
             }
         }
-        mapView.refresh(layer);
+        MainActivity.mapView.refresh(layer);
     }
 
     private void addPoint(Position point) {

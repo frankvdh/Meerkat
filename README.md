@@ -15,29 +15,103 @@ This is very much in the pre-release state. Currently it does
 * Display nearby traffic as text
 * Display nearby traffic, including past tracks and predicted positions, in a zoomable graphic map window, either Heading-Up, Track-Up, or North-Up
 * Display and edit Preferences via a Settings screen.
-* Display a yellow "threat alert" circle when traffic is very close.
-* A simulator to play back a saved log file
+* Display waypoints from .CUP file
+* Warns of Mode C traffic near your altitude
+* Illuminate a "threat alert" button when traffic is very close.
+* A simulator to play back a hard-coded scenario
+* A log replay mode to play back a saved log file
 
 
 Getting Started
 ===============
 1. Download and install the app from the Google Play Store as usual.
-2. Power up your Ping-USB device (blue LED)
-3. Shut down your phone's WiFi connection and then turn it on again. (If you have your phone set up to automatically connect to (e.g.) your home WiFi, it may refuse
-   to connect to a non-Internet-providing Wifi like the Ping-USB).
-4. Open the app.
-5. Allow Meerkat to access this device's location
-6. The app will display its Settings screen. (If it doesn't, press "back" button or swipe left and choose "Settings" from the menu)
+2. Power up your Ping-USB device (blue LED on the sticker side of the Ping-USB, green LEDs on the clear side of the Ping-USB)
+3. Shut down your phone's WiFi connection and then turn it on again, telling it to connect to your Ping device.
+   (You may need to prevent your phone from automatically connecting to (e.g.) your home WiFi, because otherwise
+   it may refuse to connect to a non-Internet-providing Wifi like the Ping-USB).
+4. Open Meerkat.
+5. Allow Meerkat to access your phone's location (even if you plan to use your ADS-B location)
+6. Meerkat will display its Settings screen. (If it doesn't, tap "Settings" on the bottom navigation bar)
 7. Tap "Scan"
 8. Tap on your Ping-USB's Wifi network name, typically "Ping-xxxx" (e.g. Ping-12E3)
-9. Press the back button or swipe left to return to the main Map screen.
+9. Tap "Map" on the bottom navigation bar to go to the main Map screen.
 
 Meerkat uses quite a lot of power, so it's best to connect to a charger or powerbank when you're running Meerkat.
 
 Shutting Down
 =============
-The app uses quite a lot of power, so when you're not using it, it's a good idea to shut it down. To do so, press the back button or swipe left to get the menu bar
-up on the screen and press the on/off icon.
+The app uses quite a lot of power, so when you're not using it, it's a good idea to shut it down. To do so, press the "Quit" button at the top of the screen.
+
+Navigation and Status
+=====================
+The bottom navigation bar allows you to select which screen you want to see:
+* Map
+* Aircraft List
+* Log
+* Settings
+
+Across the top of the screen, below the "Quit" button, is a series of indicators:
+* GPS -- blinks when updates are received from the phone's GPS
+* Ping -- blinks each time your phone receives an update from the Ping device
+* Hdg -- blinks each time your phone updates its heading from the internal sensors
+* Mode C -- illuminates when Mode C traffic is detected. Mode C transponders are detected by the Ping device, but only
+            give an altitude, not a position. The colour indicates the relative altitude of the traffic to you, as below.
+* Alert -- Illuminates red if an aircraft is near to you in altitude and distance
+
+Altitude Colours and Alerts
+===========================
+Altitude Colours
+----------------
+Colours are used in several places to represent the relative altitude of another aircraft:
+* Icons and predicted positions on the map
+* The Mode C indicator
+
+If the other aircraft is on the ground, it is shown as black.
+If the other aircraft is above you, the colour is blue (representing sky). 
+If it is below you, the colour is green (representing the ground). 
+If it is close to your altitude, it is red (representing danger).
+
+The standard heights for these transitions are at +/-1000ft and +/-500ft from your aircraft's altitude. You can alter these values by altering the "gradientMaximumDiff" and "gradientMinimumDiff" settings
+in the "Settings" panel and/or by changing them in the com.meerkat_preferences.xml file. NB: If you have changed the altitude units to "metres"
+you will be setting these relative altitudes in metres.
+
+Blue
+------------------------------   +1000ft = 304m = +gradientMaximumDiff
+blue
+blueish purple
+purple
+reddish purple
+red
+------------------------------   +500ft = 152m = +gradientMinimumDiff
+Red
+
+                                  Your altitude
+
+Red
+------------------------------   -500ft = -152m = -gradientMinimumDiff
+red 
+orange
+yellow
+brown
+green
+------------------------------   -1000ft = -304m = -gradientMaximumDiff
+Green
+------------------------------
+Black                            On ground
+
+Alerts
+------
+If an aircraft is within the inner "red" altitude range above, and it is within 0.5nm (926m) of your aircraft, the "Alert" indicator will illuminate bright red. 
+
+You can adjust the horizontal distance at which alerts may occur by adjusting the "dangerRadius" setting in the "Settings" panel and/or by changing it in the com.meerkat_preferences.xml file. NB: If you have changed the distance units to "metres"
+you will be setting these relative altitudes in metres, kilometres, or statute miles rather than nautical miles.
+
+In the future:
+* An audio alert will also be played.
+* A haptic alert will be sent to a Smartwatch
+* The alert will also happen if the predicted position of the other aircraft is inside the danger area.
+* The alert will also happen if the predicted path of the other aircraft crosses the danger area.
+
 
 
 The Main Map Screen
@@ -47,9 +121,6 @@ is located at 25% of the way up the screen and halfway across the screen. You ca
 be further up the screen to give more warning of traffic approaching from behind.
  
 The background has some circles and lines to make it easier to estimate distance and direction.
-
-When other aircraft are detected within 20nm, a red "danger" circle is drawn around the phone's GPS location. The nearer any aircraft's position (not predicted
-or historical) is to your location, the heavier the border is drawn. There is currently no other warning.
 
 Each aircraft (or ADS-B-equipped ground vehicle or obstacle) is displayed as an icon depending on its GDL90 emitter type. Unknown types (typically when incomplete 
 information has been received from the sender) are shown with a UFO icon.
@@ -72,6 +143,9 @@ Each icon can also optionally (controlled by Settings) have associated with it:
 These use the same colour coding as the icon, so an aircraft 2,000 feet above and descending will have a blue icon, but red predictions. When an
 aircraft is being flown straight by autopilot, these predictions coincide. When an aircraft is manoeuvring, these predictions will vary, and the actual path 
 of the aircraft is uncertain.
+
+When other aircraft are detected within 20nm, a yellow "danger" circle is drawn around the phone's GPS location. The nearer any aircraft's position (not predicted
+or historical) is to your location, the heavier the border is drawn. When it is .
 
 Screen Orientation
 ------------------
@@ -232,11 +306,9 @@ have devices other than the PingUSB.
 TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :) slowly :(
-* Revise UI to not use menu
 * Allow screen to be used vertically in heading mode
 * Indicate Mode-C traffic presence
 * Audio / Haptic alerts of collision threats
-* Further Reduce frequency of heading change updates ???
 * Use a theme to allow black background
 * Digital filtering of path to predict tracks
 * Handling of Float preference values (custom SeekBar?)

@@ -12,10 +12,10 @@
  */
 package com.meerkat.gdl90;
 
-import static com.meerkat.SettingsActivity.minGpsUpdateIntervalSeconds;
-import static com.meerkat.SettingsActivity.ownCallsign;
-import static com.meerkat.SettingsActivity.ownId;
-import static com.meerkat.SettingsActivity.preferAdsbPosition;
+import static com.meerkat.ui.settings.SettingsViewModel.minGpsUpdateIntervalSeconds;
+import static com.meerkat.ui.settings.SettingsViewModel.ownCallsign;
+import static com.meerkat.ui.settings.SettingsViewModel.ownId;
+import static com.meerkat.ui.settings.SettingsViewModel.preferAdsbPosition;
 import static java.lang.Float.NaN;
 
 import android.hardware.GeomagneticField;
@@ -23,12 +23,12 @@ import android.hardware.GeomagneticField;
 import androidx.annotation.NonNull;
 
 import com.meerkat.Gps;
-import com.meerkat.SettingsActivity;
 import com.meerkat.VehicleList;
 import com.meerkat.log.Log;
 import com.meerkat.map.VehicleIcon;
 import com.meerkat.measure.Position;
 import com.meerkat.measure.Units;
+import com.meerkat.ui.settings.SettingsViewModel;
 
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
@@ -105,7 +105,7 @@ public class Traffic extends Gdl90Message {
         callsign = getString(8).trim();
         if (ownId == 0 && callsign.equals(ownCallsign)) {
             ownId = participantAddr;
-            SettingsActivity.savePrefs();
+            SettingsViewModel.savePrefs();
         }
         b = getByte();
         int p = b >> 4;
