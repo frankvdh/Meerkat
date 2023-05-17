@@ -98,7 +98,7 @@ public class MapView extends androidx.appcompat.widget.AppCompatImageView {
     private static DisplayOrientation currentMode = null;
 
     float displayRotation() {
-        // Do not return of NaN from direction sensors... this causes cos() & sin() to both return 0.
+        // Do not return NaN from direction sensors... this causes cos() & sin() to both return 0.
         float rot;
         if (displayOrientation == DisplayOrientation.HeadingUp) {
             rot = Compass.degTrue();

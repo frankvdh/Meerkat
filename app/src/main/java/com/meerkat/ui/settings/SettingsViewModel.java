@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.meerkat.BuildConfig;
 import com.meerkat.log.Log;
+import com.meerkat.map.Cup;
 import com.meerkat.map.MapView;
 import com.meerkat.measure.Units;
 
@@ -73,6 +74,11 @@ public class SettingsViewModel extends ViewModel {
      */
     public static volatile int toolbarDelayMilliS, initToolbarDelayMilliS;
     public static volatile boolean useCupFile;
+    public static volatile Cup.Label labelText;
+    public static volatile boolean showFrequency;
+    public static volatile boolean showRunway;
+
+    public static volatile int magFieldUpdateDistance;
 
     public static void loadPrefs(Context context) {
         String currentVersionName = BuildConfig.VERSION_NAME;
@@ -179,6 +185,15 @@ public class SettingsViewModel extends ViewModel {
             replaySpeedFactor = 10;
         }
         useCupFile = prefs.getBoolean("useCupFile", true);
+        try {
+            labelText = Cup.Label.valueOf(prefs.getString("labelText", "Code").trim());
+        } catch (Exception e) {
+            labelText = Cup.Label.Code;
+            saveNeeded = true;
+        }
+        showFrequency = prefs.getBoolean("showFrequency", true);
+        showRunway = prefs.getBoolean("showRunway", true);
+        magFieldUpdateDistance = (int) distanceUnits.toM(prefs.getInt("magFieldUpdateDistance", 30));
 
 /*
         logReplay = true;
@@ -234,6 +249,10 @@ public class SettingsViewModel extends ViewModel {
         edit.putBoolean("simulate", simulate);
         edit.putString("replaySpeedFactor", String.format(Locale.ENGLISH, "%.2f", replaySpeedFactor));
         edit.putBoolean("useCupFile", useCupFile);
+        edit.putString("labelText", labelText.toString());
+        edit.putBoolean("showFrequency", showFrequency);
+        edit.putBoolean("showRunway", showRunway);
+        edit.putInt("magFieldUpdateDistance", (int) distanceUnits.fromM(magFieldUpdateDistance));
         edit.apply();
         Log.log(logLevel, "Settings saved");
     }

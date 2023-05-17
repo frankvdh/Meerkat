@@ -129,7 +129,7 @@ public class Vehicle implements Comparable<Vehicle> {
     }
 
     public void update(int crc, Position point, String callsign, @NonNull VehicleIcon.Emitter emitterType) {
-        Log.v(String.format("Update %06x, %s, %s, %s", id, callsign, emitterType, point.toString()));
+        Log.d(String.format("Update %06x, %s, %s, %s", id, callsign, emitterType, point.toString()));
 
         synchronized (layer) {
             this.lastCrc = crc;

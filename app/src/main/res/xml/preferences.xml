@@ -139,8 +139,34 @@
             androidx:defaultValue="true"
             androidx:key="useCupFile"
             androidx:persistent="true"
-            androidx:summaryOff="Do not show ground locations"
-            androidx:summaryOn="Showe ground locations"
+            androidx:summaryOff="Do not show waypoints"
+            androidx:summaryOn="Show waypoints"
+            androidx:title="Ground Locations" />
+
+
+        <androidx.preference.DropDownPreference
+            androidx:defaultValue="Code"
+            androidx:entries="@array/labeltext_values"
+            androidx:entryValues="@array/labeltext_values"
+            androidx:key="labelText"
+            androidx:persistent="true"
+            androidx:title="What identifier to write alongside waypoint icons"
+            androidx:useSimpleSummaryProvider="true" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="true"
+            androidx:key="showFrequency"
+            androidx:persistent="true"
+            androidx:summaryOff="Do not show frequency alongside waypoint icons"
+            androidx:summaryOn="Show frequency alongside waypoint icons"
+            androidx:title="Ground Locations" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            androidx:defaultValue="true"
+            androidx:key="showRunway"
+            androidx:persistent="true"
+            androidx:summaryOff="Do not show runway ID and length alongside waypoint icons"
+            androidx:summaryOn="Show runway ID and length alongside waypoint icons"
             androidx:title="Ground Locations" />
 
         <androidx.preference.SwitchPreferenceCompat
@@ -198,6 +224,7 @@
             androidx:title="Your ADS-B in hexadecimal. Set to 0 to automatically detect and save"
             androidx:useSimpleSummaryProvider="true" />
     </androidx.preference.PreferenceCategory>
+
     <androidx.preference.PreferenceCategory
         androidx:icon="@drawable/ic_vibrate"
         androidx:title="Sensitivity">
@@ -222,6 +249,13 @@
             androidx:showSeekBarValue="true"
             androidx:summary="How long (in seconds) before the display is refreshed. Smaller values = more frequent refreshes"
             androidx:title="Minimum Gps update interval in seconds" />
+
+        <androidx.preference.SeekBarPreference
+            androidx:key="magFieldUpdateDistance"
+            androidx:persistent="true"
+            androidx:showSeekBarValue="true"
+            androidx:summary="How far you travel (in [distance unit]s) before the magnetic field is recalculated. Smaller values = more frequent recalculations"
+            androidx:title="Minimum Magnetic Field update distance in [distancwe unit]s" />
 
     </androidx.preference.PreferenceCategory>
     <androidx.preference.PreferenceCategory

@@ -117,6 +117,7 @@
                 setRange("polynomialPredictionStepSecs", 1, 6, 60, 1);
                 setRange("polynomialHistoryMillis", 1000, 2500, 10000, 100);
                 setRange("sensorSmoothingConstant", 1, 20, 99, 5);
+                setRange("magFieldUpdateKm", 1, 30, 99, 1);
             }
 
 

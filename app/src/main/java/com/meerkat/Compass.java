@@ -20,6 +20,7 @@
  */
 package com.meerkat;
 
+import static com.meerkat.ui.settings.SettingsViewModel.magFieldUpdateDistance;
 import static com.meerkat.ui.settings.SettingsViewModel.sensorSmoothingConstant;
 
 import android.app.Service;
@@ -43,7 +44,6 @@ public class Compass extends Service implements SensorEventListener {
 
     static GeomagneticField geoField;
     private static float Declination = 0;
-
     private static SensorManager sensorManager;
     private static final float[] mag = new float[3];
     private static final float[] grav = new float[3];
@@ -62,10 +62,15 @@ public class Compass extends Service implements SensorEventListener {
     }
 
     public static void updateGeomagneticField() {
-        if (Gps.distanceTo(GpsLocation) < 10000) return;
+        // In NZ, declination changes by about 0.7deg/46nm = 1 deg/65nm = 1 deg/120km
+        // So long as we're within 60km of the last location where declination was computed, it will be within 0.5 degrees
+        // Other places nearer the magnetic poles will have faster changes in the field
+        if (Gps.distanceTo(GpsLocation) < magFieldUpdateDistance) return;
         Gps.getLatLonAltTime(GpsLocation);
         geoField = new GeomagneticField((float) GpsLocation.getLatitude(), (float) GpsLocation.getLongitude(), (float) GpsLocation.getAltitude(), GpsLocation.getTime());
-        Declination = geoField.getDeclination();
+        var newDeclination = geoField.getDeclination();
+        Log.i("Mag declination changed from %.1f to %.1f", Declination, newDeclination);
+        Declination = newDeclination;
     }
 
     public void resume() {

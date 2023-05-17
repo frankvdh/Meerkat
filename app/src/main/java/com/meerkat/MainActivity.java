@@ -38,7 +38,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.meerkat.databinding.ActivityMainBinding;
 import com.meerkat.log.Log;
 import com.meerkat.map.Cup;
-import com.meerkat.map.CupFile;
 import com.meerkat.map.MapView;
 import com.meerkat.wifi.PingComms;
 
@@ -71,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         }
         Log.i("Starting in %s mode", simulate ? "Simulation" : logReplay ? "Log Replay" : "Live");
 
-        groundLocations = useCupFile ? CupFile.readAll(new File(this.getExternalFilesDir(null), "waypoints.cup")) : new ArrayList<>();
+        groundLocations = useCupFile ? Cup.readFile(new File(this.getExternalFilesDir(null), "waypoints.cup")) : new ArrayList<>();
         com.meerkat.databinding.ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         binding.getRoot().setKeepScreenOn(keepScreenOn);

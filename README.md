@@ -238,12 +238,18 @@ Alternatively, you can type your device's Wifi name into the WiFi Name text box.
 | ownCallsign          | Callsign to identify your own ship                                                              							  | null          |
 | ownId                | ADS-B id of your own ship. Set to 0 to autodetect based on ownCallsign                                                       | 0             |
 | preferAdsbPosition   | Whether to use your own ship's ADS-B position (if available) instead of the phone's internal GPS                             | true          |
+| useCupFile           | Whether to show waypoints and airfields on the map                                                                           | true          |
+| labelText            | Which text item to display for a waypoint (Code/Name/Description)                                                            | Code          |
+| showFrequency        | Whether to show the frequencies associated with an airfield                                                                  | true          |
+| showRunway           | Whether to show the runway identifier and direction (only one runway per airfield)                                           | true          |
+
 
 | Sensitivity Setting Name        | Usage                                                                                                      | Default value |
 |---------------------------------|------------------------------------------------------------------------------------------------------------|---------------|
 | sensorSmoothingConstant         | The sensitivity of the display to phone orientation change (1 - 99). Larger values make it more responsive | 20            |
 | minGpsDistanceChangeMetres      | Minimum Gps distance between updates in metres                                        	                   | 10            |
 | minGpsUpdateIntervalSeconds     | Minimum Gps update interval in seconds                                                                     | 10            |
+| magFieldUpdateDistance          | Minimum distance between calculations of the magnetic field                                                | 30nm          |
 
 | History Settings                | Usage                                                                                                                           | Default value |
 |---------------------------------|---------------------------------------------------------------------------------------------------------------------------------|---------------|
@@ -262,7 +268,7 @@ Alternatively, you can type your device's Wifi name into the WiFi Name text box.
 | showPolynomialPredictionTrack   | Whether to display the "polynomial" predicted track for each aircraft on the screen. This predicts                              |               |
 |                                 | accelerating, turning, climbing path for the next 60 seconds                                                                    | true          |
 | polynomialPredictionStepSeconds | How many seconds each step of the polynomial prediction is                                                                      | 6             |
-| polynomialHistoryMillis         | How many milliseconds history should be used by the polynomial predictor. Too large or small a value will seen poor predictions | 2500            |
+| polynomialHistoryMillis         | How many milliseconds history should be used by the polynomial predictor. Too large or small a value will seen poor predictions | 2500          |
 
 Debugging settings
 ------------------
@@ -307,7 +313,6 @@ TO DO
 -----
 This list is more-or-less in priority order. At the moment it is shrinking :) slowly :(
 * Allow screen to be used vertically in heading mode
-* Indicate Mode-C traffic presence
 * Audio / Haptic alerts of collision threats
 * Use a theme to allow black background
 * Digital filtering of path to predict tracks

@@ -38,12 +38,15 @@ import com.meerkat.log.Log;
 
 public class MapIcon extends Drawable {
     protected static final Paint textPaint = new Paint(Color.BLACK);
+    protected static final Paint whitePaint = new Paint(Color.WHITE);
     protected final Rect bounds;
 
     static {
         textPaint.setStyle(Paint.Style.FILL);
         textPaint.setTextSize(48);
         textPaint.setTextAlign(Paint.Align.LEFT);
+        whitePaint.setStyle(Paint.Style.FILL);
+        whitePaint.setColor(Color.WHITE);
     }
 
     public void setVisible() {
@@ -124,13 +127,15 @@ public class MapIcon extends Drawable {
     protected void drawText(Canvas canvas, final Point aircraftPos, int textHeight, String text, Rect clipBounds, int bmpWidth) {
         var textLines = text.split("\\n");
         Log.v("drawText: " + String.join(", ", textLines));
-        float textWidth = textPaint.measureText(textLines[0]);
-        if (textLines.length > 1)
-            textWidth = Math.max(textWidth, textPaint.measureText(textLines[1]));
+        float textWidth = 0;
+        for (var s : textLines) {
+            textWidth = Math.max(textWidth, textPaint.measureText(s));
+        }
         if (aircraftPos.x + bmpWidth / 2f + textWidth <= clipBounds.left) return;
         if (aircraftPos.x - bmpWidth / 2f - textWidth >= clipBounds.right) return;
-        if (aircraftPos.y + textHeight <= clipBounds.top) return;
-        if (aircraftPos.y - textHeight >= clipBounds.bottom) return;
+        var vertOffset = (textHeight * textLines.length) / 2;
+        if (aircraftPos.y + vertOffset <= clipBounds.top) return;
+        if (aircraftPos.y - vertOffset >= clipBounds.bottom) return;
 
         // Some part of text will be visible, so make all of it visible
         int x = aircraftPos.x;
@@ -147,12 +152,18 @@ public class MapIcon extends Drawable {
         x += (textPaint.getTextAlign() == Paint.Align.LEFT ? bmpWidth : -bmpWidth) / 2;
 
         int y = aircraftPos.y;
+        if ((textLines.length & 1) != 0) y -= textHeight / 2;
         if (y < clipBounds.top + textHeight) y = clipBounds.top + textHeight;
         else if (y >= clipBounds.bottom - textHeight)
             y = clipBounds.bottom - textHeight - 1;
-        canvas.drawText(textLines[0], x, y, textPaint);
-        if (textLines.length > 1)
-            canvas.drawText(textLines[1], x, y + textHeight, textPaint);
+        for (String textLine : textLines) {
+            if (textPaint.getTextAlign() == Paint.Align.LEFT)
+                canvas.drawRect(x, y - textHeight, x + textPaint.measureText(textLine), y, whitePaint);
+            else
+                canvas.drawRect(x - textPaint.measureText(textLine), y - textHeight, x, y, whitePaint);
+            canvas.drawText(textLine, x, y, textPaint);
+            y += textHeight;
+        }
     }
 
     @Override

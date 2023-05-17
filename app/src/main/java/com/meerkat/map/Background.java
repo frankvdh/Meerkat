@@ -106,7 +106,7 @@ public class Background extends Drawable {
                 for (var p : MainActivity.groundLocations) {
                     var distance = Gps.distanceTo(p);
                     if (Float.isNaN(distance) || distance > screenWidthMetres) continue;
-                    new MapIcon().drawIcon(canvas, p, GroundIcon.Icons.values()[p.style].bitmap, Float.NaN, Color.BLACK, p.code);
+                    new MapIcon().drawIcon(canvas, p, GroundIcon.Icons.values()[p.style].bitmap, Float.NaN, Color.BLACK, p.getLabel());
                 }
         }
         var prevMode = displayOrientation;

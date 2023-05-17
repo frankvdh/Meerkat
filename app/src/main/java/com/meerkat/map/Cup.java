@@ -51,6 +51,10 @@ package com.meerkat.map;
  * @see <a href="http://www.keepitsoaring.com/LKSC/Downloads/cup_format.pdf">http://www.keepitsoaring.com/LKSC/Downloads/cup_format.pdf</a>
  */
 
+import static com.meerkat.ui.settings.SettingsViewModel.distanceUnits;
+import static com.meerkat.ui.settings.SettingsViewModel.labelText;
+import static com.meerkat.ui.settings.SettingsViewModel.showFrequency;
+import static com.meerkat.ui.settings.SettingsViewModel.showRunway;
 import static java.lang.Double.NaN;
 
 import android.location.Location;
@@ -58,6 +62,12 @@ import android.location.Location;
 import com.meerkat.log.Log;
 import com.meerkat.measure.Units;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -182,5 +192,66 @@ public class Cup extends Location {
             }
         }
     }
+
+    public enum Label {
+        Code,
+        Name,
+        Description
+    }
+
+    public String getLabel() {
+        var label = new StringBuilder(switch (labelText) {
+            case Code -> code;
+            case Name -> name;
+            case Description -> description;
+        });
+        if (showFrequency && !frequency.isBlank())
+            label.append('\n').append(frequency);
+        if (showRunway) {
+            if (runwayDir >= 0 && runwayDir <= 360) {
+                label.append(String.format("\n%02d", (runwayDir + 5) / 10));
+                if (!Float.isNaN(runwayLen))
+                    label.append(": ").append(distanceUnits.toString(runwayLen));
+            } else if (!Float.isNaN(runwayLen))
+                label.append('\n').append(distanceUnits.toString(runwayLen));
+        }
+        return label.toString();
+    }
+
+    private static final Pattern pattern = Pattern.compile("\\s*,?\\s*(?:\"([^\"]*)\"|([^,]*))");
+
+    /**
+     * @param file File to read from
+     */
+    public static ArrayList<Cup> readFile(File file) {
+        var result = new ArrayList<Cup>();
+        Log.i("Opening CupFile " + file.getPath());
+        String line = "";
+        try (var reader = new BufferedReader(new FileReader(file))) {
+            while (reader.ready()) {
+                line = reader.readLine().trim();
+                if (line.startsWith("*")) continue;
+                Matcher matcher = pattern.matcher(line);
+                int i;
+                var fields = new String[11];
+                for (i = 0; matcher.find() && i < fields.length; i++) {
+                    fields[i] = matcher.group(1) == null ? matcher.group(2) : matcher.group(1);
+                }
+                if (i < 11) {
+                    Log.e("Cup file line error: %s", line);
+                    continue;
+                }
+                result.add(new Cup(fields));
+            }
+        } catch (NumberFormatException e) {
+            Log.e("Cup file invalid line: %s", line);
+        } catch (FileNotFoundException e) {
+            Log.e("Cup file not found: %s", file.getAbsolutePath());
+        } catch (IOException e) {
+            Log.e("Cup file IOException: %s", file.getAbsolutePath());
+        }
+        return result;
+    }
+
 }
 
